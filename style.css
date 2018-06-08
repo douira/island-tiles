@@ -1,0 +1,23 @@
+body {
+  font-family: "Roboto", sans-serif;
+}
+
+.field {
+  border: 2px darkgrey solid;
+  border-spacing: 0px;
+}
+
+.field tr, .field td {
+  border: none;
+  padding: 0px;
+  vertical-align: top;
+}
+
+.field img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
