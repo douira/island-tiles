@@ -63,26 +63,9 @@ class Tile extends Vector {
     //call Vector constructor
     super(x, y)
 
-    //if image name is an array
-    if (imageName instanceof Array) {
-      //on lengths of array
-      if (! imageName.length) {
-        //error for missing
-        throw Error("no image names given in array of names")
-      } else if (imageName.length === 1) {
-        //choose the only one
-        imageName = imageName[0]
-      } else {
-        //choose one at random
-        imageName = imageName[Math.floor(Math.random() * imageName.length)]
-      }
-    }
-
-    //if image name if given now
-    if (imageName) {
-      //save the name of the tile image file
-      this.imageName = imageName
-    } //needs to be determinedi nrelaion to other surrounding tiles if not given
+    //save the name of the tile image file
+    //needs to be determined in relaion to other surrounding tiles if not given
+    this.imageName = imageName
 
     //init empty list of floating objects
     this.objs = []
@@ -90,6 +73,21 @@ class Tile extends Vector {
 
   //generates a dom object for this tile; an image element
   getImgElem() {
+    //if image name is an array
+    if (this.imageName instanceof Array) {
+      //on lengths of array
+      if (! this.imageName.length) {
+        //error for missing
+        throw Error("no image names given in array of names")
+      } else if (this.imageName.length === 1) {
+        //choose the only one
+        this.imageName = this.imageName[0]
+      } else {
+        //choose one at random
+        this.imageName = this.imageName[Math.floor(Math.random() * this.imageName.length)]
+      }
+    }
+
     //check that img element doesn't exist yet
     if (! this.elem) {
       //generate new
@@ -141,15 +139,6 @@ class Tile extends Vector {
   }
 }
 
-//the Water tile
-class Water extends Tile {
-  //init the render tile with the correct image
-  constructor(x, y) {
-    //init with water image
-    super(x, y, ["water-1", "water-2", "water-3"])
-  }
-}
-
 //neighbour offsets translate own position into the position of a neighbour
 const neighbourOffsets = [
   new Vector(0, -1),
@@ -182,6 +171,8 @@ const neighbourConfigNameMap = {
 //RoundedTile does calculations regarding corners and edges for grass and land tiles
 class RoundedTile extends Tile {
   //is given a image name map for all the different positions
+  //pass true as insideTypes to accept only self as inside,
+  //padd falsy to accept all except for field borders
   constructor(x, y, imageNameMap, insideTypes) {
     //call super to init
     super(x, y)
@@ -194,15 +185,28 @@ class RoundedTile extends Tile {
   //determine image name from surrouding tile types
   calcImageName(level) {
     //for all items, resolve getters if given
-    this.insideTypes = this.insideTypes.map(tileClass => tileClass())
+    if (this.insideTypes instanceof Array) {
+      this.insideTypes = this.insideTypes.map(tileClass => tileClass())
+    }
 
     //for all possible neighbour positions, determine inside or outside status
-    const neighbourConfig = neighbourOffsets.map(offset =>
-      //get tile at offsetted position and check if one of the inside classes
-      this.insideTypes.some(
-        insideClass => level.getTileAt(Vector.add(this, offset)).constructor === insideClass
+    const neighbourConfig = neighbourOffsets.map(offset => {
+      //get tile at neighbour position
+      const neighbourTile = level.getTileAt(Vector.add(this, offset))
+
+      //if tile doesn't exist: border of field, automatically outside
+      if (! neighbourTile) {
+        return "o"
+      }
+
+      //get tile at offsetted position and check if one of the inside classes or same class
+      //do not check if none given (accept all as inside)
+      return (
+        ! this.insideTypes ||
+        neighbourTile.constructor === this.constructor ||
+        this.insideTypes.length && this.insideTypes.includes(neighbourTile.constructor)
       ) ? "i" : "o"
-    ).join("")
+    }).join("")
 
     //set from name map and choose base image if special one not present
     this.imageName = this.imageNameMap[
@@ -257,7 +261,7 @@ class Land extends RoundedTile {
       onlyRight: "land-only-r",
       onlyBottom: "land-only-b",
       onlyLeft: "land-only-l"
-    }, [classRegistry.classGetterFor("Land"), classRegistry.classGetterFor("Grass")])
+    }, [classRegistry.classGetterFor("Grass")])
   }
 }
 
@@ -278,13 +282,30 @@ class Grass extends RoundedTile {
       edgeLeft: "grass-edge-l",
       onlyRight: "grass-corner-lb",
       onlyLeft: "grass-corner-rb"
-    }, [classRegistry.classGetterFor("Grass")])
+    }, true)
+  }
+}
+
+//the Water tile
+class Water extends RoundedTile {
+  //init the render tile with the correct image
+  constructor(x, y) {
+    //init with grass image map
+    super(x, y, {
+      center: ["water-1", "water-2", "water-3"],
+      edgeTop: "water-border-t",
+      rightTop: "water-border-t",
+      leftTop: "water-border-corner",
+      edgeLeft: "water-border-l",
+      leftBottom: "water-border-l"
+    })
   }
 }
 
 //register classes used in definitions of classes that extend RoundedTile
 classRegistry.register("Land", Land)
 classRegistry.register("Grass", Grass)
+classRegistry.register("Water", Water)
 
 //mapping from position descriptors to tile classes
 const positionDescriptorMapping = {
@@ -603,8 +624,8 @@ class Level {
       //return tile at 2d position
       return this.tiles[y][x]
     } else {
-      //out of bounds
-      throw Error("tile get coordinates out of bounds")
+      //return false, is checked by caller and handled accordingly
+      return false
     }
   }
 }

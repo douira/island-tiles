@@ -3,7 +3,7 @@ body {
 }
 
 .field {
-  border: 2px darkgrey solid;
+  border: none;
   border-spacing: 0px;
 }
 
