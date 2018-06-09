@@ -44,18 +44,16 @@ class Vector {
     return this
   }
 
-  //subtracting is the same but negative
-  /*sub(x, y) {
-    //use vector if given
-    if (x instanceof Vector) {
-      //get x and y
-      y = x.y
-      x = x.x
+  //statically add vectors and create a new vector
+  static add(v1, v2) {
+    //require both to be vectors
+    if (v1 instanceof Vector && v2 instanceof Vector) {
+      //return vector with components added
+      return new Vector(v1.x + v2.x, v1.y + v2.y)
+    } else {
+      throw Error("static vector add needs two vectors to be passed")
     }
-
-    //add negation
-    this.add(-x, -y)
-  }*/
+  }
 }
 
 //handles rendering of a tile
@@ -111,9 +109,9 @@ class Tile extends Vector {
 
   //sets itself up in the specified position in the given table
   //doesn't do anything if it's already set up
-  initDisplay(tiles, table) {
+  initDisplay(level, table) {
     //update image name with tile config
-    this.calcImageName(tiles)
+    this.calcImageName(level)
 
     //get td of this position
     const tableCellElem = table.children(".row-" + this.y).children(".col-" + this.x)
@@ -152,35 +150,66 @@ class Water extends Tile {
   }
 }
 
+//neighbour offsets translate own position into the position of a neighbour
+const neighbourOffsets = [
+  new Vector(0, -1),
+  new Vector(1, 0),
+  new Vector(0, 1),
+  new Vector(-1, 0)
+]
+
+//maps from neighbourhood configs to imageNameMap names,
+//i for inside type, o for outside type tiles (first is top going clockwise)
+const neighbourConfigNameMap = {
+  iiii: "center",
+  oooo: "edgeAll",
+  ioio: "edgeVertical",
+  oioi: "edgeHorizontal",
+  ooii: "rightTop",
+  iooi: "rightBottom",
+  iioo: "leftBottom",
+  oiio: "leftTop",
+  oiii: "edgeTop",
+  ioii: "edgeRight",
+  iioi: "edgeBottom",
+  iiio: "edgeLeft",
+  iooo: "onlyTop",
+  oioo: "onlyRight",
+  ooio: "onlyBottom",
+  oooi: "onlyLeft"
+}
+
 //RoundedTile does calculations regarding corners and edges for grass and land tiles
 class RoundedTile extends Tile {
   //is given a image name map for all the different positions
-  constructor(x, y, imageNameMap, connectTypes) {
+  constructor(x, y, imageNameMap, insideTypes) {
     //call super to init
     super(x, y)
 
-    //save map and connectTypes behavior spec
+    //save map and insideTypes behavior spec
     this.imageNameMap = imageNameMap
-    this.connectTypes = connectTypes
-  }
-
-  //used in loop in calcImageName to resolve getters made with class registry
-  static processConnectTypeGetters(tileClass) {
-    //resolve getter
-    return tileClass()
+    this.insideTypes = insideTypes
   }
 
   //determine image name from surrouding tile types
-  calcImageName(tiles) {
-    //resolve connectTypes registry references
-    for (const type in this.connectTypes) {
-      //for all items, resolve getters if given
-      this.connectTypes[type] = this.connectTypes[type].map(RoundedTile.processConnectTypeGetters)
-    }
+  calcImageName(level) {
+    //for all items, resolve getters if given
+    this.insideTypes = this.insideTypes.map(tileClass => tileClass())
 
-    //TODO:
-    //use connectTypes to choose the correct entry from imageNameMap if given,
-    //choose an almost fitting one if not given (precendence!)
+    //for all possible neighbour positions, determine inside or outside status
+    const neighbourConfig = neighbourOffsets.map(offset =>
+      //get tile at offsetted position and check if one of the inside classes
+      this.insideTypes.some(
+        insideClass => level.getTileAt(Vector.add(this, offset)).constructor === insideClass
+      ) ? "i" : "o"
+    ).join("")
+
+    //set from name map and choose base image if special one not present
+    this.imageName = this.imageNameMap[
+      //get name in image name map from neighbourhoodNameMap,
+      //choose center if unknown neighbour config
+      neighbourConfigNameMap[neighbourConfig] || "center"
+    ] || this.imageNameMap.center
   }
 }
 
@@ -192,7 +221,7 @@ class ClassRegistry {
   }
 
   //register a class in the list of classes
-  register(addClass, name) {
+  register(name, addClass) {
     //add to list with name
     this.classes[name] = addClass;
   }
@@ -223,14 +252,12 @@ class Land extends RoundedTile {
       edgeLeft: "land-edge-l",
       edgeVertical: "land-edge-v",
       edgeHorizontal: "land-edge-h",
-      edgeAll: "land-edge-all"
-    }, {
-      //tiles to treat like "outside" (round corners off towards)
-      outside: [classRegistry.classGetterFor("Water")],
-
-      //tiles to consider inside (no rounding of corners)
-      inside: [classRegistry.classGetterFor("Land"), classRegistry.classGetterFor("Grass")]
-    })
+      edgeAll: "land-edge-all",
+      onlyTop: "land-only-t",
+      onlyRight: "land-only-r",
+      onlyBottom: "land-only-b",
+      onlyLeft: "land-only-l"
+    }, [classRegistry.classGetterFor("Land"), classRegistry.classGetterFor("Grass")])
   }
 }
 
@@ -248,18 +275,16 @@ class Grass extends RoundedTile {
       edgeTop: "grass-edge-t",
       edgeRight: "grass-edge-r",
       edgeBottom: "grass-edge-b",
-      edgeLeft: "grass-edge-l"
-    }, {
-      outside: [classRegistry.classGetterFor("Land")],
-      inside: [classRegistry.classGetterFor("Grass")]
-    })
+      edgeLeft: "grass-edge-l",
+      onlyRight: "grass-corner-lb",
+      onlyLeft: "grass-corner-rb"
+    }, [classRegistry.classGetterFor("Grass")])
   }
 }
 
 //register classes used in definitions of classes that extend RoundedTile
 classRegistry.register("Land", Land)
 classRegistry.register("Grass", Grass)
-classRegistry.register("Water", Water)
 
 //mapping from position descriptors to tile classes
 const positionDescriptorMapping = {
@@ -284,7 +309,13 @@ const positionDescriptorMapping = {
     s: Seed,
     wb: WaterBottle,
     sp: Spring,
-    st: Starfish*/
+    st: Starfish,
+    sp: Spikes,
+    sb: SpikeButton
+    sl: Slingshot,
+    pb: Pebble,
+    c: Coconut,
+    ch: CoconutHole*/
   }
 }
 
@@ -548,7 +579,33 @@ class Level {
     row.addClass("row-0")
 
     //simply iterate and call method on each tile
-    this.tileList.forEach(tile => tile.initDisplay(this.tiles, table))
+    this.tileList.forEach(tile => tile.initDisplay(this, table))
+  }
+
+  //returns the tile at the given position
+  getTileAt(x, y) {
+    //init has to be finished at this point as it happens in instantiation
+
+    //use vector if given
+    if (x instanceof Vector) {
+      //get x and y
+      y = x.y
+      x = x.x
+    }
+
+    //must be numbers
+    if (typeof x !== "number" || typeof y !== "number") {
+      throw Error("tile get params must be numbers");
+    }
+
+    //check to be in bounds
+    if (x >= 0 && x < this.dim.x && y >= 0 && y < this.dim.y) {
+      //return tile at 2d position
+      return this.tiles[y][x]
+    } else {
+      //out of bounds
+      throw Error("tile get coordinates out of bounds")
+    }
   }
 }
 
@@ -574,7 +631,7 @@ const levels = [
     new Vector(20, 12),
     [
       "wwlllwww",
-      ["wllggg", ["l"], "w"],
+      ["wlgggl", ["l"], "w"],
       "wllggllw",
       "wwwlllll",
       "wlllwwww",
