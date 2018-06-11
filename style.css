@@ -11,6 +11,10 @@ body {
   border: none;
   padding: 0px;
   vertical-align: top;
+  width: 32px;
+  height: 32px;
+  position: relative;
+  vertical-align: top;
 }
 
 .field img {
@@ -20,4 +24,5 @@ body {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+  position: absolute;
 }
