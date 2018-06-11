@@ -11,16 +11,16 @@ body {
   border: none;
   padding: 0px;
   vertical-align: top;
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   position: relative;
   vertical-align: top;
 }
 
 .field img {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;

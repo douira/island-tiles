@@ -57,7 +57,7 @@ class Vector {
 }
 
 //handles rendering of a tile
-class Tile extends Vector {
+class DisplayTile extends Vector {
   //make this new tile at a position
   constructor(x, y, imageName) {
     //call Vector constructor
@@ -66,9 +66,6 @@ class Tile extends Vector {
     //save the name of the tile image file
     //needs to be determined in relaion to other surrounding tiles if not given
     this.imageName = imageName
-
-    //init empty list of floating objects
-    this.objs = []
   }
 
   //generates a dom object for this tile; an image element
@@ -86,16 +83,27 @@ class Tile extends Vector {
         //choose one at random
         this.imageName = this.imageName[Math.floor(Math.random() * this.imageName.length)]
       }
+    } else if (! this.imageName) {
+      throw Error(
+        "must pass image name or call calcImageName to generate before getting img element"
+      )
     }
 
     //check that img element doesn't exist yet
     if (! this.elem) {
-      //generate new
-      this.elem = $("<img>", {
-        id: "tile" + this.x + "-" + this.y,
+      //img elem attribs
+      const attribs = {
         class: "tile",
         src: "tiles/" + this.imageName + ".png"
-      })
+      }
+
+      //check if present, and call get tile id (present on terrain tiles)
+      if (this.getTileIdAttrib) {
+        attribs.id = this.getTileIdAttrib()
+      }
+
+      //generate new with prepared attribs
+      this.elem = $("<img>", attribs)
     }
 
     //return current element
@@ -104,6 +112,18 @@ class Tile extends Vector {
 
   //does nothing if not overriden
   calcImageName() { }
+}
+
+//a terrain tile is a displayable tile that can have objects on it
+class TerrainTile extends DisplayTile {
+  //init like display tile
+  constructor(x, y, imageName) {
+    //init super
+    super(x, y, imageName)
+
+    //init empty list of floating objects
+    this.objs = []
+  }
 
   //sets itself up in the specified position in the given table
   //doesn't do anything if it's already set up
@@ -118,7 +138,15 @@ class Tile extends Vector {
     if (! tableCellElem.children().length) {
       //add img elem to that table cell
       tableCellElem.append(this.getImgElem())
+
+      //add image elements for all child objects
+      this.objs.forEach(o => o.addToCell(tableCellElem))
     }
+  }
+
+  //returns id to be put on non moving img element
+  getTileIdAttrib() {
+    return "tile" + this.x + "-" + this.y
   }
 
   //adds a floating object to this tile
@@ -169,7 +197,7 @@ const neighbourConfigNameMap = {
 }
 
 //RoundedTile does calculations regarding corners and edges for grass and land tiles
-class RoundedTile extends Tile {
+class RoundedTile extends TerrainTile {
   //is given a image name map for all the different positions
   //pass true as insideTypes to accept only self as inside,
   //padd falsy to accept all except for field borders
@@ -307,6 +335,42 @@ classRegistry.register("Land", Land)
 classRegistry.register("Grass", Grass)
 classRegistry.register("Water", Water)
 
+//a basic object that can be on top of a terrain tile
+class ObjectTile extends DisplayTile {
+  //created with a position and the image name
+  constructor(x, y, imageName) {
+    //init super tile
+    super(x, y, imageName)
+  }
+
+  //adds the image element for this object to the given table cell
+  addToCell(cell) {
+    //get img element and save for moving round
+    this.imgElem = this.getImgElem()
+
+    //add to cell given
+    cell.append(this.imgElem)
+  }
+}
+
+//rock tile is stationary
+class Rock extends ObjectTile {
+  //init with image name
+  constructor(x, y) {
+    //use multiple possible images
+    super(x, y, ["rock-1", "rock-2"])
+  }
+}
+
+//rock palm is stationary
+class Palm extends ObjectTile {
+  //init with image name
+  constructor(x, y) {
+    //use multiple possible images
+    super(x, y, ["palm-1", "palm-2"])
+  }
+}
+
 //mapping from position descriptors to tile classes
 const positionDescriptorMapping = {
   //first field is always the tile type
@@ -318,9 +382,9 @@ const positionDescriptorMapping = {
 
   //all following fields are the floating objects and the player
   objs: {
-    /*r: Rock,
+    r: Rock,
     p: Palm,
-    bw: WetBox,
+    /*bw: WetBox,
     pl: Player,
     h: Goal, //h for house
     b: Box,
@@ -601,11 +665,14 @@ class Level {
 
     //simply iterate and call method on each tile
     this.tileList.forEach(tile => tile.initDisplay(this, table))
+
+    //set min width of table to current width to prevent squishing
+    table.css("min-width", table[0].offsetWidth)
   }
 
   //returns the tile at the given position
   getTileAt(x, y) {
-    //init has to be finished at this point as it happens in instantiation
+    //init has to be finished at this point as init happens in instantiation
 
     //use vector if given
     if (x instanceof Vector) {
@@ -652,8 +719,8 @@ const levels = [
     new Vector(20, 12),
     [
       "wwlllwww",
-      ["wlgggl", ["l"], "w"],
-      "wllggllw",
+      ["wllggl", ["l", "r"], ["l", "p"]],
+      "wllgggll",
       "wwwlllll",
       "wlllwwww",
       "wlwwwwww",
