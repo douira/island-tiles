@@ -371,6 +371,61 @@ class Palm extends ObjectTile {
   }
 }
 
+//map from key codes for WASD and arrow keys to directions
+const keyCodeDirections = {
+  //WASD
+  87: 0,
+  68: 1,
+  83: 2,
+  65: 3,
+
+  //up, right, down, left
+  38: 0,
+  39: 1,
+  40: 2,
+  37: 3
+}
+
+//map from direction to offset vector
+const keyDirectionOffsets = [
+  //up, right, down, left
+  new Vector(0, -1),
+  new Vector(1, 0),
+  new Vector(0, 1),
+  new Vector(-1, 0)
+]
+
+//represents the player, controllable and deals with interaction
+class Player extends ObjectTile {
+  //init with image name
+  constructor(x, y) {
+    //use starting player image facing upwards
+    super(x, y, "player-t")
+
+    //register key interaction handler
+    $(document).keydown((function(e) {
+      //prevent default action of moving the page or similar
+      e.preventDefault()
+
+      //if not present, we don't care about this key
+      if (! (e.which in keyCodeDirections)) {
+        return
+      }
+
+      //get key direction
+      const keyDirection = keyCodeDirections[e.which]
+
+      //try to move with offset vector for this direction
+      this.move(keyDirectionOffsets[keyDirection])
+    }).bind(this));
+  }
+
+  //called when the player should move in that direction
+  move(movement) {
+
+  }
+}
+
 //mapping from position descriptors to tile classes
 const positionDescriptorMapping = {
   //first field is always the tile type
@@ -384,8 +439,8 @@ const positionDescriptorMapping = {
   objs: {
     r: Rock,
     p: Palm,
-    /*bw: WetBox,
     pl: Player,
+    /*bw: WetBox,
     h: Goal, //h for house
     b: Box,
     t: Teleporter,
@@ -721,7 +776,7 @@ const levels = [
       "wwlllwww",
       ["wllggl", ["l", "r"], ["l", "p"]],
       "wllgggll",
-      "wwwlllll",
+      ["wwwl", ["l", "pl"], "lll"],
       "wlllwwww",
       "wlwwwwww",
       "wwlwwwww",
