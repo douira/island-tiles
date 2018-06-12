@@ -404,13 +404,13 @@ class Player extends ObjectTile {
 
     //register key interaction handler
     $(document).keydown((function(e) {
-      //prevent default action of moving the page or similar
-      e.preventDefault()
-
-      //if not present, we don't care about this key
+      //if not present, we don't care about pressing this key
       if (! (e.which in keyCodeDirections)) {
         return
       }
+
+      //prevent default action of moving the page or similar
+      e.preventDefault()
 
       //get key direction
       const keyDirection = keyCodeDirections[e.which]
@@ -420,7 +420,7 @@ class Player extends ObjectTile {
     }).bind(this));
   }
 
-  //called when the player should move in that direction
+  //called when the player should move in that direction (movement vector)
   move(movement) {
 
   }
@@ -670,8 +670,17 @@ class Level {
             throw Error("obj abbrev given in level description is invalid")
           }
 
+          //create object of given class
+          const obj = new objClass()
+
+          //if is player instance
+          if (obj instanceof Player) {
+            //register as _the_ player
+            this.player = obj
+          }
+
           //return created object
-          return new objClass()
+          return obj
         })
 
         //remove first (is empty and not processed, is the tile itself)
