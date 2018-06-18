@@ -58,6 +58,13 @@ const Displayable = stampit.compose({
     tileType: "NotExtended!"
   },
 
+  statics: {
+    //returns the attribute value for a given image name
+    makeImgAttrib(forName) {
+      return "tiles/" + forName + ".png"
+    }
+  },
+
   methods: {
     //generates a dom object for this tile; an image element
     getImgElem() {
@@ -85,7 +92,7 @@ const Displayable = stampit.compose({
         //img elem attribs
         const attribs = {
           class: "tile",
-          src: "tiles/" + this.imageName + ".png"
+          src: Displayable.makeImgAttrib(this.imageName)
         }
 
         //check if present, and call get tile id (present on terrain tiles)
@@ -99,6 +106,20 @@ const Displayable = stampit.compose({
 
       //return current element
       return this.elem
+    },
+
+    //updates the display image with a given new image name
+    changeImageName(newImageName) {
+      //stop if image name didn't actually change
+      if (newImageName === this.imageName) {
+        return
+      }
+
+      //set new as image name
+      this.imageName = newImageName
+
+      //set a new name in the img element
+      this.elem.attr("src", Displayable.makeImgAttrib(this.imageName))
     }
   }
 })
@@ -120,16 +141,16 @@ const Terrain = Displayable.compose(Vector, {
       }
 
       //get td of this position
-      const tableCellElem = table.children(".row-" + this.y).children(".col-" + this.x)
+      this.tableCellElem = table.children(".row-" + this.y).children(".col-" + this.x)
 
-      //if not set in there already
-      if (! tableCellElem.children().length) {
-        //add img elem to that table cell
-        tableCellElem.append(this.getImgElem())
+      //add img elem to that table cell
+      this.tableCellElem.append(this.getImgElem())
 
-        //add image elements for all child objects
-        this.objs.forEach(o => o.addToCell(tableCellElem))
-      }
+      //sort floating objects for display
+      this.sortObjs()
+
+      //add image elements for all child objects
+      this.objs.forEach(o => o.addToCell(this.tableCellElem))
     },
 
     //returns id to be put on non moving img element
@@ -138,21 +159,72 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //adds a floating object to this tile
-    addFloatingObj(objs) {
+    addFloatingObj(objs, isInit) {
       //if given array, call on each element given
       if (objs instanceof Array) {
         //call on each
-        objs.forEach(this.addFloatingObj, this)
+        objs.forEach(o => this.addFloatingObj(o, isInit))
 
         //stop, already processed
         return
       }
 
+      //attach self as parent
+      objs.parent = this
+
+      //set position to own position
+      objs.x = this.x
+      objs.y = this.y
+
       //add to list of floating objects
       this.objs.push(objs)
 
+      //dont sort if in init
+      if (! isInit) {
+        this.sortObjs()
+      }
+    },
+
+    //sorts the floating objects by height priority
+    sortObjs() {
       //sort list of objects by their height priority
       this.objs.sort((a, b) => b.heightPrio - a.heightPrio)
+    },
+
+    //remove given object from array of objects, will remove its dom element on its own
+    removeFloatingObj(obj) {
+      //remove from array
+      this.objs.splice(this.objs.indexOf(obj), 1)
+    },
+
+    //by default, ask all contained objects in order of display order
+    checkMove(movement, obj) {
+      //first check tile requirements
+      if (this.checkMoveTerrain && ! this.checkMoveTerrain(movement, obj)) {
+        //stop right away, terrain tile disallows movement
+        return false
+      }
+
+      //check objects, the last movement reponse that is returned is used
+      const moveResponse = this.objs.reduce((response, ownObj) => {
+        //get result from floating object
+        const result = ownObj.checkMove(movement, obj)
+
+        //set as new response if result is falsy or
+        //if current response is truthy and result is object (movement directive)
+        if (! result || response && typeof result === "object") {
+          response = result
+        }
+
+        //return reponse
+        return response
+      }, true)
+
+      //notify objects that movement is actually happening
+      this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, obj))
+
+      //return reponse
+      return moveResponse
     }
   }
 })
@@ -223,11 +295,28 @@ const RoundedTerrain = Terrain.methods({
   }
 })
 
-//disallows walking on the tile
-const NonWalkable = stampit.methods({
+//disallows walking on the tile if this object is on it
+const NonWalkableObject = stampit.methods({
   //disallow putting things on this by default, called to check if something can move onto this
   checkMove() {
     return false
+  }
+})
+
+//disallows walking on this terrain tile
+//terrain is walkable if checkMoveTerrain not present
+const NonWalkableTerrain = stampit.methods({
+  //disallow walking on terrain tile before checking objects
+  checkMoveTerrain() {
+    return false
+  }
+})
+
+//always walkable object
+const WalkableObject = stampit.methods({
+  //always allow walking on
+  checkMove() {
+    return true
   }
 })
 
@@ -275,7 +364,7 @@ const Grass = RoundedTerrain.props({
 })
 
 //the Water tile
-const Water = RoundedTerrain.compose(NonWalkable).props({
+const Water = RoundedTerrain.compose(NonWalkableTerrain).props({
   tileType: "Water",
   imageNameMap: {
     center: ["water-1", "water-2", "water-3"],
@@ -297,11 +386,26 @@ const FloatingObject = Displayable.compose(Vector).methods({
 
     //add to cell given
     cell.append(this.imgElem)
+  },
+
+  //moves the object to another tile
+  moveToTile(newTile) {
+    //if this object is in a tile
+    if (this.parent) {
+      //remove from parent
+      this.parent.removeFloatingObj(this)
+    }
+
+    //add to object list of new parent tile (will set tile prop in this)
+    newTile.addFloatingObj(this)
+
+    //add to table cell of new parent
+    this.addToCell(this.parent.tableCellElem)
   }
 })
 
 //rock tile is stationary
-const Rock = FloatingObject.compose(NonWalkable).props({
+const Rock = FloatingObject.compose(NonWalkableObject).props({
   //init with image name
   tileType: "Rock",
   imageName: ["rock-1", "rock-2"],
@@ -311,7 +415,7 @@ const Rock = FloatingObject.compose(NonWalkable).props({
 })
 
 //Palm tile is stationary
-const Palm = FloatingObject.compose(NonWalkable).props({
+const Palm = FloatingObject.compose(NonWalkableObject).props({
   //init with image name
   tileType: "Palm",
   heightPrio: 0,
@@ -334,17 +438,30 @@ const keyCodeDirections = {
 }
 
 //represents the player, controllable and deals with interaction
-const Player = FloatingObject.compose(NonWalkable).compose({
+const Player = FloatingObject.compose(NonWalkableObject).compose({
   //set image name
   props: {
     tileType: "Player",
     heightPrio: 100
   },
 
+  //image names for directions
+  statics: {
+    directionImageNames: [
+      "player-t",
+      "player-r",
+      "player-b",
+      "player-l"
+    ]
+  },
+
   //init registers event handlers
-  init() {
+  init({ level }) {
     //current tile name
     this.imageName = "player-t"
+
+    //needs to save level
+    this.level = level
 
     //register key interaction handler
     $(document).keydown((function(e) {
@@ -360,15 +477,31 @@ const Player = FloatingObject.compose(NonWalkable).compose({
       const keyDirection = keyCodeDirections[e.which]
 
       //try to move with offset vector for this direction
-      this.move(directionOffsets[keyDirection])
+      this.move(directionOffsets[keyDirection], keyDirection)
     }).bind(this));
   },
 
   methods: {
     //called when the player should move in that direction (movement vector)
-    /*move(movement) {
+    move(movement, direction) {
+      //update to face in that direction
+      this.changeImageName(Player.directionImageNames[direction])
 
-    }*/
+      //get target (destination tile)
+      const targetTile = this.level.getTileAt(Vector.add(this, movement))
+
+      //do not move if no tile present (border of playing field)
+      if (targetTile) {
+        //check if target tile is ok with movement to it
+        const response = targetTile.checkMove(movement, this)
+
+        //if reponse is truthy, proceed with movement
+        if (response) {
+          //do movement to target tile
+          this.moveToTile(targetTile)
+        }
+      }
+    }
   }
 })
 
@@ -604,7 +737,7 @@ const Level = stampit.compose({
         }
 
         //make new tile with class gotten from mapping
-        const tile = tileMaker({ x, y })
+        const tile = tileMaker({ x, y})
 
         //if objects specified
         if (position.length > 1) {
@@ -624,7 +757,7 @@ const Level = stampit.compose({
             }
 
             //create object of given class
-            const obj = objMaker()
+            const obj = objMaker({ level: this })
 
             //if is player instance
             if (obj instanceof Player) {
@@ -639,8 +772,8 @@ const Level = stampit.compose({
           //remove first (is empty and not processed, is the tile itself)
           objs.shift()
 
-          //add all objs to tile
-          tile.addFloatingObj(objs)
+          //add all objs to tile in init mode
+          tile.addFloatingObj(objs, true)
         }
 
         //also add tile to linear list of tiles for non position specific iteration
