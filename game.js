@@ -39,6 +39,12 @@ const Vector = stampit.compose({
 
       //chaining
       return this
+    },
+
+    //gets a new instace of this vector
+    getNew() {
+      //construct new vector with same values
+      return Vector(this)
     }
   },
 
@@ -132,6 +138,21 @@ const Terrain = Displayable.compose(Vector, {
   },
 
   methods: {
+    //update order of floating objects
+    updateObjOrder(needsEmpty) {
+      //if flag not set, empty container first
+      if (! needsEmpty) {
+        //empty without destroying contained elements (but leave terrain)
+        this.tableCellElem.children().slice(1).detach()
+      }
+
+      //add img elem to that table cell
+      this.tableCellElem.append(this.getImgElem())
+
+      //add image elements for all child objects
+      this.objs.forEach(o => o.addToCell(this.tableCellElem))
+    },
+
     //sets itself up in the specified position in the given table
     //doesn't do anything if it's already set up
     initDisplay(level, table) {
@@ -143,14 +164,11 @@ const Terrain = Displayable.compose(Vector, {
       //get td of this position
       this.tableCellElem = table.children(".row-" + this.y).children(".col-" + this.x)
 
-      //add img elem to that table cell
-      this.tableCellElem.append(this.getImgElem())
-
       //sort floating objects for display
       this.sortObjs()
 
-      //add image elements for all child objects
-      this.objs.forEach(o => o.addToCell(this.tableCellElem))
+      //update elements in tile container, newly created and needs no emptying
+      this.updateObjOrder(true)
     },
 
     //returns id to be put on non moving img element
@@ -207,13 +225,16 @@ const Terrain = Displayable.compose(Vector, {
 
       //check objects, the last movement reponse that is returned is used
       const moveResponse = this.objs.reduce((response, ownObj) => {
-        //get result from floating object
-        const result = ownObj.checkMove(movement, obj)
+        //if object has to be checked at all
+        if (ownObj.checkMove) {
+          //get result from floating object
+          const result = ownObj.checkMove(movement, obj)
 
-        //set as new response if result is falsy or
-        //if current response is truthy and result is object (movement directive)
-        if (! result || response && typeof result === "object") {
-          response = result
+          //set as new response if result is falsy or
+          //if current response is truthy and result is object (movement directive)
+          if (! result || response && typeof result === "object") {
+            response = result
+          }
         }
 
         //return reponse
@@ -576,6 +597,32 @@ const Level = stampit.compose({
         //single position
         return ["w"]
       }
+    },
+
+    //describes the bounds to check for water
+    waterBounds(fieldDim) {
+      return [
+        {
+          start: Vector({ x: 0, y: 0 }),
+          dir: Vector({ x: 1, y: 0 }),
+          length: fieldDim.x
+        },
+        {
+          start: Vector({ x: fieldDim.x - 1, y: 0 }),
+          dir: Vector({ x: 0, y: 1 }),
+          length: fieldDim.y
+        },
+        {
+          start: Vector({ x: 0, y: fieldDim.y - 1 }),
+          dir: Vector({ x: 1, y: 0 }),
+          length: fieldDim.x
+        },
+        {
+          start: Vector({ x: 0, y: 0 }),
+          dir: Vector({ x: 0, y: 1 }),
+          length: fieldDim.y
+        }
+      ]
     }
   },
 
@@ -643,39 +690,112 @@ const Level = stampit.compose({
       //flag that is set if padding needs to be done
       let needsPadding = false
 
+      //flag is set to true if we need to check that all bounds are water
+      let checkWaterBounds = false
+
       //if field is larger or already at than specified size
       if (fieldDim.x >= this.dim.x) {
         //"stretch" dim to fit field
         this.dim.x = fieldDim.x
+
+        //set flag for checking bounds
+        checkWaterBounds = true
       } else {
         //set padding necessary flag
         needsPadding = true
       }
       if (fieldDim.y >= this.dim.y) {
         this.dim.y = fieldDim.y
+        checkWaterBounds = true
       } else {
-        //set paddign necessary flag
+        //set padding necessary flag
         needsPadding = true
       }
 
+      //total padding needed on axis, divide by 2 for the padding needed on each side
+      const sidePadding = Vector({
+        x: this.dim.x - fieldDim.x,
+        y: this.dim.y - fieldDim.y
+      }).mult(0.5)
+
+      //split padding into pre and post padding on both axis
+      const prePadding = Vector({
+        x: Math.floor(sidePadding.x),
+        y: Math.floor(sidePadding.y)
+      })
+      const postPadding = Vector({
+        x: Math.ceil(sidePadding.x),
+        y: Math.ceil(sidePadding.y)
+      })
+
+      //check water bounds if requested
+      if (checkWaterBounds) {
+        //set of padding in directions
+        const directionPaddingAccessors = [
+          { o: prePadding, p: "y" },
+          { o: postPadding, p: "x" },
+          { o: postPadding, p: "y" },
+          { o: prePadding, p: "x" }
+        ].map(descr => value => {
+          //map to fucntion that sets value and returns value
+          if (typeof value === "number") {
+            descr.o[descr.p] += value
+
+            //also apply to dim
+            this.dim[descr.p] += value
+          }
+
+          //return current
+          return descr.o[descr.p]
+        })
+
+        //for all bounds get padding
+        checkWaterBounds = Level.waterBounds(fieldDim)
+
+        //calc water padding with bounds
+        .map((bound, index) => {
+          //dont check for padding if we already have normal padding here
+          if (directionPaddingAccessors[index]()) {
+            return false
+          }
+
+          //current check position
+          const pos = bound.start.getNew()
+
+          //checking position index (index in bound)
+          let i = 0
+
+          //check bound until end or until non water found
+          while (i++ < bound.length - 1) {
+            //check for non water
+            if (this.field[pos.y][pos.x][0] !== "w") {
+              //found non water, need padding for this bound
+              return true
+            }
+
+            //add increment vector to position for next position
+            pos.add(bound.dir)
+          }
+
+          //no non-water found, needs to padding
+          return false
+        })
+
+        //apply and check for presence of water padding
+        .reduce((needsWaterPadding, padding, index) => {
+          //if water padding determined to be needed
+          if (padding) {
+            //add to normal padding
+            directionPaddingAccessors[index](1)
+          }
+
+          //no padding needed for water if already padding for size or no water padding needed
+          return needsWaterPadding || padding
+        }, false)
+      }
+
       //if padding is necessary
-      if (needsPadding) {
-        //total padding needed, divide by 2 for the padding needed on each side
-        const sidePadding = Vector({
-          x: this.dim.x - fieldDim.x,
-          y: this.dim.y - fieldDim.y
-        }).mult(0.5)
-
-        //split padding into pre and post padding on both axis
-        const prePadding = Vector({
-          x: Math.floor(sidePadding.x),
-          y: Math.floor(sidePadding.y)
-        })
-        const postPadding = Vector({
-          x: Math.ceil(sidePadding.x),
-          y: Math.ceil(sidePadding.y)
-        })
-
+      if (needsPadding || checkWaterBounds) {
         //apply post padding and fill out any uneven lines
         for (let y = 0; y < fieldDim.y + postPadding.y; y ++) {
           //if line doesn't exist, create it
@@ -855,7 +975,7 @@ const Game = stampit.compose({
 const levels = [
   Level({
     name: "Mahkilaki",
-    dim: Vector({ x: 20, y: 12 }),
+    //dim: Vector({ x: 20, y: 12 }),
     field: [
       "wwlllwww",
       ["wllggl", ["l", "r"], ["l", "p"]],
@@ -863,8 +983,8 @@ const levels = [
       ["wwwl", ["l", "pl"], "lll"],
       "wlllwwww",
       "wlwwwwww",
-      "wwlwwwww",
-      "wwwwwwww"
+      "wlwwwwww",
+      "wlwwwwww"
     ]
   })
 ]
