@@ -63,13 +63,60 @@ const Palm = FloatingObject.compose(NonWalkableObject).props({
   imageName: ["palm-1", "palm-2"]
 })
 
-//pushable allows flaoting objects to be pushed by the player
-const Pushable = stampit.compose({
+//movable supplies methods for trying to move (being the subject of the move)
+const Movable = stampit.methods({
+  //returns the target tile for a given movement from this tile
+  getTargetTile(movement) {
+    //add offset to own position and get tile from there from level
+    return this.level.getTileAt(Vector.add(this, movement.offset))
+  },
+
+  //tries to perform a move
+  attemptMove(targetTile, movement, initiator) {
+    //check if target tile is ok with movement to it, no action if out of bounds
+    return targetTile && targetTile.checkMove(movement, { subject: this, initiator })
+  },
+
+  //does the actual moving
+  performMove(targetTile, movement, initiator) {
+    //notify terrain tiles and objects and so on
+    targetTile.notifyMove(movement, { subject: this, initiator })
+
+    //do movement to target tile, if target file is falsy attemptMove wasn't checked first!
+    this.moveToTile(targetTile)
+  },
+
+  //move is called as the initial impulse (called on initiator)
+  move(movement) {
+    //get target tile for movement
+    const targetTile = this.getTargetTile(movement)
+
+    //check if move is possible
+    if (this.attemptMove(targetTile, movement, this)) {
+      //perform possible move
+      this.performMove(targetTile, movement, this)
+    }
+  }
+})
+
+//pushable allows floating objects to be pushed by the player
+const Pushable = Movable.compose({
   methods: {
     //check if next can be walked on by this object
     checkMove(movement, actors) {
-      //calculate next in direction of movement
-      const targetTile = this.level.getTileAt(Vector.add(movement.offset, this))
+      //require subject and initiator to be the same (don't allow double pushing)
+      return actors.initiator === actors.subject &&
+        //check if push movement ok in general (for this object)
+        (! this.checkMoveExtra || this.checkMoveExtra(movement, actors)) &&
+
+        //try to move in direction of current movement, this is the subject but keep initiator
+        this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
+    },
+
+    //when move actually happens, do move to tile
+    notifyMove(movement, actors) {
+      //do own move to tile, has to get target tile again (other target because of push)
+      this.performMove(this.getTargetTile(movement), movement, actors.initiator)
     }
   }
 })
@@ -92,7 +139,7 @@ const WetBox = FloatingObject.compose({
 })
 
 //represents the player, controllable and deals with interaction
-const Player = FloatingObject.compose(NonWalkableObject).compose({
+const Player = FloatingObject.compose(NonWalkableObject, Movable).compose({
   //set image name
   props: {
     tileType: "Player",
@@ -142,31 +189,15 @@ const Player = FloatingObject.compose(NonWalkableObject).compose({
       //prevent default action of moving the page or similar
       e.preventDefault()
 
+      //update to face in that direction
+      this.changeImageName(Player.directionImageNames[keyDirection])
+
       //try to move with offset vector for this direction, also pass direction
-      this.move({ offset: directionOffsets[keyDirection], direction: keyDirection }, this)
+      this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
     }).bind(this));
   },
 
   methods: {
-    //called when the player should move in that direction (movement vector)
-    move(movement, initiator) {
-      //update to face in that direction
-      this.changeImageName(Player.directionImageNames[movement.direction])
 
-      //get target (destination tile)
-      const targetTile = this.level.getTileAt(Vector.add(this, movement.offset))
-
-      //do not move if no tile present (border of playing field)
-      if (targetTile) {
-        //check if target tile is ok with movement to it
-        const response = targetTile.checkMove(movement, { subject: this, initiator })
-
-        //if reponse is truthy, proceed with movement
-        if (response) {
-          //do movement to target tile
-          this.moveToTile(targetTile)
-        }
-      }
-    }
   }
 })

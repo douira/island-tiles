@@ -23,9 +23,9 @@ const levels = [
     //dim: Vector({ x: 20, y: 12 }),
     field: [
       "wwlllllw",
-      ["wl", ["l", "b"], "ggg", ["l", "r"], ["l", "p"]],
+      ["wllggg", ["l", "r"], ["l", "p"]],
       "wllgggll",
-      ["wlll", ["l", "pl"], "lll"],
+      ["wl", ["l", "b"], ["l", "b"], ["l", "pl"], ["l", "b"], "ll"],
       ["wlll", ["w", "wb"], "www"]
     ]
   })

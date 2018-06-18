@@ -101,29 +101,15 @@ const Terrain = Displayable.compose(Vector, {
         return false
       }
 
-      //check objects, the last movement reponse that is returned is used
-      const moveResponse = this.objs.reduce((response, ownObj) => {
-        //if object has to be checked at all
-        if (ownObj.checkMove) {
-          //get result from floating object
-          const result = ownObj.checkMove(movement, actors)
+      //check that all objects are ok with movement
+      return this.objs.reduce(
+        (moveOk, ownObj) => moveOk && ownObj.checkMove(movement, actors), true)
+    },
 
-          //set as new response if result is falsy or
-          //if current response is truthy and result is object (movement directive)
-          if (! result || response && typeof result === "object") {
-            response = result
-          }
-        }
-
-        //return reponse
-        return response
-      }, true)
-
+    //called when movement actually happens
+    notifyMove(movement, actors) {
       //notify objects that movement is actually happening
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
-
-      //return reponse
-      return moveResponse
     }
   }
 })
