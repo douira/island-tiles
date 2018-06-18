@@ -244,7 +244,10 @@ const Level = stampit.compose({
           //check bound until end or until non water found
           while (i++ < bound.length - 1) {
             //check for non water
-            if (this.field[pos.y][pos.x][0] !== "w") {
+            if (
+              this.field[pos.y] &&
+              this.field[pos.y][pos.x] &&
+              this.field[pos.y][pos.x][0] !== "w") {
               //found non water, need padding for this bound
               return true
             }
