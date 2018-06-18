@@ -132,9 +132,12 @@ const Displayable = stampit.compose({
 
 //a terrain tile is a displayable tile that can have objects on it
 const Terrain = Displayable.compose(Vector, {
-  init() {
+  init({ level }) {
     //starts off with empty list of floating objects
     this.objs = []
+
+    //save level ref
+    this.level = level
   },
 
   methods: {
@@ -189,6 +192,9 @@ const Terrain = Displayable.compose(Vector, {
 
       //attach self as parent
       objs.parent = this
+
+      //attach level
+      objs.level = this.level
 
       //set position to own position
       objs.x = this.x
@@ -458,6 +464,34 @@ const Palm = FloatingObject.compose(NonWalkableObject).props({
   imageName: ["palm-1", "palm-2"]
 })
 
+//pushable allows flaoting objects to be pushed by the player
+const Pushable = stampit.compose({
+  methods: {
+    //check if next can be walked on by this object
+    checkMove(movement, actors) {
+      //calculate next in direction of movement
+      const targetTile = this.level.getTileAt(Vector.add(movement.offset, this))
+    }
+  }
+})
+
+//box can be pushed
+const Box = FloatingObject.compose(Pushable).compose({
+  props: {
+    tileType: "Box",
+    imageName: "box"
+  }
+})
+
+//WetBox is created when box is sunken in water
+const WetBox = FloatingObject.compose({
+  //configure image
+  props: {
+    tileType: "WetBox",
+    imageName: "box-wet"
+  }
+})
+
 //map from key codes for WASD and arrow keys to directions
 const keyCodeDirections = {
   //WASD
@@ -492,12 +526,9 @@ const Player = FloatingObject.compose(NonWalkableObject).compose({
   },
 
   //init registers event handlers
-  init({ level }) {
+  init() {
     //current tile name
     this.imageName = "player-t"
-
-    //needs to save level
-    this.level = level
 
     //register key interaction handler
     $(document).keydown((function(e) {
@@ -541,39 +572,6 @@ const Player = FloatingObject.compose(NonWalkableObject).compose({
   }
 })
 
-//mapping from position descriptors to tile classes
-const positionDescriptorMapping = {
-  //first field is always the tile type
-  tiles: {
-    w: Water,
-    l: Land,
-    g: Grass
-  },
-
-  //all following fields are the floating objects and the player
-  objs: {
-    r: Rock,
-    p: Palm,
-    pl: Player,
-    /*bw: WetBox,
-    h: Goal, //h for house
-    b: Box,
-    t: Teleporter,
-    wh: WaterHole,
-    sh: SeedHole,
-    s: Seed,
-    wb: WaterBottle,
-    sp: Spring,
-    st: Starfish,
-    sp: Spikes,
-    sb: SpikeButton
-    sl: Slingshot,
-    pb: Pebble,
-    c: Coconut,
-    ch: CoconutHole*/
-  }
-}
-
 //level describes the configuration of the playing field
 const Level = stampit.compose({
   //is constructed in the level store, parses the level format
@@ -594,6 +592,40 @@ const Level = stampit.compose({
   },
 
   statics: {
+    //mapping from position descriptors to tile classes
+    positionDescriptorMapping: {
+      //first field is always the tile type
+      tiles: {
+        w: Water,
+        l: Land,
+        g: Grass
+      },
+
+      //all following fields are the floating objects and the player
+      objs: {
+        r: Rock,
+        p: Palm,
+        pl: Player,
+        b: Box,
+        wb: WetBox,
+        /*bw: WetBox,
+        h: Goal, //h for house
+        t: Teleporter,
+        wh: WaterHole,
+        sh: SeedHole,
+        s: Seed,
+        wb: WaterBottle,
+        sp: Spring,
+        st: Starfish,
+        sp: Spikes,
+        sb: SpikeButton
+        sl: Slingshot,
+        pb: Pebble,
+        c: Coconut,
+        ch: CoconutHole*/
+      }
+    },
+
     //returns a padding position descriptor or an array of them
     getPadding(length) {
       //make array if length set as positive number
@@ -864,7 +896,7 @@ const Level = stampit.compose({
       //for all positions of the field
       this.tiles = this.field.map((line, y) => line.map((position, x) => {
         //get mapped tile factory from mapping
-        const tileMaker = positionDescriptorMapping.tiles[position[0]]
+        const tileMaker = Level.positionDescriptorMapping.tiles[position[0]]
 
         //verify presence (that abbreviation in level description is valid)
         if (! tileMaker) {
@@ -872,7 +904,7 @@ const Level = stampit.compose({
         }
 
         //make new tile with class gotten from mapping
-        const tile = tileMaker({ x, y})
+        const tile = tileMaker({ x, y, level: this })
 
         //if objects specified
         if (position.length > 1) {
@@ -884,7 +916,7 @@ const Level = stampit.compose({
             }
 
             //get obj factory, select from obj mapping
-            const objMaker = positionDescriptorMapping.objs[objAbbrev]
+            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev]
 
             //check for validity
             if (! objMaker) {
@@ -892,7 +924,7 @@ const Level = stampit.compose({
             }
 
             //create object of given class
-            const obj = objMaker({ level: this })
+            const obj = objMaker()
 
             //if is player instance
             if (obj instanceof Player) {
@@ -993,10 +1025,10 @@ const levels = [
     //dim: Vector({ x: 20, y: 12 }),
     field: [
       "wwlllllw",
-      ["wllggg", ["l", "r"], ["l", "p"]],
+      ["wl", ["l", "b"], "ggg", ["l", "r"], ["l", "p"]],
       "wllgggll",
       ["wlll", ["l", "pl"], "lll"],
-      "wlllwwww"
+      ["wlll", ["w", "wb"], "www"]
     ]
   })
 ]
