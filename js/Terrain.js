@@ -110,6 +110,11 @@ const Terrain = Displayable.compose(Vector, {
     notifyMove(movement, actors) {
       //notify objects that movement is actually happening
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
+    },
+
+    //checks if object of given type is contained
+    hasSuchObject(type) {
+      return this.objs.some(o => o.tileType === type)
     }
   }
 })
@@ -239,15 +244,25 @@ const Grass = RoundedTerrain.compose({
 })
 
 //the Water tile
-const Water = RoundedTerrain.compose(NonWalkableTerrain).props({
-  tileType: "Water",
-  imageNameMap: {
-    center: ["water-1", "water-2", "water-3"],
-    edgeTop: "water-border-t",
-    rightTop: "water-border-t",
-    leftTop: "water-border-corner",
-    edgeLeft: "water-border-l",
-    leftBottom: "water-border-l"
+const Water = RoundedTerrain.compose(NonWalkableTerrain, {
+  props: {
+    tileType: "Water",
+    imageNameMap: {
+      center: ["water-1", "water-2", "water-3"],
+      edgeTop: "water-border-t",
+      rightTop: "water-border-t",
+      leftTop: "water-border-corner",
+      edgeLeft: "water-border-l",
+      leftBottom: "water-border-l"
+    },
+    insideTypes: false
   },
-  insideTypes: false
+
+  methods: {
+    //allow movement into if wet box is present or submersible object is being pushed
+    checkMoveTerrain(movement, actors) {
+      //allow only if sinkable or wet box is present (ask wet box)
+      return actors.subject.sinkable || this.hasSuchObject("WetBox")
+    }
+  }
 })

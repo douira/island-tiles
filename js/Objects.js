@@ -3,12 +3,12 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox*/
 
 //always walkable object
-/*const WalkableObject = stampit.methods({
+const WalkableObject = stampit.methods({
   //always allow walking on
   checkMove() {
     return true
   }
-})*/
+})
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -121,8 +121,15 @@ const Pushable = Movable.compose({
   }
 })
 
+//Sinkable object can be pushed into water,
+//optional method "sink" can be defiend to specify behavior after being pushed into water
+const Sinkable = stampit.props({
+  //prop to signal to water to allow pushing
+  sinkable: true
+})
+
 //box can be pushed
-const Box = FloatingObject.compose(Pushable).compose({
+const Box = FloatingObject.compose(Pushable, Sinkable).compose({
   props: {
     tileType: "Box",
     imageName: "box"
@@ -130,7 +137,7 @@ const Box = FloatingObject.compose(Pushable).compose({
 })
 
 //WetBox is created when box is sunken in water
-const WetBox = FloatingObject.compose({
+const WetBox = FloatingObject.compose(WalkableObject, {
   //configure image
   props: {
     tileType: "WetBox",
