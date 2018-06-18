@@ -216,9 +216,9 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //by default, ask all contained objects in order of display order
-    checkMove(movement, obj) {
+    checkMove(movement, actors) {
       //first check tile requirements
-      if (this.checkMoveTerrain && ! this.checkMoveTerrain(movement, obj)) {
+      if (this.checkMoveTerrain && ! this.checkMoveTerrain(movement, actors)) {
         //stop right away, terrain tile disallows movement
         return false
       }
@@ -228,7 +228,7 @@ const Terrain = Displayable.compose(Vector, {
         //if object has to be checked at all
         if (ownObj.checkMove) {
           //get result from floating object
-          const result = ownObj.checkMove(movement, obj)
+          const result = ownObj.checkMove(movement, actors)
 
           //set as new response if result is falsy or
           //if current response is truthy and result is object (movement directive)
@@ -242,7 +242,7 @@ const Terrain = Displayable.compose(Vector, {
       }, true)
 
       //notify objects that movement is actually happening
-      this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, obj))
+      this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
 
       //return reponse
       return moveResponse
@@ -259,60 +259,64 @@ const directionOffsets = [
   Vector({ x: -1, y: 0 })
 ]
 
-//maps from neighbourhood configs to imageNameMap names,
-//i for inside type, o for outside type tiles (first is top going clockwise)
-const neighbourConfigNameMap = {
-  iiii: "center",
-  oooo: "edgeAll",
-  ioio: "edgeVertical",
-  oioi: "edgeHorizontal",
-  ooii: "rightTop",
-  iooi: "rightBottom",
-  iioo: "leftBottom",
-  oiio: "leftTop",
-  oiii: "edgeTop",
-  ioii: "edgeRight",
-  iioi: "edgeBottom",
-  iiio: "edgeLeft",
-  iooo: "onlyTop",
-  oioo: "onlyRight",
-  ooio: "onlyBottom",
-  oooi: "onlyLeft"
-}
-
 //RoundedTile does calculations regarding corners and edges for grass and land tiles
-const RoundedTerrain = Terrain.methods({
+const RoundedTerrain = Terrain.compose({
   //is given a image name map for all the different positions
   //pass true as insideTypes to accept only self as inside,
   //pass falsy to accept all except for field borders
 
+  statics: {
+    //maps from neighbourhood configs to imageNameMap names,
+    //i for inside type, o for outside type tiles (first is top going clockwise)
+    neighbourConfigNameMap: {
+      iiii: "center",
+      oooo: "edgeAll",
+      ioio: "edgeVertical",
+      oioi: "edgeHorizontal",
+      ooii: "rightTop",
+      iooi: "rightBottom",
+      iioo: "leftBottom",
+      oiio: "leftTop",
+      oiii: "edgeTop",
+      ioii: "edgeRight",
+      iioi: "edgeBottom",
+      iiio: "edgeLeft",
+      iooo: "onlyTop",
+      oioo: "onlyRight",
+      ooio: "onlyBottom",
+      oooi: "onlyLeft"
+    }
+  },
+
   //determine image name from surrouding tile types
-  calcImageName(level) {
-    //for all possible neighbour positions, determine inside or outside status
-    const neighbourConfig = directionOffsets.map(offset => {
-      //get tile at neighbour position
-      const neighbourTile = level.getTileAt(Vector.add(this, offset))
+  methods: {
+    calcImageName(level) {
+      //for all possible neighbour positions, determine inside or outside status
+      const neighbourConfig = directionOffsets.map(offset => {
+        //get tile at neighbour position
+        const neighbourTile = level.getTileAt(Vector.add(this, offset))
 
-      //if tile doesn't exist: border of field, automatically outside
-      if (! neighbourTile) {
-        return "o"
-      }
+        //if tile doesn't exist: border of field, automatically outside
+        if (! neighbourTile) {
+          return "o"
+        }
 
-      //get tile at offsetted position and check if one of the inside classes or same class
-      //do not check if none given (accept all as inside)
-      return (
-        ! this.insideTypes ||
-        neighbourTile.tileType === this.tileType ||
-        this.insideTypes.length && this.insideTypes.includes(neighbourTile.tileType)
-      ) ? "i" : "o"
-    }).join("")
+        //get tile at offsetted position and check if one of the inside classes or same class
+        //do not check if none given (accept all as inside)
+        return (
+          ! this.insideTypes ||
+          neighbourTile.tileType === this.tileType ||
+          this.insideTypes.length && this.insideTypes.includes(neighbourTile.tileType)
+        ) ? "i" : "o"
+      }).join("")
 
-    //set from name map and choose base image if special one not present
-    this.imageName = this.imageNameMap[
-      //get name in image name map from neighbourhoodNameMap,
-      //choose center if unknown neighbour config
-      neighbourConfigNameMap[neighbourConfig] || "center"
-    ] || this.imageNameMap.center
+      //set from name map and choose base image if special one not present
+      this.imageName = this.imageNameMap[
+        //get name in image name map from neighbourhoodNameMap,
+        //choose center if unknown neighbour config
+        RoundedTerrain.neighbourConfigNameMap[neighbourConfig] || "center"
+      ] || this.imageNameMap.center
+    }
   }
 })
 
@@ -366,22 +370,33 @@ const Land = RoundedTerrain.props({
 })
 
 //the Grass tile
-const Grass = RoundedTerrain.props({
-  tileType: "Grass",
-  imageNameMap: {
-    center: "grass",
-    rightTop: "grass-corner-rt",
-    rightBottom: "grass-corner-rb",
-    leftBottom: "grass-corner-lb",
-    leftTop: "grass-corner-lt",
-    edgeTop: "grass-edge-t",
-    edgeRight: "grass-edge-r",
-    edgeBottom: "grass-edge-b",
-    edgeLeft: "grass-edge-l",
-    onlyRight: "grass-corner-lb",
-    onlyLeft: "grass-corner-rb"
+const Grass = RoundedTerrain.compose({
+  //configuration
+  props: {
+    tileType: "Grass",
+    imageNameMap: {
+      center: "grass",
+      rightTop: "grass-corner-rt",
+      rightBottom: "grass-corner-rb",
+      leftBottom: "grass-corner-lb",
+      leftTop: "grass-corner-lt",
+      edgeTop: "grass-edge-t",
+      edgeRight: "grass-edge-r",
+      edgeBottom: "grass-edge-b",
+      edgeLeft: "grass-edge-l",
+      onlyRight: "grass-corner-lb",
+      onlyLeft: "grass-corner-rb"
+    },
+    insideTypes: true
   },
-  insideTypes: true
+
+  methods: {
+    //disallow movement not from spring
+    checkMoveTerrain(movement, actors) {
+      //return false if initiator is not of type spring
+      return actors.initiator.tileType === "Spring"
+    }
+  }
 })
 
 //the Water tile
@@ -498,23 +513,23 @@ const Player = FloatingObject.compose(NonWalkableObject).compose({
       const keyDirection = keyCodeDirections[e.which]
 
       //try to move with offset vector for this direction
-      this.move(directionOffsets[keyDirection], keyDirection)
+      this.move({ offset: directionOffsets[keyDirection], direction: keyDirection }, this)
     }).bind(this));
   },
 
   methods: {
     //called when the player should move in that direction (movement vector)
-    move(movement, direction) {
+    move(movement, initiator) {
       //update to face in that direction
-      this.changeImageName(Player.directionImageNames[direction])
+      this.changeImageName(Player.directionImageNames[movement.direction])
 
       //get target (destination tile)
-      const targetTile = this.level.getTileAt(Vector.add(this, movement))
+      const targetTile = this.level.getTileAt(Vector.add(this, movement.offset))
 
       //do not move if no tile present (border of playing field)
       if (targetTile) {
         //check if target tile is ok with movement to it
-        const response = targetTile.checkMove(movement, this)
+        const response = targetTile.checkMove(movement, { subject: this, initiator })
 
         //if reponse is truthy, proceed with movement
         if (response) {
@@ -977,14 +992,11 @@ const levels = [
     name: "Mahkilaki",
     //dim: Vector({ x: 20, y: 12 }),
     field: [
-      "wwlllwww",
-      ["wllggl", ["l", "r"], ["l", "p"]],
+      "wwlllllw",
+      ["wllggg", ["l", "r"], ["l", "p"]],
       "wllgggll",
-      ["wwwl", ["l", "pl"], "lll"],
-      "wlllwwww",
-      "wlwwwwww",
-      "wlwwwwww",
-      "wlwwwwww"
+      ["wlll", ["l", "pl"], "lll"],
+      "wlllwwww"
     ]
   })
 ]
