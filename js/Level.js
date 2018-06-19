@@ -1,5 +1,5 @@
 /*global stampit,
-Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector*/
+Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector, Goal*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -106,8 +106,8 @@ const Level = stampit.compose({
         pl: Player,
         b: Box,
         wb: WetBox,
-        /*bw: WetBox,
         h: Goal, //h for house
+        /*
         t: Teleporter,
         wh: WaterHole,
         sh: SeedHole,
@@ -120,7 +120,9 @@ const Level = stampit.compose({
         sl: Slingshot,
         pb: Pebble,
         c: Coconut,
-        ch: CoconutHole*/
+        ch: CoconutHole,
+        mc: MommyCrab,
+        bc: BabyCrab*/
       }
     },
 
@@ -428,7 +430,7 @@ const Level = stampit.compose({
             const obj = objMaker()
 
             //if is player instance
-            if (obj instanceof Player) {
+            if (obj.tileType === "Player") {
               //register as _the_ player
               this.player = obj
             }
@@ -453,9 +455,12 @@ const Level = stampit.compose({
     },
 
     //inits the level in the page
-    initInPage(elems, levelIndex) {
+    initInPage(game, elems, levelIndex) {
+      //save game
+      this.game = game
+
       //set title text
-      elems.levelIndex.text(levelIndex + 1)
+      elems.levelIndex.text(`#${levelIndex + 1}`)
       elems.levelName.text(this.name)
 
       //init in field table
@@ -464,6 +469,9 @@ const Level = stampit.compose({
 
     //adds all tiles to the given table
     initInTable(table) {
+      //save table
+      this.table = table
+
       //empty present contents of table
       table.empty()
 
@@ -496,6 +504,9 @@ const Level = stampit.compose({
 
       //set min width of table to current width to prevent squishing
       table.css("min-width", table[0].offsetWidth)
+
+      //start game by registering event handler of player
+      this.player.registerHandlers()
     },
 
     //returns the tile at the given position
@@ -509,6 +520,19 @@ const Level = stampit.compose({
       } else {
         //return false, is checked by caller and handled accordingly
         return false
+      }
+    },
+
+    //triggered when the goal is stepped on,
+    //checks for there to be no objects that have to be removed left over
+    goalTriggered() {
+      //all objects in all tiles must not be requireGone
+      if (this.tileList.every(t => t.objs.every(o => ! o.requireGone))) {
+        //remove handlers
+        this.player.unregisterHandlers()
+
+        //make game move on to next level
+        this.game.levelCompleted()
       }
     }
   }

@@ -17,8 +17,14 @@
     <script src="/js/main.js"></script>
   </head>
   <body>
-    <p id="level-title">Level #<span id="level-index"></span>: <span id="level-name"></span>
-    </p>
-    <table id="field"></table>
+    <div id="container">
+      <p id="level-title">
+        Level <span class="level-index"></span>: <span id="level-name"></span>
+        <span class="hide-this" id="message-text">Completed Level <span class="level-index"></span>!
+          <a href="#" id="next-level">Next Level</a>
+        </span>
+      </p>
+      <table id="field"></table>
+    </div>
   </body>
 </html>

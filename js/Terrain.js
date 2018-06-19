@@ -94,7 +94,7 @@ const Terrain = Displayable.compose(Vector, {
     //sorts the floating objects by height priority
     sortObjs() {
       //sort list of objects by their height priority
-      this.objs.sort((a, b) => b.heightPrio - a.heightPrio)
+      this.objs.sort((a, b) => (b.heightPrio || 0) - (a.heightPrio || 0))
 
       //filter falsy
       this.objs = this.objs.filter(o => o)
@@ -115,8 +115,8 @@ const Terrain = Displayable.compose(Vector, {
       }
 
       //check that all objects are ok with movement
-      return this.objs.reduce(
-        (moveOk, ownObj) => moveOk && ownObj.checkMove(movement, actors), true)
+      return this.objs.reduce((moveOk, ownObj) =>
+        moveOk && (! ownObj.checkMove || ownObj.checkMove(movement, actors)), true)
     },
 
     //called when movement actually happens
@@ -134,6 +134,8 @@ const Terrain = Displayable.compose(Vector, {
     hasSuchObject(type) {
       return this.objs.some(o => o.tileType === type)
     }
+
+    //registers all event handlers (called on level start)
   }
 })
 

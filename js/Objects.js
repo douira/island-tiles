@@ -1,14 +1,6 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Rock, Palm, Box, WetBox*/
-
-//always walkable object
-const WalkableObject = stampit.methods({
-  //always allow walking on
-  checkMove() {
-    return true
-  }
-})
+/*exported Rock, Palm, Box, WetBox, Goal*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -157,7 +149,7 @@ const Sinkable = Pushable.compose({
 })
 
 //WetBox is created when box is sunken in water
-const WetBox = FloatingObject.compose(WalkableObject, {
+const WetBox = FloatingObject.compose({
   //configure image
   props: {
     tileType: "WetBox",
@@ -181,12 +173,37 @@ const Box = FloatingObject.compose(Sinkable).compose({
   }
 })
 
+//requires objects with this behavior to be all gone fro mthe field before finishing the level
+const RequireGone = stampit.compose({
+  props: {
+    requireGone: true
+  }
+})
+
+//Goal triggers the level to check that the finishing conditions are met
+const Goal = FloatingObject.compose({
+  //set image name
+  props: {
+    tileType: "Goal",
+    imageName: "house"
+  },
+
+  methods: {
+    //when stepped on
+    notifyMove() {
+      //trigger level finish check
+      this.level.goalTriggered()
+    }
+  }
+})
+
 //represents the player, controllable and deals with interaction
 const Player = FloatingObject.compose(NonWalkableObject, Movable).compose({
   //set image name
   props: {
     tileType: "Player",
-    heightPrio: 100
+    heightPrio: 100,
+    imageName: "player-t"
   },
 
   statics: {
@@ -214,36 +231,37 @@ const Player = FloatingObject.compose(NonWalkableObject, Movable).compose({
     }
   },
 
-  //init registers event handlers
-  init() {
-    //current tile name
-    this.imageName = "player-t"
-
-    //register key interaction handler
-    $(document).keydown((function(e) {
-      //get key direction
-      const keyDirection = Player.keyCodeDirections[e.which]
-
-      //if not present, we don't care about pressing this key
-      if (typeof keyDirection !== "number") {
-        return
-      }
-
-      //prevent default action of moving the page or similar
-      e.preventDefault()
-
-      //register movement action
-      this.level.anim.registerAction(() => {
-        //update to face in that direction
-        this.changeImageName(Player.directionImageNames[keyDirection])
-
-        //try to move with offset vector for this direction, also pass direction
-        this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
-      }, "interaction")
-    }).bind(this));
-  },
-
   methods: {
+    //register event handlers when called on start of level
+    registerHandlers() {
+      //register key interaction handler
+      $(document).on("keydown.interaction", e => {
+        //get key direction
+        const keyDirection = Player.keyCodeDirections[e.which]
 
+        //if not present, we don't care about pressing this key
+        if (typeof keyDirection !== "number") {
+          return
+        }
+
+        //prevent default action of moving the page or similar
+        e.preventDefault()
+
+        //register movement action
+        this.level.anim.registerAction(() => {
+          //update to face in that direction
+          this.changeImageName(Player.directionImageNames[keyDirection])
+
+          //try to move with offset vector for this direction, also pass direction
+          this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
+        }, "interaction")
+      });
+    },
+
+    //remove event handlers
+    unregisterHandlers() {
+      //remove keydown handler we assigned
+      $(document).off(".interaction")
+    }
   }
 })

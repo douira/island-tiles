@@ -1,14 +1,28 @@
 body {
   font-family: "Amatic SC", cursive;
+  margin: 0px;
+  padding: 10px;
 }
 
 #level-title {
   font-size: 40px;
-  margin: 10px 0;
-  margin-left: 10px;
+  margin: 0px;
+  margin-bottom: 10px;
 }
 
-#level-name, #level-index {
+#message-text {
+  margin-left: 40px;
+}
+
+#next-level {
+  color: black;
+}
+
+#container {
+  width: auto;
+}
+
+#level-name, .level-index, #next-level {
   font-weight: bold;
 }
 
@@ -35,4 +49,12 @@ body {
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   position: absolute;
+}
+
+.hide-this {
+  display: none;
+}
+
+.no-underline {
+  text-decoration: none;
 }
