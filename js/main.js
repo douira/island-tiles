@@ -14,7 +14,8 @@ const Game = stampit.compose({
       nextBtn: $("#next-level"),
       controls: $("#controls"),
       prevBtn: $("#prev-level"),
-      resetBtn: $("#reset-level")
+      resetBtn: $("#reset-level"),
+      progress: $("#progress-info")
     }
 
     //save levels
@@ -22,6 +23,9 @@ const Game = stampit.compose({
 
     //the index of the level the player has reached
     this.reachedIndex = 0
+
+    //the index of the highest completed level
+    this.completedIndex = 0
 
     //init the first level
     this.levelIndex = -1
@@ -76,6 +80,9 @@ const Game = stampit.compose({
 
       //enable next button when reached level is higher than current level
       Game.setEnabled(this.elems.nextBtn, this.reachedIndex > this.levelIndex, "active-control")
+
+      //update progress info text
+      this.elems.progress.text(`(${this.completedIndex}/${this.levels.length} Levels done)`)
     },
 
     //inits the currently selected level
@@ -111,10 +118,12 @@ const Game = stampit.compose({
 
     //called by the current level when the player completes it
     levelCompleted() {
-      //set reached level to at least the next level, cap at max level
-      this.reachedIndex = Math.min(
-        this.levels.length - 1, Math.max(this.reachedIndex, this.levelIndex + 1))
+      //update max completed
+      this.completedIndex = Math.max(this.completedIndex, this.reachedIndex, this.levelIndex + 1)
 
+      //set reached level to at least the next level, cap at max level
+      this.reachedIndex = Math.min(this.levels.length - 1, this.completedIndex)
+      console.log(this.completedIndex, this.reachedIndex)
       //make completed message visible and make next button bold
       this.elems.message.removeClass("hide-this")
       this.elems.nextBtn.addClass("bold")
