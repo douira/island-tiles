@@ -31,17 +31,26 @@ const FloatingObject = Displayable.compose(Vector).methods({
 
   //moves the object to another tile
   moveToTile(newTile) {
-    //if this object is in a tile
-    if (this.parent) {
-      //remove from parent
-      this.parent.removeFloatingObj(this)
-    }
+    //remove from parent
+    this.remove()
 
     //add to object list of new parent tile (will set tile prop in this)
     newTile.addFloatingObj(this)
 
     //add to table cell of new parent
     this.addToCell(this.parent.tableCellElem)
+  },
+
+  //removes itself from it's parent
+  remove() {
+    //remove from parent
+    this.parent.removeObj(this)
+  },
+
+  //changes this object to a new type by creaing a new one and re-adding to to the terrain
+  mutate(toType) {
+    //create new of type and pass to replace this
+    this.parent.mutateObj(this, toType())
   }
 })
 

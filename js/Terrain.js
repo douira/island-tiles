@@ -51,6 +51,19 @@ const Terrain = Displayable.compose(Vector, {
       return "tile" + this.x + "-" + this.y
     },
 
+    //sets up a given nw object with data from this tile
+    setupNewObj(newObj) {
+      //attach self as parent
+      newObj.parent = this
+
+      //attach level
+      newObj.level = this.level
+
+      //set position to own position
+      newObj.x = this.x
+      newObj.y = this.y
+    },
+
     //adds a floating object to this tile
     addFloatingObj(objs, isInit) {
       //if given array, call on each element given
@@ -62,15 +75,8 @@ const Terrain = Displayable.compose(Vector, {
         return
       }
 
-      //attach self as parent
-      objs.parent = this
-
-      //attach level
-      objs.level = this.level
-
-      //set position to own position
-      objs.x = this.x
-      objs.y = this.y
+      //setup object with this terrain tile
+      this.setupNewObj(objs)
 
       //add to list of floating objects
       this.objs.push(objs)
@@ -88,7 +94,7 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //remove given object from array of objects, will remove its dom element on its own
-    removeFloatingObj(obj) {
+    removeObj(obj) {
       //remove from array
       this.objs.splice(this.objs.indexOf(obj), 1)
     },
@@ -115,6 +121,20 @@ const Terrain = Displayable.compose(Vector, {
     //checks if object of given type is contained
     hasSuchObject(type) {
       return this.objs.some(o => o.tileType === type)
+    },
+
+    //removes and replaces an object with the given new object
+    mutateObj(replace, withNew) {
+      //get the index of the object to be replaced
+      const index = this.objs.indexOf(replace)
+
+      //if present at all, replace that field with new object value
+      if (index >= 0) {
+        this.objs[index] = withNew
+      }
+
+      //setup the new object's state for being in this tile
+      this.setupNewObj(withNew)
     }
   }
 })

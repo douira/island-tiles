@@ -25,7 +25,7 @@ const levels = [
       "wwlllllw",
       ["wllggg", ["l", "r"], ["l", "p"]],
       "wllgggll",
-      ["wl", ["l", "b"], ["l", "b"], ["l", "pl"], ["l", "b"], "lll"],
+      ["wl", ["l"], ["l", "b"], ["l", "pl"], ["l", "b"], "lll"],
       ["wlll", ["w", "wb"], "www"]
     ]
   })
