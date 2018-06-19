@@ -1,5 +1,5 @@
 /*global stampit,
-Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector, Goal, Starfish*/
+Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector, Goal, Starfish, MommyCrab, BabyCrab*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -105,6 +105,8 @@ const Level = stampit.compose({
         wb: WetBox,
         h: Goal, //h for house
         st: Starfish,
+        mc: MommyCrab,
+        bc: BabyCrab
         /*
         t: Teleporter,
         wh: WaterHole,
@@ -119,8 +121,7 @@ const Level = stampit.compose({
         pb: Pebble,
         c: Coconut,
         ch: CoconutHole,
-        mc: MommyCrab,
-        bc: BabyCrab*/
+        */
       }
     },
 
@@ -183,6 +184,21 @@ const Level = stampit.compose({
 
       //get a new animation queue manager
       this.anim = AnimationQueue({ level: this })
+
+      //init item list
+      this.items = { }
+
+      //counts number of present item objects
+      this.initItems = { }
+
+      //count all objects
+      this.tileList.forEach(t => t.objs.forEach(o => {
+        //increment if object is item
+        if (o.isItem) {
+          //add to type of item
+          this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
+        }
+      }))
     },
 
     //normalizes input format
@@ -549,13 +565,57 @@ const Level = stampit.compose({
     //triggered when the goal is stepped on,
     //checks for there to be no objects that have to be removed left over
     goalTriggered() {
-      //all objects in all tiles must not be requireGone
-      if (this.tileList.every(t => t.objs.every(o => ! o.requireGone))) {
+      //check that there are no stored items
+      let itemsPresent = false
+      for (const itemName in this.items) {
+        //if item present
+        if (this.items[itemName]) {
+          //set flag and stop loop
+          itemsPresent = true
+          break
+        }
+      }
+
+      //there must be no items stored an all objects in all tiles must not be requireGone
+      if (! itemsPresent && this.tileList.every(t => t.objs.every(o => ! o.requireGone))) {
         //unregister
         this.unregisterHandlers()
 
         //make game move on to next level
         this.game.levelCompleted()
+      }
+    },
+
+    //adds an item of the given name to the item store
+    addItem(itemName, amount = 1) {
+      //create empty entry if not present and add amount
+      this.items[itemName] = (this.items[itemName] || 0) + amount
+    },
+
+    //take out the specified amount (or all) items of the given name
+    takeItems(itemName, amount = 1) {
+      //init with at least 0
+      this.items[itemName] = this.items[itemName] || 0
+
+      //if amount is "all", give all items
+      if (amount === "all") {
+        //get number of present items
+        const present = this.items[itemName]
+
+        //remove from inventory
+        this.items[itemName] = 0
+
+        //return amount gotten
+        return present
+      } else if (amount > this.items[itemName]) {
+        //return falsy (0) if more requested than present
+        return 0
+      } else {
+        //decrement number of items by amount
+        this.items[itemName] -= amount
+
+        //return requiested amount
+        return amount
       }
     }
   }

@@ -1,6 +1,6 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Rock, Palm, Box, WetBox, Goal, Starfish*/
+/*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab, BabyCrab*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -149,24 +149,20 @@ const Pushable = Movable.compose({
 
 //Sinkable object can be pushed into water,
 //optional method "sink" can be defined to specify behavior after being pushed into water
-const Sinkable = Pushable.compose({
-  props: {
-    //prop to signal to water to allow pushing into it
-    sinkable: true
-  }
+const Sinkable = Pushable.props({
+  //prop to signal to water to allow pushing this into it
+  sinkable: true
 })
 
 //WetBox is created when box is sunken in water
-const WetBox = FloatingObject.compose({
+const WetBox = FloatingObject.props({
   //configure image
-  props: {
-    tileType: "WetBox",
-    imageName: "box-wet"
-  }
+  tileType: "WetBox",
+  imageName: "box-wet"
 })
 
 //box can be pushed
-const Box = FloatingObject.compose(Sinkable).compose({
+const Box = FloatingObject.compose(Sinkable, {
   props: {
     tileType: "Box",
     imageName: "box"
@@ -182,10 +178,8 @@ const Box = FloatingObject.compose(Sinkable).compose({
 })
 
 //requires objects with this behavior to be all gone fro mthe field before finishing the level
-const RequireGone = stampit.compose({
-  props: {
-    requireGone: true
-  }
+const RequireGone = stampit.props({
+  requireGone: true
 })
 
 //Goal triggers the level to check that the finishing conditions are met
@@ -221,8 +215,110 @@ const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
   }
 })
 
+//items can be picked up and are stored in a fixed type inventory
+const Pickable = stampit.compose({
+  props: {
+    //signal to be item (for counting on whole level)
+    isItem: true
+  },
+
+  methods: {
+    //only allow picking up/walking on by player
+    checkMove(movement, actors) {
+      return actors.subject.tileType === "Player"
+    },
+
+    //when stepped on, remove and increment inventory counter
+    notifyMove(movement, actors) {
+      //require player to be moving into us
+      if (actors.subject.tileType !== "Player") {
+        return
+      }
+
+      //do as animation
+      this.level.anim.registerAction(() => {
+        //remove self
+        this.remove()
+
+        //register item pickup
+        this.level.addItem(this.tileType)
+      })
+    }
+  }
+})
+
+//baby crabs can be picked up and given to the mother crab all at once
+const BabyCrab = FloatingObject.compose(Pickable, RequireGone).props({
+  //image name and type
+  tileType: "BabyCrab",
+  imageName: "crab-small"
+})
+
+//can receive items and perform actions when a certain amount of items is reached
+const Receptacle = stampit.compose({
+  props: {
+    //starts off with 0 received items
+    receivedItems: 0
+  },
+
+  methods: {
+    //dont allow walking on but take items when "bumped" into
+    checkMove(movement, actors) {
+      //require player to be moving into us and moving upwards (receptacle images face downwards)
+      if (actors.subject.tileType !== "Player" || movement.direction !== 0) {
+        return
+      }
+
+      //take all items specified in prop from level
+      const gottenItems = this.level.takeItems(this.itemType, this.itemReceiveType || "all")
+
+      //increment received items with new items
+      this.receivedItems += gottenItems
+
+      //if present, call callbacck of specific type
+      if (this.receiveItems) {
+        this.receiveItems(gottenItems)
+      }
+
+      //disallow walking however
+      return false
+    }
+  }
+})
+
+//receptable that calls a callback when all items on the field of the accepted type are received
+const ReceptacleAllItems = Receptacle.methods({
+  //on item receive
+  receiveItems() {
+    //if all received and callback present
+    if (this.receivedItems === this.level.initItems[this.itemType] && this.allItemsReceived) {
+      this.allItemsReceived()
+    }
+  }
+})
+
+//mommy crab receives all stored baby crabs from the inventory
+const MommyCrab = FloatingObject.compose(ReceptacleAllItems, {
+  props: {
+    tileType: "MommyCrab",
+    imageName: "crab-large-sad",
+
+    //also specify type of item to receive
+    itemType: "BabyCrab",
+    itemReceiveType: "all"
+  },
+
+  methods: {
+    //when all items are received
+    allItemsReceived() {
+      //change to happy/done image in animation
+      this.level.anim.registerAction(() => this.changeImageName("crab-large-happy"))
+    }
+  }
+})
+
 //represents the player, controllable and deals with interaction
-const Player = FloatingObject.compose(NonWalkableObject, Movable).compose({
+const Player = FloatingObject.compose(NonWalkableObject, Movable, {
   //set image name
   props: {
     tileType: "Player",

@@ -1,5 +1,5 @@
 /*global stampit, Level, Vector*/
-//Note: props is apparently shared among all instances of a stamp (shallow/ref copy)
+//Note: props is a shallow copy and thereby partially shared among instances
 
 //the game object has a field of tiles
 const Game = stampit.compose({
@@ -128,21 +128,24 @@ const Game = stampit.compose({
 //game level definitions, is padded with water if field is smaller than specified size
 const levels = [
   Level({
-    name: "Uku",
+    name: "Ukulat B'tiema",
     dim: Vector({ x: 0, y: 0 }),
     field: [
-      ["l", ["l", "st"], "l"],
-      [["l", "pl"], ["l", "h"], "w"]
+      ["wl", ["l", "bc"], ["l", "bc"]],
+      [["l", "r"], ["l", "p"], ["l", "r"], ["l", "bc"]],
+      [["l", "mc"], ["l", "bc"], ["l", "b"]],
+      ["l", ["l", "st"], "l", ["w", "r"]],
+      [["l", "pl"], ["l", "h"], "lw", ["w", "r"]]
     ]
   }),
   Level({
-    name: "Mahkilaki",
+    name: "Mahkilakii",
     dim: Vector({ x: 0, y: 0 }),
     field: [
       ["wwllll", ["l", "h"], "w"],
       ["wl", ["l", "p"], "g", ["g", "r"], "g", ["l", "r"], ["l", "p"]],
       ["wllgg", ["g", "p"], "ll"],
-      ["w", ["l"], ["l", "b"], ["l", "pl"], ["l", "b"], "llll"],
+      ["w", ["l"], ["l", "b"], ["l", "pl"], ["l", "b"], "l", ["l", "st"], "l", ["w", "r"]],
       ["wlll", ["w", "wb"], "www"]
     ]
   })
