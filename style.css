@@ -4,10 +4,22 @@ body {
   padding: 10px;
 }
 
-#level-title {
+#controls, #level-title {
   font-size: 40px;
   margin: 0px;
+}
+
+#level-title {
   margin-bottom: 10px;
+}
+
+#controls {
+  margin-top: 10px;
+}
+
+#controls :not(.active-control) {
+  color: grey;
+  pointer-events: none;
 }
 
 #level-name {
@@ -22,7 +34,7 @@ body {
   width: auto;
 }
 
-#level-name, .level-index, #next-level {
+#level-name, .level-index, .bold {
   font-weight: bold;
 }
 
@@ -53,8 +65,4 @@ body {
 
 .hide-this {
   display: none;
-}
-
-.no-underline {
-  text-decoration: none;
 }

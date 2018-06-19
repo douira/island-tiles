@@ -11,7 +11,7 @@ const Game = stampit.compose({
       levelIndex: $(".level-index"),
       levelName: $("#level-name"),
       message: $("#message-text"),
-      nextLevel: $("#next-level"),
+      nextBtn: $("#next-level"),
       controls: $("#controls"),
       prevBtn: $("#prev-level"),
       resetBtn: $("#reset-level")
@@ -20,12 +20,15 @@ const Game = stampit.compose({
     //save levels
     this.levels = levels
 
+    //the index of the level the player has reached
+    this.reachedIndex = 0
+
     //init the first level
     this.levelIndex = -1
     this.startNextLevel(1)
 
     //register handler to start next level when link is clicked
-    this.elems.nextLevel.click(e => {
+    this.elems.nextBtn.click(e => {
       //dont follow link
       e.preventDefault()
 
@@ -55,7 +58,26 @@ const Game = stampit.compose({
     })
   },
 
+  statics: {
+    //sets the enabled state of a control element
+    setEnabled(elem, enabled, setClass) {
+      //add or remove enabling class
+      elem[enabled ? "addClass" : "removeClass"](setClass)
+    }
+  },
+
   methods: {
+    //updates the dispaly of the controls
+    updateControls() {
+      //prev button is active if not at first level
+      Game.setEnabled(this.elems.prevBtn, this.levelIndex, "active-control")
+
+      //reset button is always enabled
+
+      //enable next button when reached level is higher than current level
+      Game.setEnabled(this.elems.nextBtn, this.reachedIndex > this.levelIndex, "active-control")
+    },
+
     //inits the currently selected level
     startCurrentLevel() {
       //init level in table
@@ -66,12 +88,18 @@ const Game = stampit.compose({
     startNextLevel(delta = 1) {
       //check if a level with this index exists
       if (this.levelIndex < this.levels.length) {
+        //hide completed message and reset net button bold
+        this.elems.message.addClass("hide-this")
+        this.elems.nextBtn.removeClass("bold")
+
         //increment level counter
         this.levelIndex += delta
 
         //hide completed message and show controls instead
         this.elems.message.addClass("hide-this")
-        this.elems.controls.removeClass("hide-this")
+
+        //update controls display
+        this.updateControls()
 
         //set as current level
         this.currentLevel = this.levels[this.levelIndex]
@@ -83,17 +111,16 @@ const Game = stampit.compose({
 
     //called by the current level when the player completes it
     levelCompleted() {
-      //make the next level button and text visisble, hide controls instead
-      this.elems.message.removeClass("hide-this")
-      this.elems.controls.addClass("hide-this")
+      //set reached level to at least the next level, cap at max level
+      this.reachedIndex = Math.min(
+        this.levels.length - 1, Math.max(this.reachedIndex, this.levelIndex + 1))
 
-      //if there are still levels left
-      if (this.levelIndex < this.levels.length - 1) {
-        this.elems.nextLevel.text("Next Level").removeClass("no-underline")
-      } else {
-        //set text to finished and remove link appearance
-        this.elems.nextLevel.text("Finished.").addClass("no-underline")
-      }
+      //make completed message visible and make next button bold
+      this.elems.message.removeClass("hide-this")
+      this.elems.nextBtn.addClass("bold")
+
+      //update controls display
+      this.updateControls()
     }
   }
 })

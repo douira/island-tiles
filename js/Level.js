@@ -517,7 +517,7 @@ const Level = stampit.compose({
       this.tileList.forEach(tile => tile.initDisplay(this, table))
 
       //set min width of table to current width to prevent squishing
-      table.css("min-width", table[0].offsetWidth)
+      //table.css("min-width", table[0].offsetWidth)
 
       //start game by registering event handler of player
       this.player.registerHandlers()
