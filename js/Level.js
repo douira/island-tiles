@@ -452,6 +452,16 @@ const Level = stampit.compose({
       }));
     },
 
+    //inits the level in the page
+    initInPage(elems, levelIndex) {
+      //set title text
+      elems.levelIndex.text(levelIndex + 1)
+      elems.levelName.text(this.name)
+
+      //init in field table
+      this.initInTable(elems.table)
+    },
+
     //adds all tiles to the given table
     initInTable(table) {
       //empty present contents of table

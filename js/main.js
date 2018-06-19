@@ -1,18 +1,33 @@
 /*global stampit, Level*/
-//Note: props is apparently shared among all instances of a stamp
+//Note: props is apparently shared among all instances of a stamp (shallow/ref copy)
 
 //the game object has a field of tiles
 const Game = stampit.compose({
   //constructed with a level object
-  init({ level }) {
-    //get display table
-    this.table = $(".field")
+  init({ levels }) {
+    //get display elements
+    this.elems = {
+      table: $("#field"),
+      levelIndex: $("#level-index"),
+      levelName: $("#level-name")
+    }
 
-    //save level
-    this.level = level
+    //save levels
+    this.levels = levels
 
-    //setup level in table
-    this.level.initInTable(this.table)
+    //init the first level
+    this.startLevel(0)
+  },
+
+  methods: {
+    //inits the given level index
+    startLevel(index) {
+      //set as current level
+      this.currentLevel = this.levels[index]
+
+      //init level in table
+      this.currentLevel.initInPage(this.elems, index)
+    }
   }
 })
 
@@ -34,5 +49,5 @@ const levels = [
 //when document is present
 $(document).ready(function() {
   //make a game with the first level
-  Game({ level: levels[0] })
+  Game({ levels: levels })
 });

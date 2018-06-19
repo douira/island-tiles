@@ -1,13 +1,23 @@
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: "Amatic SC", cursive;
 }
 
-.field {
+#level-title {
+  font-size: 40px;
+  margin: 10px 0;
+  margin-left: 10px;
+}
+
+#level-name, #level-index {
+  font-weight: bold;
+}
+
+#field {
   border: none;
   border-spacing: 0px;
 }
 
-.field tr, .field td {
+#field tr, #field td {
   border: none;
   padding: 0px;
   vertical-align: top;
@@ -17,7 +27,7 @@ body {
   vertical-align: top;
 }
 
-.field img {
+#field img {
   display: block;
   width: 64px;
   height: 64px;
