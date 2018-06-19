@@ -1,5 +1,5 @@
 /*global stampit,
-Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector, Goal*/
+Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector, Goal, Starfish*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -107,6 +107,7 @@ const Level = stampit.compose({
         b: Box,
         wb: WetBox,
         h: Goal, //h for house
+        st: Starfish,
         /*
         t: Teleporter,
         wh: WaterHole,
@@ -114,7 +115,7 @@ const Level = stampit.compose({
         s: Seed,
         wb: WaterBottle,
         sp: Spring,
-        st: Starfish,
+
         sp: Spikes,
         sb: SpikeButton
         sl: Slingshot,

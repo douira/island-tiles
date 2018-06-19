@@ -94,7 +94,7 @@ const Terrain = Displayable.compose(Vector, {
     //sorts the floating objects by height priority
     sortObjs() {
       //sort list of objects by their height priority
-      this.objs.sort((a, b) => (b.heightPrio || 0) - (a.heightPrio || 0))
+      this.objs.sort((a, b) => (a.heightPrio || 0) - (b.heightPrio || 0))
 
       //filter falsy
       this.objs = this.objs.filter(o => o)
@@ -288,7 +288,10 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
     //notify sinkables
     notifyMoveTerrain(movement, actors) {
       //if actor is sinkable and no wet box present
-      if (actors.subject.sinkable && ! this.hasSuchObject("WetBox")) {
+      if (
+        actors.subject.notifySink && //only if present at all
+        actors.subject.sinkable && ! this.hasSuchObject("WetBox")
+      ) {
         //notify box of sinking
         actors.subject.notifySink(movement, actors)
       }

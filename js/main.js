@@ -72,7 +72,7 @@ const levels = [
     name: "Uku",
     dim: Vector({ x: 0, y: 0 }),
     field: [
-      ["lll"],
+      ["l", ["l", "st"], "l"],
       [["l", "pl"], ["l", "h"], "w"]
     ]
   }),

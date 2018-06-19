@@ -1,6 +1,6 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Rock, Palm, Box, WetBox, Goal*/
+/*exported Rock, Palm, Box, WetBox, Goal, Starfish*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -24,19 +24,27 @@ const FloatingObject = Displayable.compose(Vector).methods({
   //moves the object to another tile
   moveToTile(newTile) {
     //remove from parent
-    this.remove()
+    this.remove(true)
 
     //add to object list of new parent tile (will set tile prop in this)
     newTile.addObj(this)
 
     //add to table cell of new parent
     this.addToCell(this.parent.tableCellElem)
+
+    //update display of the parent
+    this.parent.updateDisplay()
   },
 
   //removes itself from it's parent
-  remove() {
+  remove(noUpdate) {
     //remove from parent
     this.parent.removeObj(this)
+
+    //update display if not disabled
+    if (! noUpdate) {
+      this.parent.updateDisplay()
+    }
   },
 
   //changes this object to a new type by creating a new one and re-adding to to the terrain
@@ -193,6 +201,22 @@ const Goal = FloatingObject.compose({
     notifyMove() {
       //trigger level finish check
       this.level.goalTriggered()
+    }
+  }
+})
+
+//starfish only needs to be sunken
+const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
+  props: {
+    tileType: "Starfish",
+    imageName: "starfish"
+  },
+
+  methods: {
+    //remove when sunk
+    notifySink() {
+      //register animation to sink
+      this.level.anim.registerAction(() => this.remove())
     }
   }
 })
