@@ -46,12 +46,12 @@ const Terrain = Displayable.compose(Vector, {
       this.updateImgOrder(true)
     },
 
-    //updates the dispaly of this tile
+    //updates the display of this tile
     updateDisplay() {
       //sort object with height prio
       this.sortObjs()
 
-      //and update iamges in dispaly table
+      //and update iamges in display table
       this.updateImgOrder()
     },
 

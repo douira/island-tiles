@@ -2,6 +2,7 @@ body {
   font-family: "Amatic SC", cursive;
   margin: 0px;
   padding: 10px;
+  text-align: center;
 }
 
 #controls, #level-title {
@@ -43,6 +44,11 @@ body {
   border-spacing: 0px;
 }
 
+#field, #item-list {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 #field tr, #field td {
   border: none;
   padding: 0px;
@@ -53,16 +59,43 @@ body {
   vertical-align: top;
 }
 
-#field img {
-  display: block;
-  width: 64px;
-  height: 64px;
+#field img, #item-list img {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+}
+
+#field img {
+  width: 64px;
+  height: 64px;
+  display: block;
   position: absolute;
 }
 
 .hide-this {
   display: none;
+}
+
+#item-list {
+  width: 500px;
+  height: 64px;
+  margin-top: 10px;
+  border: solid grey 3px;
+  border-radius: 3px;
+  font-size: 40px;
+}
+
+#item-list #no-items-msg {
+  color: #afafaf;
+  margin-top: 6px;
+}
+
+#item-list span {
+  font-weight: bold;
+}
+
+#item-list img {
+  width: 64px;
+  height: 64px;
+  vertical-align: middle;
 }

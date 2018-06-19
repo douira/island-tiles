@@ -8,6 +8,7 @@ const Game = stampit.compose({
     //get display elements for level display
     this.elems = {
       table: $("#field"),
+      itemDisplay: $("#item-list"),
       levelIndex: $(".level-index"),
       levelName: $("#level-name"),
       message: $("#message-text"),
@@ -71,7 +72,7 @@ const Game = stampit.compose({
   },
 
   methods: {
-    //updates the dispaly of the controls
+    //updates the display of the controls
     updateControls() {
       //prev button is active if not at first level
       Game.setEnabled(this.elems.prevBtn, this.levelIndex, "active-control")

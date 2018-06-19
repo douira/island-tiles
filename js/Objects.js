@@ -58,7 +58,7 @@ const FloatingObject = Displayable.compose(Vector).methods({
     //add to table cell of new parent
     this.addToCell(this.parent.tableCellElem)
 
-    //update dispaly of the parent
+    //update display of the parent
     this.parent.updateDisplay()
   }
 })
@@ -241,7 +241,7 @@ const Pickable = stampit.compose({
         this.remove()
 
         //register item pickup
-        this.level.addItem(this.tileType)
+        this.level.addItem(this)
       })
     }
   }
