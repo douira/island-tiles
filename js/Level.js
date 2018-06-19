@@ -82,11 +82,8 @@ const Level = stampit.compose({
     //apply padding to field
     this.applyPadding()
 
-    //parse the field into tiles and floating objects
-    this.parseField()
-
-    //get a new animation queue manager
-    this.anim = AnimationQueue({ level: this })
+    //level cannot be used in this stage yet,
+    //needs to parse into tile objects and init in table to work
   },
 
   statics: {
@@ -175,6 +172,19 @@ const Level = stampit.compose({
   },
 
   methods: {
+    //does the final object creation and sets up the animation queue
+    //can also be used to reset
+    buildTiles() {
+      //unregister any previously registered things
+      this.unregisterHandlers()
+
+      //parse the field into tiles and floating objects
+      this.parseField()
+
+      //get a new animation queue manager
+      this.anim = AnimationQueue({ level: this })
+    },
+
     //normalizes input format
     normalize() {
       //parse fields, split into arrays if seperated with delimiter
@@ -457,6 +467,9 @@ const Level = stampit.compose({
 
     //inits the level in the page
     initInPage(game, elems, levelIndex) {
+      //do final tile building
+      this.buildTiles()
+
       //save game
       this.game = game
 
@@ -524,13 +537,22 @@ const Level = stampit.compose({
       }
     },
 
+    //takes down registered components of this level
+    unregisterHandlers() {
+      //if player present
+      if (this.player) {
+        //remove handlers of player
+        this.player.unregisterHandlers()
+      }
+    },
+
     //triggered when the goal is stepped on,
     //checks for there to be no objects that have to be removed left over
     goalTriggered() {
       //all objects in all tiles must not be requireGone
       if (this.tileList.every(t => t.objs.every(o => ! o.requireGone))) {
-        //remove handlers
-        this.player.unregisterHandlers()
+        //unregister
+        this.unregisterHandlers()
 
         //make game move on to next level
         this.game.levelCompleted()

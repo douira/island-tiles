@@ -11,7 +11,10 @@ const Game = stampit.compose({
       levelIndex: $(".level-index"),
       levelName: $("#level-name"),
       message: $("#message-text"),
-      nextLevel: $("#next-level")
+      nextLevel: $("#next-level"),
+      controls: $("#controls"),
+      prevBtn: $("#prev-level"),
+      resetBtn: $("#reset-level")
     }
 
     //save levels
@@ -19,7 +22,7 @@ const Game = stampit.compose({
 
     //init the first level
     this.levelIndex = -1
-    this.startNextLevel()
+    this.startNextLevel(1)
 
     //register handler to start next level when link is clicked
     this.elems.nextLevel.click(e => {
@@ -27,33 +30,62 @@ const Game = stampit.compose({
       e.preventDefault()
 
       //start the next level
-      this.startNextLevel()
+      this.startNextLevel(1)
+    })
+
+    //handler to reset level
+    this.elems.resetBtn.click(e => {
+      //don't do link action
+      e.preventDefault()
+
+      //start current level again
+      this.startCurrentLevel()
+    })
+
+    //handler to go back one level
+    this.elems.prevBtn.click(e => {
+      //don't do link action
+      e.preventDefault()
+
+      //if a previous level exists
+      if (this.levelIndex) {
+        //go back to previous level
+        this.startNextLevel(-1)
+      }
     })
   },
 
   methods: {
-    //inits the given level index
-    startNextLevel() {
+    //inits the currently selected level
+    startCurrentLevel() {
+      //init level in table
+      this.currentLevel.initInPage(this, this.elems, this.levelIndex)
+    },
+
+    //inits the given level index (or the previous one if -1 passed)
+    startNextLevel(delta = 1) {
       //check if a level with this index exists
       if (this.levelIndex < this.levels.length) {
         //increment level counter
-        this.levelIndex ++
+        this.levelIndex += delta
 
-        //hide completed message
+        //hide completed message and show controls instead
         this.elems.message.addClass("hide-this")
+        this.elems.controls.removeClass("hide-this")
 
         //set as current level
         this.currentLevel = this.levels[this.levelIndex]
 
-        //init level in table
-        this.currentLevel.initInPage(this, this.elems, this.levelIndex)
+        //start selected level
+        this.startCurrentLevel()
       }
     },
 
     //called by the current level when the player completes it
     levelCompleted() {
-      //make the next level button and text visisble
+      //make the next level button and text visisble, hide controls instead
       this.elems.message.removeClass("hide-this")
+      this.elems.controls.addClass("hide-this")
 
       //if there are still levels left
       if (this.levelIndex < this.levels.length - 1) {

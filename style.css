@@ -10,11 +10,11 @@ body {
   margin-bottom: 10px;
 }
 
-#message-text {
-  margin-left: 40px;
+#level-name {
+  margin-right: 40px;
 }
 
-#next-level {
+#next-level, #prev-level, #reset-level {
   color: black;
 }
 

@@ -94,7 +94,7 @@ const Terrain = Displayable.compose(Vector, {
     //sorts the floating objects by height priority
     sortObjs() {
       //sort list of objects by their height priority
-      this.objs.sort((a, b) => (a.heightPrio || 0) - (b.heightPrio || 0))
+      this.objs.sort(({ heightPrio: a = 0 }, { heightPrio: b = 0 }) => a - b)
 
       //filter falsy
       this.objs = this.objs.filter(o => o)
