@@ -14,14 +14,14 @@ const Terrain = Displayable.compose(Vector, {
 
   methods: {
     //update order of floating objects
-    updateObjOrder(needsEmpty) {
+    updateImgOrder(needsNoEmpty) {
       //if flag not set, empty container first
-      if (! needsEmpty) {
+      if (! needsNoEmpty) {
         //empty without destroying contained elements (but leave terrain)
         this.tableCellElem.children().slice(1).detach()
       }
 
-      //add img elem to that table cell
+      //add own img elem to that table cell
       this.tableCellElem.append(this.getImgElem())
 
       //add image elements for all child objects
@@ -43,7 +43,16 @@ const Terrain = Displayable.compose(Vector, {
       this.sortObjs()
 
       //update elements in tile container, newly created and needs no emptying
-      this.updateObjOrder(true)
+      this.updateImgOrder(true)
+    },
+
+    //updates the dispaly of this tile
+    updateDisplay() {
+      //sort object with height prio
+      this.sortObjs()
+
+      //and update iamges in dispaly table
+      this.updateImgOrder()
     },
 
     //returns id to be put on non moving img element
@@ -65,11 +74,11 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //adds a floating object to this tile
-    addFloatingObj(objs, isInit) {
+    addObj(objs) {
       //if given array, call on each element given
       if (objs instanceof Array) {
         //call on each
-        objs.forEach(o => this.addFloatingObj(o, isInit))
+        objs.forEach(o => this.addObj(o))
 
         //stop, already processed
         return
@@ -80,17 +89,15 @@ const Terrain = Displayable.compose(Vector, {
 
       //add to list of floating objects
       this.objs.push(objs)
-
-      //dont sort if in init
-      if (! isInit) {
-        this.sortObjs()
-      }
     },
 
     //sorts the floating objects by height priority
     sortObjs() {
       //sort list of objects by their height priority
       this.objs.sort((a, b) => b.heightPrio - a.heightPrio)
+
+      //filter falsy
+      this.objs = this.objs.filter(o => o)
     },
 
     //remove given object from array of objects, will remove its dom element on its own
@@ -114,6 +121,11 @@ const Terrain = Displayable.compose(Vector, {
 
     //called when movement actually happens
     notifyMove(movement, actors) {
+      //do extra notify if present
+      if (this.notifyMoveTerrain) {
+        this.notifyMoveTerrain(movement, actors)
+      }
+
       //notify objects that movement is actually happening
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
     },
@@ -121,20 +133,6 @@ const Terrain = Displayable.compose(Vector, {
     //checks if object of given type is contained
     hasSuchObject(type) {
       return this.objs.some(o => o.tileType === type)
-    },
-
-    //removes and replaces an object with the given new object
-    mutateObj(replace, withNew) {
-      //get the index of the object to be replaced
-      const index = this.objs.indexOf(replace)
-
-      //if present at all, replace that field with new object value
-      if (index >= 0) {
-        this.objs[index] = withNew
-      }
-
-      //setup the new object's state for being in this tile
-      this.setupNewObj(withNew)
     }
   }
 })
@@ -283,6 +281,15 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
     checkMoveTerrain(movement, actors) {
       //allow only if sinkable or wet box is present (ask wet box)
       return actors.subject.sinkable || this.hasSuchObject("WetBox")
+    },
+
+    //notify sinkables
+    notifyMoveTerrain(movement, actors) {
+      //if actor is sinkable and no wet box present
+      if (actors.subject.sinkable && ! this.hasSuchObject("WetBox")) {
+        //notify box of sinking
+        actors.subject.notifySink(movement, actors)
+      }
     }
   }
 })

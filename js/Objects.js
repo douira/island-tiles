@@ -35,7 +35,7 @@ const FloatingObject = Displayable.compose(Vector).methods({
     this.remove()
 
     //add to object list of new parent tile (will set tile prop in this)
-    newTile.addFloatingObj(this)
+    newTile.addObj(this)
 
     //add to table cell of new parent
     this.addToCell(this.parent.tableCellElem)
@@ -47,10 +47,19 @@ const FloatingObject = Displayable.compose(Vector).methods({
     this.parent.removeObj(this)
   },
 
-  //changes this object to a new type by creaing a new one and re-adding to to the terrain
+  //changes this object to a new type by creating a new one and re-adding to to the terrain
   mutate(toType) {
-    //create new of type and pass to replace this
-    this.parent.mutateObj(this, toType())
+    //remove from parent
+    this.parent.removeObj(this, true)
+
+    //create new of type and add to parent
+    this.parent.addObj(toType())
+
+    //add to table cell of new parent
+    this.addToCell(this.parent.tableCellElem)
+
+    //update dispaly of the parent
+    this.parent.updateDisplay()
   }
 })
 
@@ -122,26 +131,28 @@ const Pushable = Movable.compose({
         this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
     },
 
-    //when move actually happens, do move to tile
+    //when move actually happens (movement to parent tile), do move to next tile
     notifyMove(movement, actors) {
+      //get target tile for movement on this object
+      const targetTile = this.getTargetTile(movement)
+
       //do own move to tile, has to get target tile again (other target because of push)
-      this.performMove(this.getTargetTile(movement), movement, actors.initiator)
+      this.performMove(targetTile, movement, actors.initiator)
+
+      //call pushed callback on self
+      if (this.notifyPush) {
+        this.notifyPush(targetTile, movement, actors)
+      }
     }
   }
 })
 
 //Sinkable object can be pushed into water,
-//optional method "sink" can be defiend to specify behavior after being pushed into water
-const Sinkable = stampit.props({
-  //prop to signal to water to allow pushing
-  sinkable: true
-})
-
-//box can be pushed
-const Box = FloatingObject.compose(Pushable, Sinkable).compose({
+//optional method "sink" can be defined to specify behavior after being pushed into water
+const Sinkable = Pushable.compose({
   props: {
-    tileType: "Box",
-    imageName: "box"
+    //prop to signal to water to allow pushing into it
+    sinkable: true
   }
 })
 
@@ -151,6 +162,22 @@ const WetBox = FloatingObject.compose(WalkableObject, {
   props: {
     tileType: "WetBox",
     imageName: "box-wet"
+  }
+})
+
+//box can be pushed
+const Box = FloatingObject.compose(Sinkable).compose({
+  props: {
+    tileType: "Box",
+    imageName: "box"
+  },
+
+  methods: {
+    //upon being pushed into water
+    notifySink() {
+      //register animation to sink
+      this.level.anim.registerAction(() => this.mutate(WetBox))
+    }
   }
 })
 
@@ -205,11 +232,14 @@ const Player = FloatingObject.compose(NonWalkableObject, Movable).compose({
       //prevent default action of moving the page or similar
       e.preventDefault()
 
-      //update to face in that direction
-      this.changeImageName(Player.directionImageNames[keyDirection])
+      //register movement action
+      this.level.anim.registerAction(() => {
+        //update to face in that direction
+        this.changeImageName(Player.directionImageNames[keyDirection])
 
-      //try to move with offset vector for this direction, also pass direction
-      this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
+        //try to move with offset vector for this direction, also pass direction
+        this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
+      }, "interaction")
     }).bind(this));
   },
 

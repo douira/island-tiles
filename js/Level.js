@@ -1,6 +1,72 @@
 /*global stampit,
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox, Vector*/
 
+//handles animation
+const AnimationQueue = stampit.compose({
+  statics: {
+    actionTypeTimes: {
+      //interval times for player interaction and normal animation
+      interaction: 0,
+      animation: 100
+    }
+  },
+
+  //init with parent level
+  init({ level }) {
+    this.level = level
+
+    //queue of animation actions
+    this.queue = []
+
+    //action lock has to be taken before actions are performed
+    this.lock = false
+  },
+
+  methods: {
+    //registers a new animation action
+    registerAction(action, actionType) {
+      //add to queue
+      this.queue.push({
+        action,
+
+        //must be one of the defined action types, use animation by default
+        actionType: typeof AnimationQueue.actionTypeTimes[actionType] === "number" ?
+          actionType : "animation"
+      })
+
+      //check if the lock hasn't been taken
+      if (! this.lock) {
+        //perform action now
+        this.doAction()
+      }
+    },
+
+    //do the top most action and take a lock for a animation interval
+    doAction() {
+      //if anything to be done left
+      if (this.queue.length) {
+        //take lock
+        this.lock = true
+
+        //get item from queue
+        const actionDescr = this.queue.shift()
+
+        //do next action check in interval time (keep lock until done)
+        setTimeout(() => {
+          //execute action
+          actionDescr.action()
+
+          //and check for more actions
+          this.doAction()
+        }, AnimationQueue.actionTypeTimes[actionDescr.actionType])
+      } else {
+        //remove lock
+        this.lock = false
+      }
+    }
+  }
+})
+
 //level describes the configuration of the playing field
 const Level = stampit.compose({
   //is constructed in the level store, parses the level format
@@ -18,6 +84,9 @@ const Level = stampit.compose({
 
     //parse the field into tiles and floating objects
     this.parseField()
+
+    //get a new animation queue manager
+    this.anim = AnimationQueue({ level: this })
   },
 
   statics: {
@@ -372,7 +441,7 @@ const Level = stampit.compose({
           objs.shift()
 
           //add all objs to tile in init mode
-          tile.addFloatingObj(objs, true)
+          tile.addObj(objs, true)
         }
 
         //also add tile to linear list of tiles for non position specific iteration
