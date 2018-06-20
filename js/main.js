@@ -3,6 +3,20 @@
 
 //the game object has a field of tiles
 const Game = stampit.compose({
+  props: {
+    //enable next starts off disabled
+    enableNextBtn: false,
+
+    //the index of the level the player has reached
+    reachedIndex: 0,
+
+    //the index of the highest completed level
+    completedIndex: 0,
+
+    //start with current index at -1 as init will increment to 0
+    levelIndex: -1
+  },
+
   //constructed with a level object
   init({ levels }) {
     //get display elements for level display
@@ -22,23 +36,31 @@ const Game = stampit.compose({
     //save levels
     this.levels = levels
 
-    //the index of the level the player has reached
-    this.reachedIndex = 0
-
-    //the index of the highest completed level
-    this.completedIndex = 0
-
     //init the first level
-    this.levelIndex = -1
     this.startNextLevel(1)
 
     //register handler to start next level when link is clicked
-    this.elems.nextBtn.click(e => {
+    this.elems.nextBtn.click( e => {
       //dont follow link
       e.preventDefault()
 
       //start the next level
       this.startNextLevel(1)
+    })
+
+    //or enter is pressed
+    $(document).keydown("keydown.controls", e => {
+      //on enter key press
+      if (e.which === 13) {
+        //don't interact
+        e.preventDefault()
+
+        //check that is allowed
+        if (this.enableNextBtn) {
+          //start next level
+          this.startNextLevel(1)
+        }
+      }
     })
 
     //handler to reset level
@@ -80,7 +102,8 @@ const Game = stampit.compose({
       //reset button is always enabled
 
       //enable next button when reached level is higher than current level
-      Game.setEnabled(this.elems.nextBtn, this.reachedIndex > this.levelIndex, "active-control")
+      this.enableNextBtn = this.reachedIndex > this.levelIndex
+      Game.setEnabled(this.elems.nextBtn, this.enableNextBtn, "active-control")
 
       //update progress info text
       this.elems.progress.text(`(${this.completedIndex}/${this.levels.length} Levels done)`)
@@ -121,7 +144,7 @@ const Game = stampit.compose({
 
       //set reached level to at least the next level, cap at max level
       this.reachedIndex = Math.min(this.levels.length - 1, this.completedIndex)
-      console.log(this.completedIndex, this.reachedIndex)
+
       //make completed message visible and make next button bold
       this.elems.message.removeClass("hide-this")
       this.elems.nextBtn.addClass("bold")
@@ -134,6 +157,17 @@ const Game = stampit.compose({
 
 //game level definitions, is padded with water if field is smaller than specified size
 const levels = [
+  Level({
+    name: "Zuumoadila",
+    dim: Vector({ x: 0, y: 0 }),
+    field: [
+      ["lll", ["l", "b"]],
+      ["l", ["l", "wb"], ["l", "wh"], ["l", "sh"],  ["l", "s"]],
+      [["l", "pl"], "ggg", ["l", "p"]],
+      [["l", "r"], ["g", "p"], ["g", "h"], "gl"],
+      ["l", ["l", "r"], ["l", "r"], ["l", "p"],]
+    ]
+  }),
   Level({
     name: "Karitiki Ta",
     dim: Vector({ x: 0, y: 0 }),
