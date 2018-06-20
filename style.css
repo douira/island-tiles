@@ -94,6 +94,10 @@ body {
   font-weight: bold;
 }
 
+#item-list :not(:last-child) img {
+  margin-right: 20px;
+}
+
 #item-list img {
   width: 64px;
   height: 64px;
