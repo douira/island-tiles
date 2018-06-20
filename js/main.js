@@ -88,6 +88,13 @@ const Game = stampit.compose({
 
     //inits the currently selected level
     startCurrentLevel() {
+      //set as current level
+      this.currentLevel = this.levels[this.levelIndex]
+
+      //hide completed message and reset net button bold
+      this.elems.message.addClass("hide-this")
+      this.elems.nextBtn.removeClass("bold")
+
       //init level in table
       this.currentLevel.initInPage(this, this.elems, this.levelIndex)
     },
@@ -96,21 +103,11 @@ const Game = stampit.compose({
     startNextLevel(delta = 1) {
       //check if a level with this index exists
       if (this.levelIndex < this.levels.length) {
-        //hide completed message and reset net button bold
-        this.elems.message.addClass("hide-this")
-        this.elems.nextBtn.removeClass("bold")
-
         //increment level counter
         this.levelIndex += delta
 
-        //hide completed message and show controls instead
-        this.elems.message.addClass("hide-this")
-
         //update controls display
         this.updateControls()
-
-        //set as current level
-        this.currentLevel = this.levels[this.levelIndex]
 
         //start selected level
         this.startCurrentLevel()
@@ -138,6 +135,18 @@ const Game = stampit.compose({
 //game level definitions, is padded with water if field is smaller than specified size
 const levels = [
   Level({
+    name: "Karitiki Ta",
+    dim: Vector({ x: 0, y: 0 }),
+    field: [
+      "wwwwwlll",
+      ["wwwww", ["l", "b"], "lll", ["l", "b"], "ww"],
+      ["wwwwll", ["l", "bc"], ["g", "p"], ["g", "mc"], ["g", "pl"], ["l", "b"]],
+      ["l", ["l", "bc"], "ww", "ll", ["l", "sh"], "gggl"],
+      [["l", "s"], ["l", "b"], "lww", ["l", "wb"], ["l", "wh"], "l", ["l", "h"], "llw"],
+      [["l", "bc"], ["l", "bc"], "lwwwlllww"],
+    ]
+  }),
+  Level({
     name: "Ukulat B'tiema",
     dim: Vector({ x: 0, y: 0 }),
     field: [
@@ -156,9 +165,10 @@ const levels = [
       ["wl", ["l", "p"], "g", ["g", "r"], "g", ["l", "r"], ["l", "p"]],
       ["wllgg", ["g", "p"], "ll"],
       ["w", ["l"], ["l", "b"], ["l", "pl"], ["l", "b"], "l", ["l", "st"], "l", ["w", "r"]],
-      ["wlll", ["w", "wb"], "www"]
+      ["wlll", ["w", "bw"], "www"]
     ]
-  })
+  }),
+
 ]
 
 //when document is present
