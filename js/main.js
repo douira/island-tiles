@@ -161,11 +161,11 @@ const levels = [
     name: "Zuumoadila",
     dim: Vector({ x: 0, y: 0 }),
     field: [
-      ["lll", ["l", "b"]],
-      ["l", ["l", "wb"], ["l", "wh"], ["l", "sh"],  ["l", "s"]],
-      [["l", "pl"], "ggg", ["l", "p"]],
-      [["l", "r"], ["g", "p"], ["g", "h"], "gl"],
-      ["l", ["l", "r"], ["l", "r"], ["l", "p"],]
+      ["lll", ["l", "bx"]],
+      ["l", ["l", "wb"], ["l", "wh"], ["l", "sh"],  ["l", "se"]],
+      [["l", "pl"], "ggg", ["l", "pa"]],
+      [["l", "rc"], ["g", "pa"], ["g", "ho"], "gl"],
+      ["l", ["l", "rc"], ["l", "rc"], ["l", "pa"],]
     ]
   }),
   Level({
@@ -173,11 +173,11 @@ const levels = [
     dim: Vector({ x: 0, y: 0 }),
     field: [
       "wwwwwlll",
-      ["wwwww", ["l", "b"], "lll", ["l", "b"], "ww"],
-      ["wwwwll", ["l", "bc"], ["g", "p"], ["g", "mc"], ["g", "pl"], ["l", "b"]],
+      ["wwwww", ["l", "bx"], "lll", ["l", "bx"], "ww"],
+      ["wwwwll", ["l", "bc"], ["g", "pa"], ["g", "mc"], ["g", "pl"], ["l", "bx"]],
       ["l", ["l", "bc"], "ww", "ll", ["l", "sh"], "gggl"],
-      [["l", "s"], ["l", "b"], "lww", ["l", "wb"],
-       ["l", "wh"],  ["l", "r"], ["l", "h"], ["l", "b"]],
+      [["l", "se"], ["l", "bx"], "lww", ["l", "wb"],
+       ["l", "wh"],  ["l", "rc"], ["l", "ho"], ["l", "bx"]],
       [["l", "bc"], ["l", "bc"], "lwwwllll"],
     ]
   }),
@@ -186,20 +186,20 @@ const levels = [
     dim: Vector({ x: 0, y: 0 }),
     field: [
       ["wl", ["l", "bc"], ["l", "bc"]],
-      [["l", "r"], ["l", "p"], ["l", "r"], ["l", "bc"]],
-      [["l", "mc"], ["l", "bc"], ["l", "b"]],
-      ["l", ["l", "st"], "l", ["w", "r"]],
-      [["l", "pl"], ["l", "h"], "lw", ["w", "r"]]
+      [["l", "rc"], ["l", "pa"], ["l", "rc"], ["l", "bc"]],
+      [["l", "mc"], ["l", "bc"], ["l", "bx"]],
+      ["l", ["l", "st"], "l", ["w", "rc"]],
+      [["l", "pl"], ["l", "ho"], "lw", ["w", "rc"]]
     ]
   }),
   Level({
     name: "Mahkilakii",
     dim: Vector({ x: 0, y: 0 }),
     field: [
-      ["wwllll", ["l", "h"], "w"],
-      ["wl", ["l", "p"], "g", ["g", "r"], "g", ["l", "r"], ["l", "p"]],
-      ["wllgg", ["g", "p"], "ll"],
-      ["w", ["l"], ["l", "b"], ["l", "pl"], ["l", "b"], "l", ["l", "st"], "l", ["w", "r"]],
+      ["wwllll", ["l", "ho"], "w"],
+      ["wl", ["l", "pa"], "g", ["g", "rc"], "g", ["l", "rc"], ["l", "pa"]],
+      ["wllgg", ["g", "pa"], "ll"],
+      ["w", ["l"], ["l", "bx"], ["l", "pl"], ["l", "bx"], "l", ["l", "st"], "l", ["w", "rc"]],
       ["wlll", ["w", "bw"], "www"]
     ]
   }),

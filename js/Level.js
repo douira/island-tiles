@@ -1,7 +1,7 @@
 /*global stampit,
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
-Seed, SeedHole, WaterHole, WaterBottle*/
+Seed, SeedHole, WaterHole, WaterBottle, Spring*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -105,28 +105,53 @@ const Level = stampit.compose({
 
       //all following fields are the floating objects and the player
       objs: {
-        r: Rock,
-        p: Palm,
+        rc: Rock,
+        pa: Palm,
         pl: Player,
-        b: Box,
+        bx: Box,
         bw: WetBox,
-        h: Goal, //h for house
+        ho: Goal, //h for house
         st: Starfish,
         mc: MommyCrab,
         bc: BabyCrab,
         sh: SeedHole,
-        s: Seed,
+        se: Seed,
         wh: WaterHole,
         wb: WaterBottle,
-        /*
-        t: Teleporter,
         sp: Spring,
-        sp: Spikes,
-        sb: SpikeButton
+        /*
+        tp: Teleporter,
+        sk: Spikes,
+        sb: SpikesButton
         sl: Slingshot,
         pb: Pebble,
-        c: Coconut,
+        cc: Coconut,
         ch: CoconutHole,
+        lt: LeafTop,
+        lr: LeafRight,
+        lb: LeafBottom,
+        ll: LeafLeft,
+        pr: Pearl,
+        pp: PearlPedestal,
+        fr: FigureRed,
+        fg: FigureGreen,
+        fb: FigureBlue,
+        by: Buoy,
+        ky: Key,
+        ch: Chest,
+        ci: Coin,
+        bm: Bomb,
+        bt: BombTrigger,
+        ra: Raft,
+        pi: PirateRaft,
+        ph: PirateHut,
+        ic: Ice,
+          on water, disappears once stepped off of
+        sf: Sunflower,
+          extends with copies until reached terrain border (border of grass or land),
+          pushing any sunflower makes it extend in that direction
+        ss: SunflowerSeed
+          all seeds must be converted to a sunflower, can step on sunflowers?
         */
       }
     },
@@ -408,7 +433,7 @@ const Level = stampit.compose({
 
         //verify presence (that abbreviation in level description is valid)
         if (! tileMaker) {
-          throw Error("tile abbrev given in level description is invalid")
+          throw Error(`tile abbrev given in level description is invalid '${position[0]}'`)
         }
 
         //make new tile with class gotten from mapping
@@ -428,7 +453,7 @@ const Level = stampit.compose({
 
             //check for validity
             if (! objMaker) {
-              throw Error("obj abbrev given in level description is invalid")
+              throw Error(`obj abbrev given in level description is invalid '${objAbbrev}'`)
             }
 
             //create object of given class
