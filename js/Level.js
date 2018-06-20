@@ -119,39 +119,86 @@ const Level = stampit.compose({
         wh: WaterHole,
         wb: WaterBottle,
         sp: Spring,
+        //can be used to transfer from one grass to another
         /*
         tp: Teleporter,
+          only teleports the player
+        tr: RedTeleporter,
+          can also teleport objects, thing is stuck on other side until player comes and takes it
         sk: Spikes,
+          stay down if spikes button has something on it,
+          stays down if something placed on it,
+          if player pushes thing on top of it away it stays down with player on it
         sb: SpikesButton
         sl: Slingshot,
+          bumpable, shoots pebble in defined direction,
+          triggers action on certain things it hits: hitting clam makes it open
+          hitting palm produces a coconut next to the palm in the direction of the pebble
+          can open multiple clams in one go
+          pebble stops when it makes a coconut
         pb: Pebble,
+          item, used for slingshot
         cc: Coconut,
+          see slingshot for creation, goes until it hits something,
+          if it hits empty CoconutHole, closes CoconutHole
         ch: CoconutHole,
+          needs to be hit by coconut to close and become walkable
         lt: LeafTop,
+          redirects pebble in direction its pointing, can redirect pebble coming from any side
         lr: LeafRight,
         lb: LeafBottom,
         ll: LeafLeft,
         pr: Pearl,
+          item
+        cl: Clam,
+          pushable,
+          can be bumped to receive pearl item once opened by pebble shot
         pp: PearlPedestal,
+          bumpable, goes away after getting pearl, but only if all other pedestals
+          have also gotten a pearl (all go away at once then)
         fr: FigureRed,
         fg: FigureGreen,
         fb: FigureBlue,
+        cr: CrossRed,
+        cg: CrossGreen,
+        cb: CrossBlue,
+          crosses can be hidden beneath rocks (that have to be blown up)
         by: Buoy,
         ky: Key,
+          item
         ch: Chest,
+          is bumpable receptacle, gives (1?) coin back for key
         ci: Coin,
         bm: Bomb,
+          removes rocks directly adjacent to it, explosion goes once around
         bt: BombTrigger,
+          detonates all bombs
         ra: Raft,
+          raft goes as far as possible on water, movement of player triggers
+          raft movement with player on it, if player movement possible, player leaves raft
+          things can be pushed over raft like wetbox,
+          player can push things standing on land (or on wetbox) from raft
+          example: raft can move until it hits another raft (then player can transfer)
         pi: PirateRaft,
+          is next to pirate hut, after getting all money on the map, goes into gut and
+          leaves Raft behind (apparently pirate can also go away without a hut)
         ph: PirateHut,
         ic: Ice,
-          on water, disappears once stepped off of
+          on water, disappears once stepped off of (like wetbox until stepped off)
+          also acts like blockage for raft (like most other things, just an example)
+          either acts like spikes and only goes away once nothing is on it anymore
+          or doesn't go away with objects, only with player
         sf: Sunflower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any sunflower makes it extend in that direction
         ss: SunflowerSeed
           all seeds must be converted to a sunflower, can step on sunflowers?
+        tb: Tablet,
+          pushing triggers roman numeral display on otherwise blank face,
+          there are consecutively numbered tablets in the map,
+          the number only stays visible for a certain tablet if all previous numbers
+          have been "uncovered", (goes away again otherwise)
+          all numbers have to be visible to win
         */
       }
     },
