@@ -176,8 +176,9 @@ const levels = [
       ["wwwww", ["l", "b"], "lll", ["l", "b"], "ww"],
       ["wwwwll", ["l", "bc"], ["g", "p"], ["g", "mc"], ["g", "pl"], ["l", "b"]],
       ["l", ["l", "bc"], "ww", "ll", ["l", "sh"], "gggl"],
-      [["l", "s"], ["l", "b"], "lww", ["l", "wb"], ["l", "wh"], "l", ["l", "h"], "llw"],
-      [["l", "bc"], ["l", "bc"], "lwwwlllww"],
+      [["l", "s"], ["l", "b"], "lww", ["l", "wb"],
+       ["l", "wh"],  ["l", "r"], ["l", "h"], ["l", "b"]],
+      [["l", "bc"], ["l", "bc"], "lwwwllll"],
     ]
   }),
   Level({
