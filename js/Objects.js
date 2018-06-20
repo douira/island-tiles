@@ -125,6 +125,9 @@ const Pushable = Movable.compose({
     checkMove(movement, actors) {
       //require subject and initiator to be the same (don't allow double pushing)
       return actors.initiator === actors.subject &&
+        //deny pushing down grass
+        ! (actors.subject.parent.terrainType === "Grass" && this.parent.terrainType === "Land") &&
+
         //check if push movement ok in general (for this object)
         (! this.checkMoveExtra || this.checkMoveExtra(movement, actors)) &&
 
