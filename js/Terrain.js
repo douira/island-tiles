@@ -115,8 +115,15 @@ const Terrain = Displayable.compose(Vector, {
       }
 
       //check that all objects are ok with movement
-      return this.objs.reduce((moveOk, ownObj) =>
-        moveOk && (! ownObj.checkMove || ownObj.checkMove(movement, actors)), true)
+      return this.objs.reduce((moveOk, ownObj) => {
+        //call notify check move (doesn't care about return)
+        if (ownObj.notifyCheckMove) {
+          ownObj.notifyCheckMove(movement, actors)
+        }
+
+        //check move
+        return moveOk && (! ownObj.checkMove || ownObj.checkMove(movement, actors))
+      }, true)
     },
 
     //called when movement actually happens
@@ -185,8 +192,8 @@ const RoundedTerrain = Terrain.compose({
         //do not check if none given (accept all as inside)
         return (
           ! this.insideTypes ||
-          neighbourTile.tileType === this.tileType ||
-          this.insideTypes.length && this.insideTypes.includes(neighbourTile.tileType)
+          neighbourTile.terrainType === this.terrainType ||
+          this.insideTypes.length && this.insideTypes.includes(neighbourTile.terrainType)
         ) ? "i" : "o"
       }).join("")
 
@@ -211,7 +218,7 @@ const NonWalkableTerrain = stampit.methods({
 
 //the Land tile
 const Land = RoundedTerrain.props({
-  tileType: "Land",
+  terrainType: "Land",
   imageNameMap: {
     center: "land",
     rightTop: "land-corner-rt",
@@ -237,7 +244,7 @@ const Land = RoundedTerrain.props({
 const Grass = RoundedTerrain.compose({
   //configuration
   props: {
-    tileType: "Grass",
+    terrainType: "Grass",
     imageNameMap: {
       center: "grass",
       rightTop: "grass-corner-rt",
@@ -257,8 +264,8 @@ const Grass = RoundedTerrain.compose({
   methods: {
     //disallow movement not from spring
     checkMoveTerrain(movement, actors) {
-      //return false if initiator is not of type spring
-      return actors.initiator.tileType === "Spring"
+      //return false if initiator is not of type spring or not already on grass
+      return actors.initiator.tileType === "Spring" || actors.subject.parent.terrainType === "Grass"
     }
   }
 })
@@ -266,7 +273,7 @@ const Grass = RoundedTerrain.compose({
 //the Water tile
 const Water = RoundedTerrain.compose(NonWalkableTerrain, {
   props: {
-    tileType: "Water",
+    terrainType: "Water",
     imageNameMap: {
       center: ["water-1", "water-2", "water-3"],
       edgeTop: "water-border-t",

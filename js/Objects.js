@@ -1,6 +1,7 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab, BabyCrab*/
+/*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
+BabyCrab, Seed, SeedHole, WaterHole, WaterBottle*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -104,15 +105,15 @@ const Movable = stampit.methods({
     this.moveToTile(targetTile)
   },
 
-  //move is called as the initial impulse (called on initiator)
-  move(movement) {
+  //move is called as the initial impulse (this is default initiator)
+  move(movement, initiator = this) {
     //get target tile for movement
     const targetTile = this.getTargetTile(movement)
 
     //check if move is possible
-    if (this.attemptMove(targetTile, movement, this)) {
+    if (this.attemptMove(targetTile, movement, initiator)) {
       //perform possible move
-      this.performMove(targetTile, movement, this)
+      this.performMove(targetTile, movement, initiator)
     }
   }
 })
@@ -165,7 +166,8 @@ const WetBox = FloatingObject.props({
 const Box = FloatingObject.compose(Sinkable, {
   props: {
     tileType: "Box",
-    imageName: "box"
+    imageName: "box",
+    heightPrio: 1
   },
 
   methods: {
@@ -254,6 +256,13 @@ const BabyCrab = FloatingObject.compose(Pickable, RequireGone).props({
   imageName: "crab-small"
 })
 
+//seeds can be picked up and planted in a seed hole
+const Seed = FloatingObject.compose(Pickable).props({
+  //image name and type
+  tileType: "Seed",
+  imageName: "seed"
+})
+
 //can receive items and perform actions when a certain amount of items is reached
 const Receptacle = stampit.compose({
   props: {
@@ -262,26 +271,24 @@ const Receptacle = stampit.compose({
   },
 
   methods: {
-    //dont allow walking on but take items when "bumped" into
-    checkMove(movement, actors) {
-      //require player to be moving into us and moving upwards (receptacle images face downwards)
-      if (actors.subject.tileType !== "Player" || movement.direction !== 0) {
-        return
+    //take items when "bumped" into
+    notifyCheckMove(movement, actors) {
+      //require player to be moving into us and moving in specified direction if set
+      if (
+        actors.subject.tileType === "Player" &&
+        (typeof this.requireDirection !== "number" || movement.direction === this.requireDirection)
+      ) {
+        //take all items specified in prop from level
+        const gottenItems = this.level.takeItems(this.itemType, this.itemReceiveType || "all")
+
+        //increment received items with new items
+        this.receivedItems += gottenItems
+
+        //if present and any items received, call callbacck of specific type
+        if (gottenItems && this.receiveItems) {
+          this.receiveItems(gottenItems)
+        }
       }
-
-      //take all items specified in prop from level
-      const gottenItems = this.level.takeItems(this.itemType, this.itemReceiveType || "all")
-
-      //increment received items with new items
-      this.receivedItems += gottenItems
-
-      //if present, call callbacck of specific type
-      if (this.receiveItems) {
-        this.receiveItems(gottenItems)
-      }
-
-      //disallow walking however
-      return false
     }
   }
 })
@@ -298,14 +305,15 @@ const ReceptacleAllItems = Receptacle.methods({
 })
 
 //mommy crab receives all stored baby crabs from the inventory
-const MommyCrab = FloatingObject.compose(ReceptacleAllItems, {
+const MommyCrab = FloatingObject.compose(ReceptacleAllItems, NonWalkableObject, {
   props: {
     tileType: "MommyCrab",
     imageName: "crab-large-sad",
 
     //also specify type of item to receive
     itemType: "BabyCrab",
-    itemReceiveType: "all"
+    itemReceiveType: "all",
+    requireDirection: 0
   },
 
   methods: {
@@ -315,6 +323,101 @@ const MommyCrab = FloatingObject.compose(ReceptacleAllItems, {
       this.level.anim.registerAction(() => this.changeImageName("crab-large-happy"))
     }
   }
+})
+
+//spring is the only thign that allows the player to traverse from land to grass directly
+const Spring = FloatingObject.compose({
+  props: {
+    imageName: "spring",
+    tileType: "Spring"
+  },
+
+  methods: {
+    //on being stepped on
+    notifyMove(movement, actors) {
+      //by the player
+      if (actors.subject.tileType === "Player") {
+        //init movement in same direction as animation (otherwise moves infinitely)
+        this.level.anim.registerAction(() => actors.subject.move(movement, this))
+      }
+    }
+  }
+})
+
+//seed hole can receive seed and full water bottle to become spring
+const SeedHole = FloatingObject.compose(Receptacle, {
+  props: {
+    imageName: "seed-hole",
+    tileType: "SeedHole",
+
+    //receive one seed
+    itemReceiveType: 1,
+    itemType: "Seed",
+
+    //state of seededness
+    hasSeed: false
+  },
+
+  methods: {
+    //when seed is received
+    receiveItems() {
+      //change to with seed image
+      this.changeImageName("seeded-hole")
+
+      //set flag that is seeded
+      this.hasSeed = true
+    },
+
+    //when something moves onto this
+    notifyMove(movement, actors) {
+      //if it's a full waterbottle
+      if (actors.subject.tileType === "WaterBottle" && actors.subject.filled) {
+        //and in animation
+        this.level.anim.registerAction(() => {
+          //remove waterbottle
+          /*it seems removing the waterbottle beforehand (without animation) has no effect,
+          as it hasn't actually moved to this terrain tile yet
+          and thereby isn't properly dereferenced yet before the animation*/
+          actors.subject.remove()
+
+          //mutate to spring
+          this.mutate(Spring)
+        })
+      }
+    }
+  }
+})
+
+//water bottle can be filled up with water at the water hole
+const WaterBottle = FloatingObject.compose(Pushable, {
+  props: {
+    imageName: "bottle",
+    tileType: "WaterBottle",
+    heightPrio: 1,
+
+    //state of with water or not
+    filled: false
+  },
+
+  methods: {
+    //when pushed into water hole
+    notifyPush(targetTile) {
+      //when target is water hole and not filled up yet
+      if (targetTile.hasSuchObject("WaterHole") && ! this.filled) {
+        //set filled flag
+        this.filled = true
+
+        //in animation, change to full display
+        this.level.anim.registerAction(() => this.changeImageName("bottle-full"))
+      }
+    }
+  }
+})
+
+//the water hole can be used to fill the bottle up with water
+const WaterHole = FloatingObject.props({
+  imageName: "water-hole-land",
+  tileType: "WaterHole"
 })
 
 //represents the player, controllable and deals with interaction

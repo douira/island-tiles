@@ -1,6 +1,7 @@
 /*global stampit,
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
-Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable*/
+Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
+Seed, SeedHole, WaterHole, WaterBottle*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -108,19 +109,18 @@ const Level = stampit.compose({
         p: Palm,
         pl: Player,
         b: Box,
-        wb: WetBox,
+        bw: WetBox,
         h: Goal, //h for house
         st: Starfish,
         mc: MommyCrab,
-        bc: BabyCrab
-        /*
-        t: Teleporter,
-        wh: WaterHole,
+        bc: BabyCrab,
         sh: SeedHole,
         s: Seed,
+        wh: WaterHole,
         wb: WaterBottle,
+        /*
+        t: Teleporter,
         sp: Spring,
-
         sp: Spikes,
         sb: SpikeButton
         sl: Slingshot,
@@ -318,7 +318,7 @@ const Level = stampit.compose({
           let i = 0
 
           //check bound until end or until non water found
-          while (i++ < bound.length - 1) {
+          while (i++ < bound.length) {
             //check for non water
             if (
               this.field[pos.y] &&
@@ -332,7 +332,7 @@ const Level = stampit.compose({
             pos.add(bound.dir)
           }
 
-          //no non-water found, needs to padding
+          //no non-water found, no padding needed
           return false
         })
 

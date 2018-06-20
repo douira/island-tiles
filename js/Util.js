@@ -68,11 +68,6 @@ const directionOffsets = [
 
 //handles rendering of a tile
 const Displayable = stampit.compose({
-  //default tile name
-  props: {
-    tileType: "NotExtended!"
-  },
-
   statics: {
     //returns the attribute value for a given image name
     makeImgAttrib(forName) {
