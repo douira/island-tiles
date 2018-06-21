@@ -275,7 +275,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
   props: {
     terrainType: "Water",
     imageNameMap: {
-      center: ["water-1", "water-2", "water-3"],
+      center: Array.from({ length: 8 }, (e, index) => "water-" + (index + 1)),
       edgeTop: "water-border-t",
       rightTop: "water-border-t",
       leftTop: "water-border-corner",
