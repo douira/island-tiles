@@ -1,7 +1,8 @@
 /*global stampit,
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
-Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter*/
+Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
+UnknownObject*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -123,6 +124,7 @@ const Level = stampit.compose({
           //only teleports the player
         tr: RedTeleporter,
           //can also teleport objects, thing is stuck on other side until player comes and takes it
+        uk: UnknownObject
         //can be used to transfer from one grass to another
         /*
         sk: Spikes,

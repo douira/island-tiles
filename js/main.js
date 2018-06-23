@@ -40,7 +40,7 @@ const Game = stampit.compose({
     this.startNextLevel(1)
 
     //register handler to start next level when link is clicked
-    this.elems.nextBtn.click( e => {
+    this.elems.nextBtn.click(e => {
       //dont follow link
       e.preventDefault()
 
@@ -219,8 +219,119 @@ const levels = [
 
 ]
 
+const binFormatMap = {
+  56: "pl",
+  51: "pa",
+  55: "pa",
+  54: "rc",
+  75: "ho",
+  57: "bx"
+}
+
+function setField(field, type, x, y, data) {
+  if (x && x <= 20 && y && y <= 12) {
+    x --
+    y --
+    if (! field[y]) {
+      field[y] = []
+    }
+    if (! field[y][x]) {
+      field[y][x] = []
+    }
+    field[y][x][type] = data
+  }
+}
+
+function pad(str, length = 2) {
+  return ("0".repeat(length) + str).substr(-length, length)
+}
+let game
+function consumeData(data, file) {
+  let str = ""
+  let i = 0
+  let loc = 0
+  const factor = 128
+  const field = []
+  let fieldIndex = -1
+  while (loc < data.length) {
+    if (i % 14 === 0) {
+      str += "\n"
+    }
+    if (i % 308 === 0) {
+      str += "\n"
+      fieldIndex ++
+    }
+    const add = data[loc] || "__"
+    str += pad(add)
+    if (fieldIndex <= 1) {
+      setField(field, fieldIndex, Math.floor(i / 14) % 22, i % 14, add)
+    }
+    i ++
+    loc = i * factor + 2
+  }
+  console.log(str)
+  console.log(field.map(l => l.map(i => i.map(f => pad(f)).join("")).join("")).join("\n"))
+  const descr = field.map(line => {
+    line = line
+    .map(item => {
+      const pos = ["w"]
+      const terrain = item[0]
+      if (terrain <= 12 || terrain >= 31 && terrain <= 32) {
+        pos[0] = "l"
+      } else if (terrain <= 24) {
+        pos[0] = "g"
+      }
+      if (typeof item[1] === "number") {
+        pos[1] = binFormatMap[item[1]] || "uk"
+      }
+      return pos
+    })
+    .reduce((prev, item) => {
+      //if this item is just one piece
+      if (item.length === 1) {
+        //when last is string
+        if (typeof prev[prev.length - 1] === "string") {
+          //add string to it
+          prev[prev.length - 1] += item[0]
+        } //if last is array or prev is empty, push only string
+        else {
+          prev.push(item[0])
+        }
+      } else {
+        //push whole item
+        prev.push(item)
+      }
+      return prev
+    }, [])
+
+    if (line.length === 1) {
+      line = line[0]
+    }
+    return line
+  })
+  console.log(descr)
+  game.levels.unshift(Level({
+    name: file.name,
+    field: descr
+  }))
+  game.levelIndex = 0
+  game.startCurrentLevel()
+}
 //when document is present
 $(document).ready(function() {
-  //make a game with the first level
-  Game({ levels: levels })
+  //make a game with the levels
+  game = Game({ levels: levels })
+
+  $("#files").on("change", e => {
+
+    const fileList = Array.from(e.target.files)
+    fileList.forEach(file => {
+      const reader = new FileReader()
+      reader.readAsArrayBuffer(file)
+      reader.onload = e => {
+        consumeData(new Uint8Array(e.target.result), file)
+      }
+    })
+
+  })
 });

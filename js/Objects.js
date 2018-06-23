@@ -1,7 +1,8 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
-BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter*/
+BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
+UnknownObject*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -477,6 +478,12 @@ const RedTeleporter = Teleporter.compose({
       return true
     }
   }
+})
+
+//unknown item is a placeholder
+const UnknownObject = FloatingObject.props({
+  tileType: "UnknownObject",
+  imageName: "unknown"
 })
 
 //represents the player, controllable and deals with interaction
