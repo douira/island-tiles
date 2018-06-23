@@ -158,6 +158,19 @@ const Game = stampit.compose({
 //game level definitions, is padded with water if field is smaller than specified size
 const levels = [
   Level({
+    name: "Kramba Radidi",
+    dim: Vector({ x: 0, y: 0 }),
+    field: [
+      [["l", "pa"], "lw", ["l", "pa"], ["l", "pa"], ["l", "rc"], "l"],
+      [["l", "tp"], ["l", "st"], "wl", ["l", "pa"], ["l", "ho"], ["l", "tp"]],
+      ["wwwl", ["l", "tr"], "w"],
+      "wwwl",
+      ["w", ["l", "pa"], "ll"],
+      ["wl", ["l", "bx"], "l"],
+      ["w", ["l", "pl"], "l", ["l", "tr"]],
+    ]
+  }),
+  Level({
     name: "Zuumoadila",
     dim: Vector({ x: 0, y: 0 }),
     field: [

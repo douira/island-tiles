@@ -1,7 +1,7 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
-BabyCrab, Seed, SeedHole, WaterHole, WaterBottle*/
+BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -421,6 +421,62 @@ const WaterBottle = FloatingObject.compose(Pushable, {
 const WaterHole = FloatingObject.props({
   imageName: "water-hole-land",
   tileType: "WaterHole"
+})
+
+//telporter transports player from one teleporter to the other (only the player)
+const Teleporter = FloatingObject.compose({
+  props: {
+    imageName: "teleporter-land",
+    tileType: "Teleporter",
+    isTeleporter: true
+  },
+
+  init({ level }) {
+    //register in level
+    level.registerTeleporter(this)
+  },
+
+  methods: {
+    //only teleports players
+    checkTeleport(actors) {
+      //checks that subject is player
+      return actors.subject.tileType === "Player"
+    },
+
+    //on being walked on
+    notifyMove(movement, actors) {
+      //get next teleporter from level store
+      const target = this.level.getNextTeleporter(this)
+
+      //if initiator isn't already a teleporter,
+      //there is another teleporter to move to and teleport is ok
+      if (! actors.initiator.isTeleporter && target && this.checkTeleport(actors)) {
+        //in animation, move to
+        this.level.anim.registerAction(() => actors.subject.move({
+          direction: 0, //not very important
+
+          //offset is vector to next teleporter
+          offset: Vector.sub(target, this)
+        }, this)) //this is initiator
+      }
+    }
+  }
+})
+
+//red teleporter also teleports other objects
+const RedTeleporter = Teleporter.compose({
+  //set to red derivative type
+  props: {
+    tileType: "RedTeleporter",
+    imageName: "teleporter-red-land"
+  },
+
+  methods: {
+    checkTeleport() {
+      //allow teleporting of everything
+      return true
+    }
+  }
 })
 
 //represents the player, controllable and deals with interaction

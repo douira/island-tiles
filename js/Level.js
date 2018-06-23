@@ -1,7 +1,7 @@
 /*global stampit,
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
-Seed, SeedHole, WaterHole, WaterBottle, Spring*/
+Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -43,7 +43,7 @@ const AnimationQueue = stampit.compose({
       }
     },
 
-    //do the top most action and take a lock for a animation interval
+    //do the top most action and take a lock for a action interval
     doAction() {
       //if anything to be done left
       if (this.queue.length) {
@@ -119,12 +119,12 @@ const Level = stampit.compose({
         wh: WaterHole,
         wb: WaterBottle,
         sp: Spring,
+        tp: Teleporter,
+          //only teleports the player
+        tr: RedTeleporter,
+          //can also teleport objects, thing is stuck on other side until player comes and takes it
         //can be used to transfer from one grass to another
         /*
-        tp: Teleporter,
-          only teleports the player
-        tr: RedTeleporter,
-          can also teleport objects, thing is stuck on other side until player comes and takes it
         sk: Spikes,
           stay down if spikes button has something on it,
           stays down if something placed on it,
@@ -504,7 +504,7 @@ const Level = stampit.compose({
             }
 
             //create object of given class
-            const obj = objMaker()
+            const obj = objMaker({ level: this })
 
             //if is player instance
             if (obj.tileType === "Player") {
@@ -765,6 +765,44 @@ const Level = stampit.compose({
         //return requiested amount
         return amount
       }
+    },
+
+    //registers a teleporter of given type
+    registerTeleporter(obj) {
+      //create registry if not present
+      if (! this.teleporters) {
+        this.teleporters = []
+      }
+
+      //create list of this type if not present
+      if (! this.teleporters[obj.tileType]) {
+        this.teleporters[obj.tileType] =  []
+      }
+
+      //get the current teleporter list
+      const teleporters = this.teleporters[obj.tileType]
+
+      //add this teleporter to the list
+      teleporters.push(obj)
+    },
+
+    //returns the next teleporter for a given teleporter in the list
+    getNextTeleporter(forObj) {
+      //get list of teleporters for this type
+      const teleporters = this.teleporters[forObj.tileType]
+
+      //if type of teleporter exists
+      if (teleporters) {
+        //get index of obj in list of teleporters
+        const index = teleporters.indexOf(forObj)
+
+        //if is number and not -1
+        if (typeof index === "number" && index >= 0) {
+          //return object at next index, wrap around
+          return teleporters[(index + 1) % teleporters.length]
+        }
+      }
+      //else returns falsy
     }
   }
 })

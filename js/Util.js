@@ -13,11 +13,6 @@ const Vector = stampit.compose({
   methods: {
     //can be moved in directions
     add({ x = 0, y = 0 }) {
-      //must be numbers
-      if (typeof x !== "number" || typeof y !== "number") {
-        throw Error("vector add params must be numbers");
-      }
-
       //add to own values
       this.x += x
       this.y += y
@@ -28,11 +23,6 @@ const Vector = stampit.compose({
 
     //multiply by a scalar
     mult(scalar) {
-      //must be number
-      if (typeof scalar !== "number") {
-        throw Error("scalar in vector mult must be number")
-      }
-
       //multiply both components
       this.x *= scalar
       this.y *= scalar
@@ -53,7 +43,13 @@ const Vector = stampit.compose({
     add(v1, v2) {
       //return vector with components added
       return Vector({ x: v1.x + v2.x, y: v1.y + v2.y })
-    }
+    },
+
+    //statically subtract vectors and create a new vector
+    sub(v1, v2) {
+      //return vector with components subtracted
+      return Vector({ x: v1.x - v2.x, y: v1.y - v2.y })
+    },
   }
 })
 
