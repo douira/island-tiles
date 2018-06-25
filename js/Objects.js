@@ -252,7 +252,7 @@ const Pickable = stampit.compose({
         this.remove()
 
         //register item pickup
-        this.level.addItem(this)
+        this.level.inventory.addItem(this)
       })
     }
   }
@@ -288,7 +288,8 @@ const Receptacle = stampit.compose({
         (typeof this.requireDirection !== "number" || movement.direction === this.requireDirection)
       ) {
         //take all items specified in prop from level
-        const gottenItems = this.level.takeItems(this.itemType, this.itemReceiveType || "all")
+        const gottenItems = this.level.inventory.takeItems(
+          this.itemType, this.itemReceiveType || "all")
 
         //increment received items with new items
         this.receivedItems += gottenItems
@@ -307,7 +308,10 @@ const ReceptacleAllItems = Receptacle.methods({
   //on item receive
   receiveItems() {
     //if all received and callback present
-    if (this.receivedItems === this.level.initItems[this.itemType] && this.allItemsReceived) {
+    if (
+      this.receivedItems === this.level.inventory.initItems[this.itemType] &&
+      this.allItemsReceived
+    ) {
       this.allItemsReceived()
     }
   }

@@ -71,13 +71,145 @@ const AnimationQueue = stampit.compose({
   }
 })
 
-//level describes the configuration of the playing field
-const Level = stampit.compose({
+//keeps track of the inventory
+const Inventory = stampit.compose({
   props: {
     //list of item names and tile types (does not need to be reset)
     itemDisplayInfo: { }
   },
 
+  init({ tileList, itemDisplayElem }) {
+    //init item list
+    this.items = { }
+
+    //counts number of present item objects
+    this.initItems = { }
+
+    //count all objects
+    tileList.forEach(t => t.objs.forEach(o => {
+      //increment if object is item
+      if (o.isItem) {
+        //add to type of item
+        this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
+      }
+    }))
+
+    //save display element
+    this.itemDisplayElem = itemDisplayElem
+  },
+
+  methods: {
+    //updates the item inventory display
+    updateItemDisplay() {
+      //get list for item display and empty
+      const list = this.itemDisplayElem.empty()
+
+      //array of list items to create
+      const sortList = []
+
+      //for all item entries
+      for (const itemName in this.items) {
+        //get item amount
+        const itemAmount = this.items[itemName]
+
+        //if any items present
+        if (itemAmount) {
+          //add to sort list with mapped name (from tile type to image name)
+          sortList.push({
+            imageName: this.itemDisplayInfo[itemName],
+            amount: itemAmount
+          })
+        }
+      }
+
+      //if any items present
+      if (sortList.length) {
+        //sort list of present items by amount
+        sortList
+          .sort((a, b) => a.amount - b.amount)
+
+          //and for all list items
+          .forEach(
+            //add a display item to the display list
+            item => list.append(
+              //with a span
+              $("<span>").append(
+                //that has an amount
+                item.amount).append(
+
+                //and an image of the item tile
+                $("<img>", { src: Displayable.makeImgAttrib(item.imageName) })
+              )
+            )
+          )
+      } else {
+        //add no items message
+        list.append($("<div>", {
+          text: "No Items",
+          id: "no-items-msg"
+        }))
+      }
+    },
+
+    //adds an item of the given name to the item store
+    addItem(item, amount = 1) {
+      //get item name as tile type from item and register item
+      const itemName = item.tileType
+
+      //place into list
+      this.itemDisplayInfo[itemName] = item.imageName
+
+      //create empty entry if not present and add amount
+      this.items[itemName] = (this.items[itemName] || 0) + amount
+
+      //if non null change, update display
+      if (amount > 0) {
+        this.updateItemDisplay()
+      }
+    },
+
+    //take out the specified amount (or all) items of the given name
+    takeItems(itemName, amount = 1) {
+      //init with at least 0
+      this.items[itemName] = this.items[itemName] || 0
+
+      //if amount is "all", give all items
+      if (amount === "all") {
+        //get number of present items
+        const present = this.items[itemName]
+
+        //remove from inventory
+        this.items[itemName] = 0
+
+        //if change made a difference
+        if (present > 0) {
+          //update display of items
+          this.updateItemDisplay()
+        }
+
+        //return amount gotten
+        return present
+      } else if (amount > this.items[itemName]) {
+        //return falsy (0) if more requested than present
+        return 0
+      } else {
+        //decrement number of items by amount
+        this.items[itemName] -= amount
+
+        //update display if change happened
+        if (amount > 0) {
+          this.updateItemDisplay()
+        }
+
+        //return requiested amount
+        return amount
+      }
+    }
+  }
+})
+
+//level describes the configuration of the playing field
+const Level = stampit.compose({
   //is constructed in the level store, parses the level format
   init({ name, dim, field }) {
     //copy fields
@@ -550,26 +682,17 @@ const Level = stampit.compose({
       //get a new animation queue manager
       this.anim = AnimationQueue({ level: this })
 
-      //init item list
-      this.items = { }
-
-      //counts number of present item objects
-      this.initItems = { }
-
-      //count all objects
-      this.tileList.forEach(t => t.objs.forEach(o => {
-        //increment if object is item
-        if (o.isItem) {
-          //add to type of item
-          this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
-        }
-      }))
-
       //save game
       this.game = game
 
+      //init inventory
+      this.inventory = Inventory({
+        tileList: this.tileList,
+        itemDisplayElem: this.game.elems.itemDisplay
+      })
+
       //initial item list update
-      this.updateItemDisplay()
+      this.inventory.updateItemDisplay()
 
       //set title text
       elems.levelIndex.text(`#${levelIndex + 1}`)
@@ -665,113 +788,6 @@ const Level = stampit.compose({
 
         //make game move on to next level
         this.game.levelCompleted()
-      }
-    },
-
-    //updates the item inventory display
-    updateItemDisplay() {
-      //get list for item display and empty
-      const list = this.game.elems.itemDisplay.empty()
-
-      //array of list items to create
-      const sortList = []
-
-      //for all item entries
-      for (const itemName in this.items) {
-        //get item amount
-        const itemAmount = this.items[itemName]
-
-        //if any items present
-        if (itemAmount) {
-          //add to sort list with mapped name (from tile type to image name)
-          sortList.push({
-            imageName: this.itemDisplayInfo[itemName],
-            amount: itemAmount
-          })
-        }
-      }
-
-      //if any items present
-      if (sortList.length) {
-        //sort list of present items by amount
-        sortList
-          .sort((a, b) => a.amount - b.amount)
-
-          //and for all list items
-          .forEach(
-            //add a display item to the display list
-            item => list.append(
-              //with a span
-              $("<span>").append(
-                //that has an amount
-                item.amount).append(
-
-                //and an image of the item tile
-                $("<img>", { src: Displayable.makeImgAttrib(item.imageName) })
-              )
-            )
-          )
-      } else {
-        //add no items message
-        list.append($("<div>", {
-          text: "No Items",
-          id: "no-items-msg"
-        }))
-      }
-    },
-
-    //adds an item of the given name to the item store
-    addItem(item, amount = 1) {
-      //get item name as tile type from item and register item
-      const itemName = item.tileType
-
-      //place into list
-      this.itemDisplayInfo[itemName] = item.imageName
-
-      //create empty entry if not present and add amount
-      this.items[itemName] = (this.items[itemName] || 0) + amount
-
-      //if non null change, update display
-      if (amount > 0) {
-        this.updateItemDisplay()
-      }
-    },
-
-    //take out the specified amount (or all) items of the given name
-    takeItems(itemName, amount = 1) {
-      //init with at least 0
-      this.items[itemName] = this.items[itemName] || 0
-
-      //if amount is "all", give all items
-      if (amount === "all") {
-        //get number of present items
-        const present = this.items[itemName]
-
-        //remove from inventory
-        this.items[itemName] = 0
-
-        //if change made a difference
-        if (present > 0) {
-          //update display of items
-          this.updateItemDisplay()
-        }
-
-        //return amount gotten
-        return present
-      } else if (amount > this.items[itemName]) {
-        //return falsy (0) if more requested than present
-        return 0
-      } else {
-        //decrement number of items by amount
-        this.items[itemName] -= amount
-
-        //update display if change happened
-        if (amount > 0) {
-          this.updateItemDisplay()
-        }
-
-        //return requiested amount
-        return amount
       }
     },
 
