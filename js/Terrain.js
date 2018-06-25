@@ -1,6 +1,6 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Land, Water, Grass*/
+/*exported Land, Water, Grass, UnknownTerrain*/
 
 //a terrain tile is a displayable tile that can have objects on it
 const Terrain = Displayable.compose(Vector, {
@@ -304,4 +304,10 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
       }
     }
   }
+})
+
+//unknown terrain
+const UnknownTerrain = Terrain.props({
+  terrainType: "UnknownTerrain",
+  imageName: "unknown-terrain"
 })

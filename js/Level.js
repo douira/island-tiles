@@ -2,7 +2,8 @@
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
-UnknownObject*/
+UnknownObject, FigureRed, FigureGreen, FigureBlue, CrossRed, CrossGreen, CrossBlue,
+UnknownTerrain*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -101,7 +102,8 @@ const Level = stampit.compose({
       tiles: {
         w: Water,
         l: Land,
-        g: Grass
+        g: Grass,
+        u: UnknownTerrain
       },
 
       //all following fields are the floating objects and the player
@@ -120,12 +122,20 @@ const Level = stampit.compose({
         wh: WaterHole,
         wb: WaterBottle,
         sp: Spring,
+          //can be used to transfer from one grass to another
         tp: Teleporter,
           //only teleports the player
         tr: RedTeleporter,
           //can also teleport objects, thing is stuck on other side until player comes and takes it
-        uk: UnknownObject
-        //can be used to transfer from one grass to another
+        uk: UnknownObject,
+        /*fr: FigureRed,
+          //two cannot be pushed at once (in one line)
+        fg: FigureGreen,
+        fb: FigureBlue,
+        cr: CrossRed,
+        cg: CrossGreen,
+        cb: CrossBlue,*/
+          //crosses can be hidden beneath rocks (that have to be blown up)
         /*
         sk: Spikes,
           stay down if spikes button has something on it,
@@ -137,11 +147,11 @@ const Level = stampit.compose({
           triggers action on certain things it hits: hitting clam makes it open
           hitting palm produces a coconut next to the palm in the direction of the pebble
           can open multiple clams in one go
-          pebble stops when it makes a coconut
+          pebble stops when it makes a coconut and is also stopped by rock piles
         pb: Pebble,
           item, used for slingshot
         cc: Coconut,
-          see slingshot for creation, goes until it hits something,
+          see slingshot for creation, goes until it hits something, (also stops at water)
           if it hits empty CoconutHole, closes CoconutHole
         ch: CoconutHole,
           needs to be hit by coconut to close and become walkable
@@ -155,21 +165,16 @@ const Level = stampit.compose({
         cl: Clam,
           pushable,
           can be bumped to receive pearl item once opened by pebble shot
+          can get pearl from any side, becomes bumpable when opened
+          absorbs flying pebble if already open
         pp: PearlPedestal,
           bumpable, goes away after getting pearl, but only if all other pedestals
           have also gotten a pearl (all go away at once then)
-        fr: FigureRed,
-        fg: FigureGreen,
-        fb: FigureBlue,
-        cr: CrossRed,
-        cg: CrossGreen,
-        cb: CrossBlue,
-          crosses can be hidden beneath rocks (that have to be blown up)
         by: Buoy,
         ky: Key,
           item
         ch: Chest,
-          is bumpable receptacle, gives (1?) coin back for key
+          is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
         ci: Coin,
         bm: Bomb,
           removes rocks directly adjacent to it, explosion goes once around
@@ -184,6 +189,7 @@ const Level = stampit.compose({
         pi: PirateRaft,
           is next to pirate hut, after getting all money on the map, goes into gut and
           leaves Raft behind (apparently pirate can also go away without a hut)
+          only accepts from the left
         ph: PirateHut,
         ic: Ice,
           on water, disappears once stepped off of (like wetbox until stepped off)

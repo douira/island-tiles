@@ -19,7 +19,6 @@
     <script src="js/main.js"></script>
   </head>
   <body>
-    <input type="file" id="files" name="files[]" multiple>
     <div id="container">
       <p id="level-title">
         Level <span class="level-index"></span>: <span id="level-name"></span>
@@ -33,6 +32,10 @@
         <a href="#" id="next-level">Next</a>
         <span id="progress-info"></span>
       </p>
+      <div id="file-wrapper">
+        <span>Open level files:</span>
+        <input type="file" id="files" name="files[]" multiple>
+      </div>
     </div>
   </body>
 </html>

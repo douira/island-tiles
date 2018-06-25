@@ -2,7 +2,7 @@
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
-UnknownObject*/
+UnknownObject, FigureRed, FigureGreen, FigureBlue, CrossRed, CrossGreen, CrossBlue*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -197,6 +197,11 @@ const Goal = FloatingObject.compose({
   },
 
   methods: {
+    //only allow movement from bottom side by player
+    checkMove(movement, actors) {
+      return movement.direction === 0 && actors.subject.tileType === "Player"
+    },
+
     //when stepped on
     notifyMove() {
       //trigger level finish check
