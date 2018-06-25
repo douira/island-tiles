@@ -208,8 +208,51 @@ const Inventory = stampit.compose({
   }
 })
 
+//keeps track of present teleporters
+const TeleporterRegistry = stampit.compose({
+  methods: {
+    //registers a teleporter of given type
+    registerTeleporter(obj) {
+      //create registry if not present
+      if (! this.teleporters) {
+        this.teleporters = []
+      }
+
+      //create list of this type if not present
+      if (! this.teleporters[obj.tileType]) {
+        this.teleporters[obj.tileType] =  []
+      }
+
+      //get the current teleporter list
+      const teleporters = this.teleporters[obj.tileType]
+
+      //add this teleporter to the list
+      teleporters.push(obj)
+    },
+
+    //returns the next teleporter for a given teleporter in the list
+    getNextTeleporter(forObj) {
+      //get list of teleporters for this type
+      const teleporters = this.teleporters[forObj.tileType]
+
+      //if type of teleporter exists
+      if (teleporters) {
+        //get index of obj in list of teleporters
+        const index = teleporters.indexOf(forObj)
+
+        //if is number and not -1
+        if (typeof index === "number" && index >= 0) {
+          //return object at next index, wrap around
+          return teleporters[(index + 1) % teleporters.length]
+        }
+      }
+      //else returns falsy
+    }
+  }
+})
+
 //level describes the configuration of the playing field
-const Level = stampit.compose({
+const Level = stampit.compose(TeleporterRegistry, {
   //is constructed in the level store, parses the level format
   init({ name, dim, field }) {
     //copy fields
@@ -789,44 +832,6 @@ const Level = stampit.compose({
         //make game move on to next level
         this.game.levelCompleted()
       }
-    },
-
-    //registers a teleporter of given type
-    registerTeleporter(obj) {
-      //create registry if not present
-      if (! this.teleporters) {
-        this.teleporters = []
-      }
-
-      //create list of this type if not present
-      if (! this.teleporters[obj.tileType]) {
-        this.teleporters[obj.tileType] =  []
-      }
-
-      //get the current teleporter list
-      const teleporters = this.teleporters[obj.tileType]
-
-      //add this teleporter to the list
-      teleporters.push(obj)
-    },
-
-    //returns the next teleporter for a given teleporter in the list
-    getNextTeleporter(forObj) {
-      //get list of teleporters for this type
-      const teleporters = this.teleporters[forObj.tileType]
-
-      //if type of teleporter exists
-      if (teleporters) {
-        //get index of obj in list of teleporters
-        const index = teleporters.indexOf(forObj)
-
-        //if is number and not -1
-        if (typeof index === "number" && index >= 0) {
-          //return object at next index, wrap around
-          return teleporters[(index + 1) % teleporters.length]
-        }
-      }
-      //else returns falsy
     }
   }
 })
