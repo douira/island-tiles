@@ -575,7 +575,7 @@ const UnknownObject = FloatingObject.props({
 })
 
 //represents the player, controllable and deals with interaction
-const Player = FloatingObject.compose(NonWalkableObject, Movable, {
+const Player = FloatingObject.compose(Movable, {
   //set image name
   props: {
     tileType: "Player",
@@ -639,6 +639,12 @@ const Player = FloatingObject.compose(NonWalkableObject, Movable, {
     unregisterHandlers() {
       //remove keydown handler we assigned
       $(document).off(".interaction")
+    },
+
+    //is walkable if the initiator is itself
+    //(pushing a figure that moves a figure that wants to occupy the same space as the player)
+    checkMove(movement, actors) {
+      return actors.initiator === this
     }
   }
 })
