@@ -2,7 +2,7 @@
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
-UnknownObject, FigureRed, FigureGreen, FigureBlue, CrossRed, CrossGreen, CrossBlue,
+UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross
 UnknownTerrain*/
 
 //handles animation
@@ -259,6 +259,20 @@ const ChainRegistry = Registry.methods({
   }
 })
 
+//registry that gets all other objects of the given type
+const GroupRegistry = Registry.methods({
+  //returns all other objects of the object's type
+  getOthers(forObj) {
+    //get list of objects for this type and filter out the given one
+    const otherObjs = this.getOfType(forObj).filter(o => o !== forObj)
+
+    //return if non empty, falsy otherwise
+    if (otherObjs.length) {
+      return otherObjs
+    }
+  }
+})
+
 //level describes the configuration of the playing field
 const Level = stampit.compose({
   //is constructed in the level store, parses the level format
@@ -311,13 +325,13 @@ const Level = stampit.compose({
         tr: RedTeleporter,
           //can also teleport objects, thing is stuck on other side until player comes and takes it
         uk: UnknownObject,
-        /*fr: FigureRed,
+        fr: RedFigure,
           //two cannot be pushed at once (in one line)
-        fg: FigureGreen,
-        fb: FigureBlue,
-        cr: CrossRed,
-        cg: CrossGreen,
-        cb: CrossBlue,*/
+        fg: GreenFigure,
+        fb: BlueFigure,
+        cr: RedCross,
+        cg: GreenCross,
+        cb: BlueCross,
           //crosses can be hidden beneath rocks (that have to be blown up)
         /*
         sk: Spikes,
@@ -730,6 +744,9 @@ const Level = stampit.compose({
       //init teleporter lists as chain registry
       this.tpRegistry = ChainRegistry()
 
+      //figure registry is a group registry
+      this.figureRegistry = GroupRegistry()
+
       //parse the field into tiles and floating objects
       this.parseField()
 
@@ -835,8 +852,14 @@ const Level = stampit.compose({
         }
       }
 
-      //there must be no items stored an all objects in all tiles must not be requireGone
-      if (! itemsPresent && this.tileList.every(t => t.objs.every(o => ! o.requireGone))) {
+      //there must be no items stored and all objects in all tiles must not be requireGone
+      if (! itemsPresent && this.tileList.every(
+        //check that tile is ok with finish
+        t => (! t.checkFinish || t.checkFinish()) &&
+
+        //check that all objects of this tile are ok with finish
+        t.objs.every(o => ! o.requireGone && (! o.checkFinish || o.checkFinish())))
+      ) {
         //unregister
         this.unregisterHandlers()
 

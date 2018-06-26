@@ -65,9 +65,6 @@ const Terrain = Displayable.compose(Vector, {
       //attach self as parent
       newObj.parent = this
 
-      //attach level
-      newObj.level = this.level
-
       //set position to own position
       newObj.x = this.x
       newObj.y = this.y
@@ -137,7 +134,7 @@ const Terrain = Displayable.compose(Vector, {
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
     },
 
-    //checks if object of given type is contained
+    //checks if object of given type is contained in this terrain tile
     hasSuchObject(type) {
       return this.objs.some(o => o.tileType === type)
     }

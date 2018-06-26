@@ -114,6 +114,7 @@ const Game = stampit.compose({
       //reset button is always enabled
 
       //enable next button when reached level is higher than current level
+      //TODO: remove true || (for testing only)
       this.enableNextBtn = this.reachedIndex > this.levelIndex
       Game.setEnabled(this.elems.nextBtn, true || this.enableNextBtn, "active-control")
 
@@ -241,12 +242,11 @@ const LevelFileReader = stampit.compose({
         31: "wh",
         32: "sh",
         37: "tp",
-        39: "tr"
-        /*
+        39: "tr",
         26: "cr",
         27: "cb",
         28: "cg",
-        36: "bt",
+        /*36: "bt",
         30: "sb",
         38: ["w", "ra"],
 
@@ -264,12 +264,11 @@ const LevelFileReader = stampit.compose({
         64: "se",
         76: "sp",
         66: "bc",
-        73: "mc"
-        /*
+        73: "mc",
         61: "fr",
         62: "fb",
         63: "fg",
-        72: "bm",
+        /*72: "bm",
         80: "pb",
         83: "sl",
         71: "ch",

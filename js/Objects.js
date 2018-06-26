@@ -2,7 +2,7 @@
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
-UnknownObject, FigureRed, FigureGreen, FigureBlue, CrossRed, CrossGreen, CrossBlue*/
+UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -13,55 +13,62 @@ const NonWalkableObject = stampit.methods({
 })
 
 //a basic object that can be on top of a terrain tile
-const FloatingObject = Displayable.compose(Vector).methods({
-  //adds the image element for this object to the given table cell
-  addToCell(cell) {
-    //get img element and save for moving round
-    this.imgElem = this.getImgElem()
-
-    //add to cell given
-    cell.append(this.imgElem)
+const FloatingObject = Displayable.compose(Vector, {
+  //copy level on init
+  init({ level }) {
+    this.level = level
   },
 
-  //moves the object to another tile
-  moveToTile(newTile) {
-    //remove from parent
-    this.remove(true)
+  methods: {
+    //adds the image element for this object to the given table cell
+    addToCell(cell) {
+      //get img element and save for moving round
+      this.imgElem = this.getImgElem()
 
-    //add to object list of new parent tile (will set tile prop in this)
-    newTile.addObj(this)
+      //add to cell given
+      cell.append(this.imgElem)
+    },
 
-    //add to table cell of new parent
-    this.addToCell(this.parent.tableCellElem)
+    //moves the object to another tile
+    moveToTile(newTile) {
+      //remove from parent
+      this.remove(true)
 
-    //update display of the parent
-    this.parent.updateDisplay()
-  },
+      //add to object list of new parent tile (will set tile prop in this)
+      newTile.addObj(this)
 
-  //removes itself from it's parent
-  remove(noUpdate) {
-    //remove from parent
-    this.parent.removeObj(this)
+      //add to table cell of new parent
+      this.addToCell(this.parent.tableCellElem)
 
-    //update display if not disabled
-    if (! noUpdate) {
+      //update display of the parent
+      this.parent.updateDisplay()
+    },
+
+    //removes itself from it's parent
+    remove(noUpdate) {
+      //remove from parent
+      this.parent.removeObj(this)
+
+      //update display if not disabled
+      if (! noUpdate) {
+        this.parent.updateDisplay()
+      }
+    },
+
+    //changes this object to a new type by creating a new one and re-adding to to the terrain
+    mutate(toType) {
+      //remove from parent
+      this.parent.removeObj(this, true)
+
+      //create new of type and add to parent
+      this.parent.addObj(toType())
+
+      //add to table cell of new parent
+      this.addToCell(this.parent.tableCellElem)
+
+      //update display of the parent
       this.parent.updateDisplay()
     }
-  },
-
-  //changes this object to a new type by creating a new one and re-adding to to the terrain
-  mutate(toType) {
-    //remove from parent
-    this.parent.removeObj(this, true)
-
-    //create new of type and add to parent
-    this.parent.addObj(toType())
-
-    //add to table cell of new parent
-    this.addToCell(this.parent.tableCellElem)
-
-    //update display of the parent
-    this.parent.updateDisplay()
   }
 })
 
@@ -441,9 +448,9 @@ const Teleporter = FloatingObject.compose({
     isTeleporter: true
   },
 
-  init({ level }) {
+  init() {
     //register in level
-    level.tpRegistry.register(this)
+    this.level.tpRegistry.register(this)
   },
 
   methods: {
@@ -487,6 +494,78 @@ const RedTeleporter = Teleporter.compose({
       return true
     }
   }
+})
+
+//figures can be pushed and move all other figures of the same color with it if possible
+const Figure = FloatingObject.compose(Pushable, {
+  props: {
+    heightPrio: 1
+  },
+
+  //need to take levl here already, is given later in init
+  init() {
+    //register figure in level for pushing others of this type
+    this.level.figureRegistry.register(this)
+  },
+
+  methods: {
+    //when figure is pushed
+    notifyPush(targetTile, movement, actors) {
+      //get other objects of this type in the level
+      const others = this.level.figureRegistry.getOthers(this)
+
+      //and if any present
+      if (others) {
+        //move like this figure was moved
+        others.forEach(o => o.move(movement, actors.initiator))
+      }
+
+    },
+
+    //when finish check happens, only ok if on terrain with cross of same color
+    checkFinish() {
+      //cross type is the tile type of the cross this figure has to be on
+      return this.parent.hasSuchObject(this.crossType)
+    }
+  }
+})
+
+//figures in rgb
+const RedFigure = Figure.props({
+  imageName: "figure-red",
+  tileType: "RedFigure",
+  crossType: "RedCross"
+})
+const GreenFigure = Figure.props({
+  imageName: "figure-green",
+  tileType: "GreenFigure",
+  crossType: "GreenCross"
+})
+const BlueFigure = Figure.props({
+  imageName: "figure-blue",
+  tileType: "BlueFigure",
+  crossType: "BlueCross"
+})
+
+//figures are moved onto crosses
+const Cross = FloatingObject.compose({
+  props: {
+    heightPrio: 0
+  }
+})
+
+//crosses in matching rgb colors
+const RedCross = Cross.props({
+  imageName: "cross-red",
+  tileType: "RedCross"
+})
+const GreenCross = Cross.props({
+  imageName: "cross-green",
+  tileType: "GreenCross"
+})
+const BlueCross = Cross.props({
+  imageName: "cross-blue",
+  tileType: "BlueCross"
 })
 
 //unknown item is a placeholder
