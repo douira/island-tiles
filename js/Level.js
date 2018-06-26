@@ -208,48 +208,54 @@ const Inventory = stampit.compose({
   }
 })
 
-//registry keeps track of
+//registry keeps track of registered objects and can be extended to repond in a particular way
+const Registry = stampit.compose({
+  init() {
+    //init list
+    this.objs = { }
+  },
 
-//keeps track of present teleporters
-const TeleporterRegistry = stampit.compose({
   methods: {
-    //registers a teleporter of given type
+    //registers an object of given type
     register(obj) {
-      //create registry if not present
-      if (! this.teleporters) {
-        this.teleporters = []
-      }
-
-      //create list of this type if not present
-      if (! this.teleporters[obj.tileType]) {
-        this.teleporters[obj.tileType] =  []
-      }
-
-      //get the current teleporter list
-      const teleporters = this.teleporters[obj.tileType]
-
-      //add this teleporter to the list
-      teleporters.push(obj)
+      //add this obj to the list
+      this.getOfType(obj).push(obj)
     },
 
-    //returns the next teleporter for a given teleporter in the list
-    getNext(forObj) {
-      //get list of teleporters for this type
-      const teleporters = this.teleporters[forObj.tileType]
-
-      //if type of teleporter exists
-      if (teleporters) {
-        //get index of obj in list of teleporters
-        const index = teleporters.indexOf(forObj)
-
-        //if is number and not -1
-        if (typeof index === "number" && index >= 0) {
-          //return object at next index, wrap around
-          return teleporters[(index + 1) % teleporters.length]
-        }
+    //gets list of objects for given type
+    getOfType(obj) {
+      //create list of this type if not present
+      if (! this.objs[obj.tileType]) {
+        this.objs[obj.tileType] =  []
       }
-      //else returns falsy
+
+      //return list
+      return this.objs[obj.tileType]
     }
+  }
+})
+
+//registry that can be used to get the next object in line of the same type
+const ChainRegistry = Registry.methods({
+  //returns the next teleporter for a given teleporter in the list
+  getNext(forObj) {
+    //get list of objects for this type
+    const objs = this.getOfType(forObj)
+
+    //stop if none registered
+    if (! objs.length) {
+      //returns falsey because not present
+      return
+    }
+
+    //get index of obj in list of objects
+    const index = objs.indexOf(forObj)
+
+    //if is number and not -1 (real index)
+    if (typeof index === "number" && index >= 0) {
+      //return object at next index, wrap around
+      return objs[(index + 1) % objs.length]
+    } //else returns falsy
   }
 })
 
@@ -721,8 +727,8 @@ const Level = stampit.compose({
       //unregister any previously registered things
       this.unregisterHandlers()
 
-      //init teleporter registry
-      this.tpRegistry = TeleporterRegistry()
+      //init teleporter lists as chain registry
+      this.tpRegistry = ChainRegistry()
 
       //parse the field into tiles and floating objects
       this.parseField()
