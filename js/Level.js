@@ -208,11 +208,13 @@ const Inventory = stampit.compose({
   }
 })
 
+//registry keeps track of
+
 //keeps track of present teleporters
 const TeleporterRegistry = stampit.compose({
   methods: {
     //registers a teleporter of given type
-    registerTeleporter(obj) {
+    register(obj) {
       //create registry if not present
       if (! this.teleporters) {
         this.teleporters = []
@@ -231,7 +233,7 @@ const TeleporterRegistry = stampit.compose({
     },
 
     //returns the next teleporter for a given teleporter in the list
-    getNextTeleporter(forObj) {
+    getNext(forObj) {
       //get list of teleporters for this type
       const teleporters = this.teleporters[forObj.tileType]
 
@@ -252,7 +254,7 @@ const TeleporterRegistry = stampit.compose({
 })
 
 //level describes the configuration of the playing field
-const Level = stampit.compose(TeleporterRegistry, {
+const Level = stampit.compose({
   //is constructed in the level store, parses the level format
   init({ name, dim, field }) {
     //copy fields
@@ -718,6 +720,9 @@ const Level = stampit.compose(TeleporterRegistry, {
     initInPage(game, elems, levelIndex) {
       //unregister any previously registered things
       this.unregisterHandlers()
+
+      //init teleporter registry
+      this.tpRegistry = TeleporterRegistry()
 
       //parse the field into tiles and floating objects
       this.parseField()

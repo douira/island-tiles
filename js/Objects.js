@@ -443,7 +443,7 @@ const Teleporter = FloatingObject.compose({
 
   init({ level }) {
     //register in level
-    level.registerTeleporter(this)
+    level.tpRegistry.register(this)
   },
 
   methods: {
@@ -456,7 +456,7 @@ const Teleporter = FloatingObject.compose({
     //on being walked on
     notifyMove(movement, actors) {
       //get next teleporter from level store
-      const target = this.level.getNextTeleporter(this)
+      const target = this.level.tpRegistry.getNext(this)
 
       //if initiator isn't already a teleporter,
       //there is another teleporter to move to and teleport is ok
