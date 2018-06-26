@@ -2,8 +2,8 @@
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
-UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross
-UnknownTerrain*/
+UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
+UnknownTerrain, Bomb, BombTrigger*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -28,14 +28,13 @@ const AnimationQueue = stampit.compose({
 
   methods: {
     //registers a new animation action
-    registerAction(action, actionType) {
+    registerAction(action, { delay = -1, actionType = "animation"}) {
       //add to queue
       this.queue.push({
         action,
 
-        //must be one of the defined action types, use animation by default
-        actionType: typeof AnimationQueue.actionTypeTimes[actionType] === "number" ?
-          actionType : "animation"
+        //use delay if given, resolve delay time with action type otherwise
+        delay: delay === -1 ? AnimationQueue.actionTypeTimes[actionType] : delay
       })
 
       //check if the lock hasn't been taken
@@ -62,7 +61,7 @@ const AnimationQueue = stampit.compose({
 
           //and check for more actions
           this.doAction()
-        }, AnimationQueue.actionTypeTimes[actionDescr.actionType])
+        }, actionDescr.delay)
       } else {
         //remove lock
         this.lock = false
@@ -208,10 +207,10 @@ const Inventory = stampit.compose({
   }
 })
 
-//registry keeps track of registered objects and can be extended to repond in a particular way
+//registry keeps track of registered objects
 const Registry = stampit.compose({
   init() {
-    //init list
+    //init object for lists
     this.objs = { }
   },
 
@@ -222,53 +221,57 @@ const Registry = stampit.compose({
       this.getOfType(obj).push(obj)
     },
 
+    //removes this object from its list
+    unregister(obj) {
+      //find and remove at index
+      const list = this.getOfType(obj)
+      list.splice(list.indexOf(obj), 1)
+    },
+
     //gets list of objects for given type
-    getOfType(obj) {
+    getOfType(typeOrObject) {
+      //extract type if object given
+      const type = typeof typeOrObject === "string" ? typeOrObject : typeOrObject.tileType
+
       //create list of this type if not present
-      if (! this.objs[obj.tileType]) {
-        this.objs[obj.tileType] =  []
+      if (! this.objs[type]) {
+        this.objs[type] =  []
       }
 
       //return list
-      return this.objs[obj.tileType]
-    }
-  }
-})
+      return this.objs[type]
+    },
 
-//registry that can be used to get the next object in line of the same type
-const ChainRegistry = Registry.methods({
-  //returns the next teleporter for a given teleporter in the list
-  getNext(forObj) {
-    //get list of objects for this type
-    const objs = this.getOfType(forObj)
+    //returns all other objects of the object's type
+    getOthers(forObj) {
+      //get list of objects for this type and filter out the given one
+      const otherObjs = this.getOfType(forObj).filter(o => o !== forObj)
 
-    //stop if none registered
-    if (! objs.length) {
-      //returns falsey because not present
-      return
-    }
+      //return if non empty, falsy otherwise
+      if (otherObjs.length) {
+        return otherObjs
+      }
+    },
 
-    //get index of obj in list of objects
-    const index = objs.indexOf(forObj)
+    //returns the next teleporter for a given teleporter in the list
+    getNext(forObj) {
+      //get list of objects for this type
+      const objs = this.getOfType(forObj)
 
-    //if is number and not -1 (real index)
-    if (typeof index === "number" && index >= 0) {
-      //return object at next index, wrap around
-      return objs[(index + 1) % objs.length]
-    } //else returns falsy
-  }
-})
+      //stop if none registered
+      if (! objs.length) {
+        //returns falsey because not present
+        return
+      }
 
-//registry that gets all other objects of the given type
-const GroupRegistry = Registry.methods({
-  //returns all other objects of the object's type
-  getOthers(forObj) {
-    //get list of objects for this type and filter out the given one
-    const otherObjs = this.getOfType(forObj).filter(o => o !== forObj)
+      //get index of obj in list of objects
+      const index = objs.indexOf(forObj)
 
-    //return if non empty, falsy otherwise
-    if (otherObjs.length) {
-      return otherObjs
+      //if is number and not -1 (real index)
+      if (typeof index === "number" && index >= 0) {
+        //return object at next index, wrap around
+        return objs[(index + 1) % objs.length]
+      } //else returns falsy
     }
   }
 })
@@ -333,6 +336,10 @@ const Level = stampit.compose({
         cg: GreenCross,
         cb: BlueCross,
           //crosses can be hidden beneath rocks (that have to be blown up)
+        bm: Bomb,
+          //removes rocks directly adjacent to it, explosion goes once around
+        bt: BombTrigger,
+          //detonates all bombs
         /*
         sk: Spikes,
           stay down if spikes button has something on it,
@@ -373,10 +380,6 @@ const Level = stampit.compose({
         ch: Chest,
           is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
         ci: Coin,
-        bm: Bomb,
-          removes rocks directly adjacent to it, explosion goes once around
-        bt: BombTrigger,
-          detonates all bombs
         ra: Raft,
           raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
@@ -741,20 +744,17 @@ const Level = stampit.compose({
       //unregister any previously registered things
       this.unregisterHandlers()
 
-      //init teleporter lists as chain registry
-      this.tpRegistry = ChainRegistry()
-
-      //figure registry is a group registry
-      this.figureRegistry = GroupRegistry()
+      //init registry for objects that interact with other objects in non-movement related ways
+      this.registry = Registry()
 
       //parse the field into tiles and floating objects
       this.parseField()
 
-      //get a new animation queue manager
-      this.anim = AnimationQueue({ level: this })
-
       //save game
       this.game = game
+
+      //get a new animation queue manager
+      this.anim = AnimationQueue({ level: this })
 
       //init inventory
       this.inventory = Inventory({

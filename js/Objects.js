@@ -2,7 +2,8 @@
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
-UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross*/
+UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
+Bomb, BombTrigger*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -29,11 +30,8 @@ const FloatingObject = Displayable.compose(Vector, {
       cell.append(this.imgElem)
     },
 
-    //moves the object to another tile
-    moveToTile(newTile) {
-      //remove from parent
-      this.remove(true)
-
+    //adds this object to a terrain tile
+    addToTile(newTile) {
       //add to object list of new parent tile (will set tile prop in this)
       newTile.addObj(this)
 
@@ -42,6 +40,21 @@ const FloatingObject = Displayable.compose(Vector, {
 
       //update display of the parent
       this.parent.updateDisplay()
+
+      //chaining
+      return this
+    },
+
+    //moves the object to another tile
+    moveToTile(newTile) {
+      //remove from parent
+      this.remove(true)
+
+      //add to new tile
+      this.addToTile(newTile)
+
+      //chaining
+      return this
     },
 
     //removes itself from it's parent
@@ -53,6 +66,18 @@ const FloatingObject = Displayable.compose(Vector, {
       if (! noUpdate) {
         this.parent.updateDisplay()
       }
+
+      //chaining
+      return this
+    },
+
+    //removes this object completely (should not be moved afterwards)
+    delete() {
+      //normal remove
+      this.remove()
+
+      //unregister from registry
+      this.level.registry.unregister(this)
     },
 
     //changes this object to a new type by creating a new one and re-adding to to the terrain
@@ -68,6 +93,9 @@ const FloatingObject = Displayable.compose(Vector, {
 
       //update display of the parent
       this.parent.updateDisplay()
+
+      //chaining
+      return this
     }
   }
 })
@@ -228,7 +256,7 @@ const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
     //remove when sunk
     notifySink() {
       //register animation to sink
-      this.level.anim.registerAction(() => this.remove())
+      this.level.anim.registerAction(() => this.delete())
     }
   }
 })
@@ -256,7 +284,7 @@ const Pickable = stampit.compose({
       //do as animation
       this.level.anim.registerAction(() => {
         //remove self
-        this.remove()
+        this.delete()
 
         //register item pickup
         this.level.inventory.addItem(this)
@@ -398,7 +426,7 @@ const SeedHole = FloatingObject.compose(Receptacle, {
           /*it seems removing the waterbottle beforehand (without animation) has no effect,
           as it hasn't actually moved to this terrain tile yet
           and thereby isn't properly dereferenced yet before the animation*/
-          actors.subject.remove()
+          actors.subject.delete()
 
           //mutate to spring
           this.mutate(Spring)
@@ -423,7 +451,7 @@ const WaterBottle = FloatingObject.compose(Pushable, {
     //when pushed into water hole
     notifyPush(targetTile) {
       //when target is water hole and not filled up yet
-      if (targetTile.hasSuchObject("WaterHole") && ! this.filled) {
+      if (targetTile.getSuchObject("WaterHole") && ! this.filled) {
         //set filled flag
         this.filled = true
 
@@ -450,7 +478,7 @@ const Teleporter = FloatingObject.compose({
 
   init() {
     //register in level
-    this.level.tpRegistry.register(this)
+    this.level.registry.register(this)
   },
 
   methods: {
@@ -463,7 +491,7 @@ const Teleporter = FloatingObject.compose({
     //on being walked on
     notifyMove(movement, actors) {
       //get next teleporter from level store
-      const target = this.level.tpRegistry.getNext(this)
+      const target = this.level.registry.getNext(this)
 
       //if initiator isn't already a teleporter,
       //there is another teleporter to move to and teleport is ok
@@ -505,14 +533,14 @@ const Figure = FloatingObject.compose(Pushable, {
   //need to take levl here already, is given later in init
   init() {
     //register figure in level for pushing others of this type
-    this.level.figureRegistry.register(this)
+    this.level.registry.register(this)
   },
 
   methods: {
     //when figure is pushed
     notifyPush(targetTile, movement, actors) {
       //get other objects of this type in the level
-      const others = this.level.figureRegistry.getOthers(this)
+      const others = this.level.registry.getOthers(this)
 
       //and if any present
       if (others) {
@@ -525,7 +553,7 @@ const Figure = FloatingObject.compose(Pushable, {
     //when finish check happens, only ok if on terrain with cross of same color
     checkFinish() {
       //cross type is the tile type of the cross this figure has to be on
-      return this.parent.hasSuchObject(this.crossType)
+      return this.parent.getSuchObject(this.crossType)
     }
   }
 })
@@ -566,6 +594,115 @@ const GreenCross = Cross.props({
 const BlueCross = Cross.props({
   imageName: "cross-blue",
   tileType: "BlueCross"
+})
+
+//animation particles are used for animation of effects
+//(are removed once the player regains control)
+const AnimationParticle = FloatingObject.compose({
+  props: {
+    tileType: "AnimationParticle",
+    imageName: "unknown"
+  },
+
+  statics: {
+    //how long it takes for the animation particle to disappear on its own
+    ttl: 50
+  },
+
+  //inits with given image name
+  init({ imageName, level, ttl = AnimationParticle.ttl }) {
+    //copy image name
+    this.imageName = imageName
+
+    //level is attached later but used for ttl animation so it's given here too
+    if (level) {
+      //animation to remove in ttl ms
+      level.anim.registerAction(() => this.delete(), { delay: ttl })
+    }
+  }
+})
+
+//Bomb removes rocks directly adjacent to it
+const Bomb = FloatingObject.compose(Pushable, {
+  props: {
+    imageName: "bomb",
+    tileType: "Bomb"
+  },
+
+  statics: {
+    //adjacents and own position
+    explosionOffsets: directionOffsets.concat(Vector()),
+
+    //delay time between individual explosions
+    explosionDelay: 30
+  },
+
+  //register
+  init() {
+    //register to be found by bomb trigger
+    this.level.registry.register(this)
+  },
+
+  methods: {
+    //called by bomb trigger when stepped on
+    bombTriggered() {
+      //for all adjacent tile positions and own position
+      Bomb.explosionOffsets.forEach((offset, index) => {
+        //get tile from level at position
+        const tile = this.level.getTileAt(Vector.add(offset, this))
+
+        //if tile present
+        if (tile) {
+          //get rock object from tile
+          const rock = tile.getSuchObject("Rock")
+
+          //in animation with random delay
+          this.level.anim.registerAction(() => {
+            //if present, remove rock
+            if (rock) {
+              rock.delete()
+            }
+
+            //place animation particle with explosion image onto terrain
+            AnimationParticle({ level: this.level, imageName: "bomb-explosion" }).addToTile(tile)
+          }, { delay: Math.random() * index * Bomb.explosionDelay })
+        }
+      })
+
+      //remove self, can only be triggered once
+      this.delete()
+    }
+  }
+})
+
+//bomb trigger triggers all bombs
+const BombTrigger = FloatingObject.compose({
+  props: {
+    imageName: "bomb-trigger-land",
+    tileType: "BombTrigger"
+  },
+
+  methods: {
+    //when stepped on
+    notifyMove(movement, actors) {
+      //if player moved onto this tile
+      if (actors.subject.tileType === "Player") {
+        //trigger all bombs with increasing delay in animation
+        this.level.registry.getOfType("Bomb").forEach(
+          (b, index) => this.level.anim.registerAction(
+            //action triggers bomb
+            () => b.bombTriggered(),
+
+            //wait for last bomb to finish
+            index * Bomb.explosionDelay * Bomb.explosionOffsets.length
+          )
+        )
+
+        //trigger also removes itself
+        this.delete()
+      }
+    }
+  }
 })
 
 //unknown item is a placeholder
@@ -624,14 +761,16 @@ const Player = FloatingObject.compose(Movable, {
         //prevent default action of moving the page or similar
         e.preventDefault()
 
-        //register movement action
-        this.level.anim.registerAction(() => {
-          //update to face in that direction
-          this.changeImageName(Player.directionImageNames[keyDirection])
+        //don't move if animations are still processing
+        if (this.level.anim.lock) {
+          return
+        }
 
-          //try to move with offset vector for this direction, also pass direction
-          this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
-        }, "interaction")
+        //update to face in that direction
+        this.changeImageName(Player.directionImageNames[keyDirection])
+
+        //try to move with offset vector for this direction, also pass direction
+        this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
       });
     },
 

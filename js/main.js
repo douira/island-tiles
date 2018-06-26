@@ -246,8 +246,8 @@ const LevelFileReader = stampit.compose({
         26: "cr",
         27: "cb",
         28: "cg",
-        /*36: "bt",
-        30: "sb",
+        36: "bt",
+        /*30: "sb",
         38: ["w", "ra"],
 
         */
@@ -268,8 +268,8 @@ const LevelFileReader = stampit.compose({
         61: "fr",
         62: "fb",
         63: "fg",
-        /*72: "bm",
-        80: "pb",
+        72: "bm",
+        /*80: "pb",
         83: "sl",
         71: "ch",
         85: "lu",

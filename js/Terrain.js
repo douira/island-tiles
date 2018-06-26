@@ -65,6 +65,9 @@ const Terrain = Displayable.compose(Vector, {
       //attach self as parent
       newObj.parent = this
 
+      //also add level (isn't added in construction for dynamically added objects)
+      newObj.level = this.level
+
       //set position to own position
       newObj.x = this.x
       newObj.y = this.y
@@ -99,7 +102,7 @@ const Terrain = Displayable.compose(Vector, {
 
     //remove given object from array of objects, will remove its dom element on its own
     removeObj(obj) {
-      //remove from array
+      //remove from array of objects
       this.objs.splice(this.objs.indexOf(obj), 1)
     },
 
@@ -135,8 +138,8 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //checks if object of given type is contained in this terrain tile
-    hasSuchObject(type) {
-      return this.objs.some(o => o.tileType === type)
+    getSuchObject(type) {
+      return this.objs.find(o => o.tileType === type)
     }
 
     //registers all event handlers (called on level start)
@@ -286,7 +289,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
     //allow movement into if wet box is present or submersible object is being pushed
     checkMoveTerrain(movement, actors) {
       //allow only if sinkable or wet box is present (ask wet box)
-      return actors.subject.sinkable || this.hasSuchObject("WetBox")
+      return actors.subject.sinkable || this.getSuchObject("WetBox")
     },
 
     //notify sinkables
@@ -294,7 +297,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
       //if actor is sinkable and no wet box present
       if (
         actors.subject.notifySink && //only if present at all
-        actors.subject.sinkable && ! this.hasSuchObject("WetBox")
+        actors.subject.sinkable && ! this.getSuchObject("WetBox")
       ) {
         //notify box of sinking
         actors.subject.notifySink(movement, actors)
