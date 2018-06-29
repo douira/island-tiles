@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-Bomb, BombTrigger*/
+Bomb, BombTrigger, Buoy*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -544,7 +544,7 @@ const Figure = FloatingObject.compose(Pushable, {
 
       //and if any present
       if (others) {
-        //move like this figure was moved
+        //move same as this figure was moved
         others.forEach(o => o.move(movement, actors.initiator))
       }
 
@@ -703,6 +703,12 @@ const BombTrigger = FloatingObject.compose({
       }
     }
   }
+})
+
+//buy is non walkable water obstacle
+const Buoy = FloatingObject.compose(NonWalkableObject).props({
+  imageName: "buoy",
+  tileType: "Buoy"
 })
 
 //unknown item is a placeholder

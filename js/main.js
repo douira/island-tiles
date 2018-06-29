@@ -249,7 +249,6 @@ const LevelFileReader = stampit.compose({
         36: "bt",
         /*30: "sb",
         38: ["w", "ra"],
-
         */
       },
       objectTypes: {
@@ -269,6 +268,7 @@ const LevelFileReader = stampit.compose({
         62: "fb",
         63: "fg",
         72: "bm",
+        91: "by",
         /*80: "pb",
         83: "sl",
         71: "ch",
@@ -278,7 +278,6 @@ const LevelFileReader = stampit.compose({
         88: "ll",
         89: "sk",
         82: "ci",
-        91: "by",
         58: "ch",
         60: "ky",
         90: "pi", //TODO: conflict with non-pirate raft

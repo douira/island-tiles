@@ -3,7 +3,7 @@ Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-UnknownTerrain, Bomb, BombTrigger*/
+UnknownTerrain, Bomb, BombTrigger, Buoy*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -340,6 +340,8 @@ const Level = stampit.compose({
           //removes rocks directly adjacent to it, explosion goes once around
         bt: BombTrigger,
           //detonates all bombs
+        by: Buoy,
+
         /*
         sk: Spikes,
           stay down if spikes button has something on it,
@@ -374,7 +376,6 @@ const Level = stampit.compose({
         pp: PearlPedestal,
           bumpable, goes away after getting pearl, but only if all other pedestals
           have also gotten a pearl (all go away at once then)
-        by: Buoy,
         ky: Key,
           item
         ch: Chest,
