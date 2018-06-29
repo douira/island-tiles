@@ -28,7 +28,7 @@ const AnimationQueue = stampit.compose({
 
   methods: {
     //registers a new animation action
-    registerAction(action, { delay = -1, actionType = "animation"}) {
+    registerAction(action, { delay = -1, actionType = "animation"} = {}) {
       //add to queue
       this.queue.push({
         action,
