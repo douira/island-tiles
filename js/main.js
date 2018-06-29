@@ -383,6 +383,11 @@ const LevelFileReader = stampit.compose({
         byteAddress = i * 128 + 2
       }
 
+      //read level name at end of file
+      this.levelName = this.data.slice(128 * 14 * 22 * 2 + 2)
+        //by parsing into chars from char codes
+        .reduce((str, c) => str + String.fromCharCode(parseInt(c)), "")
+
       //print fields visually
       console.log(str)
 
@@ -461,7 +466,7 @@ const LevelFileReader = stampit.compose({
 
       //create level with descriptor, file name as name and standard size
       this.level = Level({
-        name: this.fileName,
+        name: `${this.levelName} (${this.fileName})`,
         field: descr,
         dim: Vector(20, 12)
       })
