@@ -247,9 +247,8 @@ const LevelFileReader = stampit.compose({
         27: "cb",
         28: "cg",
         36: "bt",
-        /*30: "sb",
-        38: ["w", "ra"],
-        */
+        30: "sb",
+        //38: ["w", "ra"],
       },
       objectTypes: {
         56: "pl",
@@ -269,6 +268,7 @@ const LevelFileReader = stampit.compose({
         63: "fg",
         72: "bm",
         91: "by",
+        89: "sk",
         /*80: "pb",
         83: "sl",
         71: "ch",
@@ -276,7 +276,6 @@ const LevelFileReader = stampit.compose({
         86: "lr",
         87: "ld",
         88: "ll",
-        89: "sk",
         82: "ci",
         58: "ch",
         60: "ky",
@@ -463,6 +462,9 @@ const LevelFileReader = stampit.compose({
         //return processed line
         return line
       })
+
+      //print json of descriptor
+      console.log(JSON.stringify(descr))
 
       //create level with descriptor, file name as name and standard size
       this.level = Level({

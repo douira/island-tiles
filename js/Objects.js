@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-Bomb, BombTrigger, Buoy*/
+Bomb, BombTrigger, Buoy, Spikes, SpikesButton*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -119,37 +119,58 @@ const Palm = FloatingObject.compose(NonWalkableObject).props({
 })
 
 //movable supplies methods for trying to move (being the subject of the move)
-const Movable = stampit.methods({
-  //returns the target tile for a given movement from this tile
-  getTargetTile(movement) {
-    //add offset to own position and get tile from there from level
-    return this.level.getTileAt(Vector.add(this, movement.offset))
+const Movable = stampit.compose({
+  statics: {
+    //makes a movement object from a direction (generates offset)
+    makeMovementDescr(direction) {
+      return {
+        //copy direction
+        direction,
+
+        //and lookup in movement offsets for offset
+        offset: directionOffsets[direction]
+      }
+    }
   },
 
-  //tries to perform a move
-  attemptMove(targetTile, movement, initiator) {
-    //check if target tile is ok with movement to it, no action if out of bounds
-    return targetTile && targetTile.checkMove(movement, { subject: this, initiator })
-  },
+  methods: {
+    //returns the target tile for a given movement from this tile
+    getTargetTile(movement) {
+      //add offset to own position and get tile from there from level
+      return this.level.getTileAt(Vector.add(this, movement.offset))
+    },
 
-  //does the actual moving
-  performMove(targetTile, movement, initiator) {
-    //notify terrain tiles and objects and so on
-    targetTile.notifyMove(movement, { subject: this, initiator })
+    //tries to perform a move
+    attemptMove(targetTile, movement, initiator) {
+      //check if target tile is ok with movement to it, no action if out of bounds
+      return targetTile && targetTile.checkMove(movement, { subject: this, initiator })
+    },
 
-    //do movement to target tile, if target file is falsy attemptMove wasn't checked first!
-    this.moveToTile(targetTile)
-  },
+    //does the actual moving
+    performMove(targetTile, movement, initiator) {
+      //build the actors object
+      const actors = { subject: this, initiator }
 
-  //move is called as the initial impulse (this is default initiator)
-  move(movement, initiator = this) {
-    //get target tile for movement
-    const targetTile = this.getTargetTile(movement)
+      //notify current tile that this object is leaving
+      this.parent.notifyLeave(movement, actors)
 
-    //check if move is possible
-    if (this.attemptMove(targetTile, movement, initiator)) {
-      //perform possible move
-      this.performMove(targetTile, movement, initiator)
+      //notify terrain tiles and objects and so on
+      targetTile.notifyMove(movement, actors)
+
+      //do movement to target tile, if target file is falsy attemptMove wasn't checked first!
+      this.moveToTile(targetTile)
+    },
+
+    //move is called as the initial impulse (this is default initiator)
+    move(movement, initiator = this) {
+      //get target tile for movement
+      const targetTile = this.getTargetTile(movement)
+
+      //check if move is possible
+      if (this.attemptMove(targetTile, movement, initiator)) {
+        //perform possible move
+        this.performMove(targetTile, movement, initiator)
+      }
     }
   }
 })
@@ -705,10 +726,135 @@ const BombTrigger = FloatingObject.compose({
   }
 })
 
-//buy is non walkable water obstacle
+//buoy is non walkable water obstacle
 const Buoy = FloatingObject.compose(NonWalkableObject).props({
   imageName: "buoy",
   tileType: "Buoy"
+})
+
+//triggers a callback after moves have finished
+const Weighted = stampit.compose({
+  props: {
+    //true when weight (another object) is on this object
+    hasWeight: false,
+
+    //is set to true to avoid registering multiple check actions
+    checkRegistered: false,
+
+    //extra weight is not present by deafult, can be set though
+    extraWeight: false
+  },
+
+  init() {
+    //initially check weight
+    this.checkWeight()
+  },
+
+  methods: {
+    //on move onto and leave, check weight
+    notifyMove() {
+      this.checkWeight()
+    },
+    notifyLeave() {
+      this.checkWeight()
+    },
+
+    //registers a later function to check if weight is on this object
+    checkWeight() {
+      //stop if already check registered
+      if (this.checkRegistered) {
+        return
+      }
+
+      //register animation to execute when done with motion
+      this.level.anim.registerAction(() => {
+        //unset check flag
+        this.checkRegistered = false
+
+        //get new weight value, has weight if extra weight set
+        //or more than this object present in this tile
+        const newHasWeight = this.extraWeight || this.parent.objs.length > 1
+
+        //if weight state changed
+        if (newHasWeight !== this.hasWeight) {
+          //change state
+          this.hasWeight = newHasWeight
+
+          //notify object
+          this.weightStateChanged(this.hasWeight)
+        }
+      }, { delay: 0, priority: -1 })
+    },
+
+    //sets the new extra weight state
+    setExtraWeight(extraWeight) {
+      //if extra weight state changed
+      if (this.extraWeight !== extraWeight) {
+        //set as new state
+        this.extraWeight = extraWeight
+
+        //trigger check
+        this.checkWeight()
+      }
+    }
+  }
+})
+
+//spikes register and can be changed by a spike button
+const Spikes = FloatingObject.compose(Weighted, {
+  props: {
+    imageName: "spikes-up",
+    tileType: "Spikes",
+
+    //draw at bottom
+    heightPrio: 0
+  },
+
+  //on creation
+  init() {
+    //register with level for discovery by spike buttons
+    this.level.registry.register(this)
+  },
+
+  statics: {
+    upImageName: "spikes-up",
+    downImageName: "spikes-down"
+  },
+
+  methods: {
+    //when weight state changes
+    weightStateChanged() {
+      //in animation change display image
+      this.level.anim.registerAction(
+        () => this.changeImageName(this.hasWeight ? Spikes.downImageName : Spikes.upImageName)
+      )
+    },
+
+    //allow walk if in down position or already an object on it
+    checkMove() {
+      return this.hasWeight || this.parent.objs.length > 1
+    }
+  }
+})
+
+//spikes button controlles spike status
+const SpikesButton = FloatingObject.compose(Weighted, {
+  props: {
+    imageName: "spikes-button",
+    heightPrio: 0,
+    tileType: "SpikesButton",
+
+    //the current state
+    pressed: false
+  },
+
+  methods: {
+    //when weight state changes
+    weightStateChanged() {
+      //notify all spikes of change by setting extra weight to weight state of button
+      this.level.registry.getOfType("Spikes").forEach(o => o.setExtraWeight(this.hasWeight))
+    }
+  }
 })
 
 //unknown item is a placeholder
@@ -723,7 +869,7 @@ const Player = FloatingObject.compose(Movable, {
   props: {
     tileType: "Player",
     heightPrio: 100,
-    imageName: "player-t"
+    imageName: "player-l"
   },
 
   statics: {
@@ -776,7 +922,7 @@ const Player = FloatingObject.compose(Movable, {
         this.changeImageName(Player.directionImageNames[keyDirection])
 
         //try to move with offset vector for this direction, also pass direction
-        this.move({ offset: directionOffsets[keyDirection], direction: keyDirection })
+        this.move(Movable.makeMovementDescr(keyDirection))
       });
     },
 

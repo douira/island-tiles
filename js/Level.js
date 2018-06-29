@@ -3,7 +3,7 @@ Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-UnknownTerrain, Bomb, BombTrigger, Buoy*/
+UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -28,13 +28,18 @@ const AnimationQueue = stampit.compose({
 
   methods: {
     //registers a new animation action
-    registerAction(action, { delay = -1, actionType = "animation"} = {}) {
+    registerAction(action, { delay = -1, actionType = "animation", priority = 0} = {}) {
       //add to queue
       this.queue.push({
         action,
 
         //use delay if given, resolve delay time with action type otherwise
-        delay: delay === -1 ? AnimationQueue.actionTypeTimes[actionType] : delay
+        delay: delay === -1 ? AnimationQueue.actionTypeTimes[actionType] : delay,
+
+        //use given priority (which defaults to 0)
+        //we rely on the fact that sorting with the same priority keeps the items in the same order
+        //(although this may not be the case in all environments, it is in most)
+        priority
       })
 
       //check if the lock hasn't been taken
@@ -50,6 +55,12 @@ const AnimationQueue = stampit.compose({
       if (this.queue.length) {
         //take lock
         this.lock = true
+
+        //if more than one item present
+        if (this.queue.length > 1) {
+          //sort by priority, highest prio should be first in array
+          this.queue.sort((a, b) => b.priority - a.priority)
+        }
 
         //get item from queue
         const actionDescr = this.queue.shift()
@@ -341,13 +352,12 @@ const Level = stampit.compose({
         bt: BombTrigger,
           //detonates all bombs
         by: Buoy,
-
-        /*
         sk: Spikes,
-          stay down if spikes button has something on it,
+          /*stay down if spikes button has something on it,
           stays down if something placed on it,
-          if player pushes thing on top of it away it stays down with player on it
+          if player pushes thing on top of it away it stays down with player on it*/
         sb: SpikesButton
+        /*
         sl: Slingshot,
           bumpable, shoots pebble in defined direction,
           triggers action on certain things it hits: hitting clam makes it open
@@ -630,6 +640,27 @@ const Level = stampit.compose({
         }, false)
       }
 
+      //if no padding scheduled yet
+      if (! (needsPadding || checkWaterBounds)) {
+        //check that all lines are the same length
+        let lastLength
+        for (let line of this.field) {
+          //if last line length given
+          if (typeof lastLength === "number") {
+            //if lengths don't match, needs padding
+            if (lastLength !== line.length) {
+              needsPadding = true
+
+              //stop looking
+              break
+            }
+          }
+
+          //set new line length
+          lastLength = line.length
+        }
+      }
+
       //if padding is necessary
       if (needsPadding || checkWaterBounds) {
         //apply post padding and fill out any uneven lines
@@ -748,14 +779,14 @@ const Level = stampit.compose({
       //init registry for objects that interact with other objects in non-movement related ways
       this.registry = Registry()
 
+      //get a new animation queue manager
+      this.anim = AnimationQueue({ level: this })
+
       //parse the field into tiles and floating objects
       this.parseField()
 
       //save game
       this.game = game
-
-      //get a new animation queue manager
-      this.anim = AnimationQueue({ level: this })
 
       //init inventory
       this.inventory = Inventory({

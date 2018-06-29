@@ -137,6 +137,12 @@ const Terrain = Displayable.compose(Vector, {
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
     },
 
+    //called by movable right before it leaves this tile
+    notifyLeave(movement, actors) {
+      //notify objects that movement is happening (away from this tile)
+      this.objs.forEach(ownObj => ownObj.notifyLeave && ownObj.notifyLeave(movement, actors))
+    },
+
     //checks if object of given type is contained in this terrain tile
     getSuchObject(type) {
       return this.objs.find(o => o.tileType === type)
