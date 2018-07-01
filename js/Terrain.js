@@ -292,10 +292,15 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
   },
 
   methods: {
+    //checks  if there is a watertight object on this terrain
+    checkWatertightPresent() {
+      return this.objs.some(o => o.watertight)
+    },
+
     //allow movement into if wet box is present or submersible object is being pushed
     checkMoveTerrain(movement, actors) {
       //allow only if sinkable or wet box is present (ask wet box)
-      return actors.subject.sinkable || this.getSuchObject("WetBox")
+      return actors.subject.sinkable || this.checkWatertightPresent()
     },
 
     //notify sinkables
@@ -303,7 +308,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
       //if actor is sinkable and no wet box present
       if (
         actors.subject.notifySink && //only if present at all
-        actors.subject.sinkable && ! this.getSuchObject("WetBox")
+        actors.subject.sinkable && ! this.checkWatertightPresent()
       ) {
         //notify box of sinking
         actors.subject.notifySink(movement, actors)

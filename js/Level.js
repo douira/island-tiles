@@ -3,7 +3,7 @@ Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton*/
+UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -356,7 +356,11 @@ const Level = stampit.compose({
           /*stay down if spikes button has something on it,
           stays down if something placed on it,
           if player pushes thing on top of it away it stays down with player on it*/
-        sb: SpikesButton
+        sb: SpikesButton,
+        ic: Ice,
+          /*on water, disappears once stepped off of (like wetbox until stepped off)
+          also acts like blockage for raft (like most other things, just an example)
+          acts like spikes and only goes away once nothing is on it anymore*/
         /*
         sl: Slingshot,
           bumpable, shoots pebble in defined direction,
@@ -402,11 +406,6 @@ const Level = stampit.compose({
           leaves Raft behind (apparently pirate can also go away without a hut)
           only accepts from the left
         ph: PirateHut,
-        ic: Ice,
-          on water, disappears once stepped off of (like wetbox until stepped off)
-          also acts like blockage for raft (like most other things, just an example)
-          either acts like spikes and only goes away once nothing is on it anymore
-          or doesn't go away with objects, only with player
         sf: Sunflower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any sunflower makes it extend in that direction

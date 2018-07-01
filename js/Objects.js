@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-Bomb, BombTrigger, Buoy, Spikes, SpikesButton*/
+Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -215,8 +215,14 @@ const Sinkable = Pushable.props({
   sinkable: true
 })
 
+//watertight objects can be in water and suport other objects if pushed onto them
+const Watertight = stampit.props({
+  watertight: true,
+  heightPrio: 0
+})
+
 //WetBox is created when box is sunken in water
-const WetBox = FloatingObject.props({
+const WetBox = FloatingObject.compose(Watertight).props({
   //configure image
   tileType: "WetBox",
   imageName: "box-wet"
@@ -793,7 +799,7 @@ const Weighted = stampit.compose({
         //set as new state
         this.extraWeight = extraWeight
 
-        //trigger check
+        //trigger check on extra weight change
         this.checkWeight()
       }
     }
@@ -853,6 +859,25 @@ const SpikesButton = FloatingObject.compose(Weighted, {
     weightStateChanged() {
       //notify all spikes of change by setting extra weight to weight state of button
       this.level.registry.getOfType("Spikes").forEach(o => o.setExtraWeight(this.hasWeight))
+    }
+  }
+})
+
+//ice goes away like spikes come back up once unweighted (ice just goes away)
+const Ice = FloatingObject.compose(Weighted, Watertight, {
+  props: {
+    imageName: "ice",
+    tileType: "Ice"
+  },
+
+  methods: {
+    //on removal of weight
+    weightStateChanged() {
+      //if no weight now, means we had weight before
+      if (! this.hasWeight) {
+        //melt, delete itself
+        this.delete()
+      }
     }
   }
 })
