@@ -2,8 +2,8 @@
 Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
-UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal*/
+UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
+Ice, Pearl, PearlPedestal*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -551,16 +551,54 @@ const RedTeleporter = Teleporter.compose({
   }
 })
 
+//subtyped objects get additional type data so we dont have to make enumerated class names
+const Subtyped = stampit.compose({
+  //init subtype
+  init({ extraInitData }, { stamp }) {
+    //get type specific data (expects the composed object to specify a static type array)
+    this.typeData = stamp.subtypes[extraInitData]
+
+    //save more general tile type
+    this.superTileType = this.tileType
+
+    //setup image name and specific tileType subtype
+    this.imageName = this.typeData.imageName
+    this.tileType = this.typeData.tileType
+  }
+})
+
 //figures can be pushed and move all other figures of the same color with it if possible
-const Figure = FloatingObject.compose(Pushable, {
+const Figure = FloatingObject.compose(Subtyped, Pushable, {
   props: {
-    heightPrio: 1
+    heightPrio: 1,
+    tileType: "Figure"
   },
 
-  //need to take levl here already, is given later in init
+  //register
   init() {
     //register figure in level for pushing others of this type
     this.level.registry.register(this)
+  },
+
+  statics: {
+    //data for three different figure types
+    subtypes: {
+      r: {
+        imageName: "figure-red",
+        tileType: "RedFigure",
+        crossType: "RedCross"
+      },
+      g: {
+        imageName: "figure-green",
+        tileType: "GreenFigure",
+        crossType: "GreenCross"
+      },
+      b: {
+        imageName: "figure-blue",
+        tileType: "BlueFigure",
+        crossType: "BlueCross"
+      }
+    }
   },
 
   methods: {
@@ -580,47 +618,34 @@ const Figure = FloatingObject.compose(Pushable, {
     //when finish check happens, only ok if on terrain with cross of same color
     checkFinish() {
       //cross type is the tile type of the cross this figure has to be on
-      return this.parent.getSuchObject(this.crossType)
+      return this.parent.getSuchObject(this.typeData.crossType)
     }
   }
 })
 
-//figures in rgb
-const RedFigure = Figure.props({
-  imageName: "figure-red",
-  tileType: "RedFigure",
-  crossType: "RedCross"
-})
-const GreenFigure = Figure.props({
-  imageName: "figure-green",
-  tileType: "GreenFigure",
-  crossType: "GreenCross"
-})
-const BlueFigure = Figure.props({
-  imageName: "figure-blue",
-  tileType: "BlueFigure",
-  crossType: "BlueCross"
-})
-
 //figures are moved onto crosses
-const Cross = FloatingObject.compose({
+const Cross = FloatingObject.compose(Subtyped, {
   props: {
-    heightPrio: 0
-  }
-})
+    heightPrio: 0,
+    tileType: "Cross"
+  },
 
-//crosses in matching rgb colors
-const RedCross = Cross.props({
-  imageName: "cross-red",
-  tileType: "RedCross"
-})
-const GreenCross = Cross.props({
-  imageName: "cross-green",
-  tileType: "GreenCross"
-})
-const BlueCross = Cross.props({
-  imageName: "cross-blue",
-  tileType: "BlueCross"
+  statics: {
+    subtypes: {
+      r: {
+        imageName: "cross-red",
+        tileType: "RedCross"
+      },
+      g: {
+        imageName: "cross-green",
+        tileType: "GreenCross"
+      },
+      b: {
+        imageName: "cross-blue",
+        tileType: "BlueCross"
+      }
+    }
+  }
 })
 
 //animation particles are used for animation of effects

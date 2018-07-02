@@ -2,9 +2,8 @@
 Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
-UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice,
-Pearl, PearlPedestal*/
+UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
+Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -243,12 +242,12 @@ const Registry = stampit.compose({
 
     //gets list of objects for given type
     getOfType(typeOrInstance) {
-      //extract type if object given
+      //extract type of object
       const type = typeof typeOrInstance === "string" ? typeOrInstance : typeOrInstance.tileType
 
       //create list of this type if not present
       if (! this.objs[type]) {
-        this.objs[type] =  []
+        this.objs[type] = []
       }
 
       //return list
@@ -341,13 +340,9 @@ const Level = stampit.compose({
         tr: RedTeleporter,
           //can also teleport objects, thing is stuck on other side until player comes and takes it
         uk: UnknownObject,
-        fr: RedFigure,
+        fg: Figure,
           //two cannot be pushed at once (in one line)
-        fg: GreenFigure,
-        fb: BlueFigure,
-        cr: RedCross,
-        cg: GreenCross,
-        cb: BlueCross,
+        cr: Cross,
           //crosses can be hidden beneath rocks (that have to be blown up)
         bm: Bomb,
           //removes rocks directly adjacent to it, explosion goes once around
@@ -367,6 +362,13 @@ const Level = stampit.compose({
         pp: PearlPedestal,
           /*bumpable, goes away after getting pearl, but only if all other pedestals
           have also gotten a pearl (all go away at once then)*/
+        tb: Tablet,
+          /*pushing triggers roman numeral display on otherwise blank face,
+          there are consecutively numbered tablets in the map,
+          the number only stays visible for a certain tablet if all previous numbers
+          have been "uncovered", (goes away again otherwise)
+          all numbers have to be visible to win,
+          resets all to no number visible if one pushed out of order*/
         /*
         sl: Slingshot,
           bumpable, shoots pebble in defined direction,
@@ -386,13 +388,11 @@ const Level = stampit.compose({
         lr: LeafRight,
         lb: LeafBottom,
         ll: LeafLeft,
-
         cl: Clam,
           pushable,
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open
-
         ky: Key,
           item
         ch: Chest,
@@ -414,12 +414,7 @@ const Level = stampit.compose({
           pushing any sunflower makes it extend in that direction
         ss: SunflowerSeed
           all seeds must be converted to a sunflower, can step on sunflowers?
-        tb: Tablet,
-          pushing triggers roman numeral display on otherwise blank face,
-          there are consecutively numbered tablets in the map,
-          the number only stays visible for a certain tablet if all previous numbers
-          have been "uncovered", (goes away again otherwise)
-          all numbers have to be visible to win
+
         */
       }
     },
@@ -738,7 +733,7 @@ const Level = stampit.compose({
             }
 
             //get obj factory, select from obj mapping
-            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev]
+            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev.substr(0, 2)]
 
             //check for validity
             if (! objMaker) {
@@ -746,7 +741,12 @@ const Level = stampit.compose({
             }
 
             //create object of given class
-            const obj = objMaker({ level: this })
+            const obj = objMaker({
+              level: this,
+
+              //extra init data is all that comes after the two char object abbrev
+              extraInitData: objAbbrev.substr(2)
+            })
 
             //if is player instance
             if (obj.tileType === "Player") {
