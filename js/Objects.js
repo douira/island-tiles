@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice*/
+Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -351,7 +351,7 @@ const Receptacle = stampit.compose({
       ) {
         //take all items specified in prop from level
         const gottenItems = this.level.inventory.takeItems(
-          this.itemType, this.itemReceiveType || "all")
+          this.itemType, this.itemReceiveType) //itemReceiveType is number or "all"
 
         //increment received items with new items
         this.receivedItems += gottenItems
@@ -624,7 +624,7 @@ const BlueCross = Cross.props({
 })
 
 //animation particles are used for animation of effects
-//(are removed once the player regains control)
+//(are removed in animation before the player regains control)
 const AnimationParticle = FloatingObject.compose({
   props: {
     tileType: "AnimationParticle",
@@ -882,6 +882,50 @@ const Ice = FloatingObject.compose(Weighted, Watertight, {
   }
 })
 
+//pearl is a item
+const Pearl = FloatingObject.compose(Pickable).props({
+  imageName: "pearl",
+  tileType: "Pearl"
+})
+
+//accepts a pearl and goes away once all other pedestals also have a pearl
+const PearlPedestal = FloatingObject.compose(Receptacle, NonWalkableObject, RequireGone, {
+  props: {
+    imageName: "pearl-pedestal",
+    tileType: "PearlPedestal",
+
+    //takes one pearl
+    itemReceiveType: 1,
+    itemType: "Pearl"
+  },
+
+  //registers so all can be triggered at once
+  init() {
+    this.level.registry.register(this)
+  },
+
+  methods: {
+    //when we get a pearl
+    receiveItems() {
+      //set to have received an item
+      this.hasPearl = true
+
+      //change image to with pearl
+      this.changeImageName("pearl-pedestal-filled")
+
+      //get all pdestals
+      const pedestals = this.level.registry.getOfType(this)
+
+      //check if all other pedestals have pearls
+      if (pedestals.every(p => p.hasPearl)) {
+        //in order of list, animate all to disappear
+        pedestals.forEach(
+          p => this.level.anim.registerAction(() => p.delete(), { actionType: "slowAnimation"}))
+      }
+    }
+  }
+})
+
 //unknown item is a placeholder
 const UnknownObject = FloatingObject.props({
   tileType: "UnknownObject",
@@ -938,7 +982,7 @@ const Player = FloatingObject.compose(Movable, {
         //prevent default action of moving the page or similar
         e.preventDefault()
 
-        //don't move if animations are still processing
+        //don't move if any animations are still processing
         if (this.level.anim.lock) {
           return
         }

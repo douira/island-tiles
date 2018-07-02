@@ -171,6 +171,19 @@ const Game = stampit.compose({
 //game level definitions, is padded with water if field is smaller than specified size
 let levels = [
   Level({
+    name: "Kramba Radidi",
+    dim: Vector({ x: 0, y: 0 }),
+    field: [
+      [["l", "pa"], "lw", ["l", "pa"], ["l", "pa"], ["l", "ho"], ["l", "rc"]],
+      [["l", "tp"], ["l", "st"], "wl", ["l", "pa"], "l", ["l", "tp"]],
+      ["wwwl", ["l", "tr"], "w"],
+      "wwwl",
+      ["w", ["l", "pa"], "ll"],
+      ["wl", ["l", "bx"], "l"],
+      ["w", ["l", "pl"], "l", ["l", "tr"]],
+    ]
+  }),
+  Level({
     name: "Ukulat B'tiema",
     dim: Vector({ x: 0, y: 0 }),
     field: [
@@ -203,19 +216,6 @@ let levels = [
       [["l", "pl"], "g", ["g", "ho"], "g", ["l", "pa"]],
       [["l", "rc"], ["g", "pa"], "ggl"],
       ["l", ["l", "rc"], ["l", "rc"], ["l", "pa"],]
-    ]
-  }),
-  Level({
-    name: "Kramba Radidi",
-    dim: Vector({ x: 0, y: 0 }),
-    field: [
-      [["l", "pa"], "lw", ["l", "pa"], ["l", "pa"], ["l", "ho"], ["l", "rc"]],
-      [["l", "tp"], ["l", "st"], "wl", ["l", "pa"], "l", ["l", "tp"]],
-      ["wwwl", ["l", "tr"], "w"],
-      "wwwl",
-      ["w", ["l", "pa"], "ll"],
-      ["wl", ["l", "bx"], "l"],
-      ["w", ["l", "pl"], "l", ["l", "tr"]],
     ]
   }),
   Level({
@@ -270,6 +270,8 @@ const LevelFileReader = stampit.compose({
         72: "bm",
         91: "by",
         89: "sk",
+        81: "pr",
+        52: "pp",
         /*80: "pb",
         83: "sl",
         71: "ch",
@@ -282,8 +284,6 @@ const LevelFileReader = stampit.compose({
         60: "ky",
         90: "pi", //TODO: conflict with non-pirate raft
         92: "ph",
-        81: "pr",
-        52: "pp",
         94: "cl"
         */
       }

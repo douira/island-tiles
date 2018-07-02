@@ -3,7 +3,8 @@ Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, RedFigure, GreenFigure, BlueFigure, RedCross, GreenCross, BlueCross,
-UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice*/
+UnknownTerrain, Bomb, BombTrigger, Buoy, Spikes, SpikesButton, Ice,
+Pearl, PearlPedestal*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -11,7 +12,8 @@ const AnimationQueue = stampit.compose({
     actionTypeTimes: {
       //interval times for player interaction and normal animation
       interaction: 0,
-      animation: 100
+      animation: 100,
+      slowAnimation: 300
     }
   },
 
@@ -74,7 +76,7 @@ const AnimationQueue = stampit.compose({
           this.doAction()
         }, actionDescr.delay)
       } else {
-        //remove lock
+        //release lock as nothing is being processed
         this.lock = false
       }
     }
@@ -240,9 +242,9 @@ const Registry = stampit.compose({
     },
 
     //gets list of objects for given type
-    getOfType(typeOrObject) {
+    getOfType(typeOrInstance) {
       //extract type if object given
-      const type = typeof typeOrObject === "string" ? typeOrObject : typeOrObject.tileType
+      const type = typeof typeOrInstance === "string" ? typeOrInstance : typeOrInstance.tileType
 
       //create list of this type if not present
       if (! this.objs[type]) {
@@ -361,6 +363,10 @@ const Level = stampit.compose({
           /*on water, disappears once stepped off of (like wetbox until stepped off)
           also acts like blockage for raft (like most other things, just an example)
           acts like spikes and only goes away once nothing is on it anymore*/
+        pr: Pearl,
+        pp: PearlPedestal,
+          /*bumpable, goes away after getting pearl, but only if all other pedestals
+          have also gotten a pearl (all go away at once then)*/
         /*
         sl: Slingshot,
           bumpable, shoots pebble in defined direction,
@@ -380,16 +386,13 @@ const Level = stampit.compose({
         lr: LeafRight,
         lb: LeafBottom,
         ll: LeafLeft,
-        pr: Pearl,
-          item
+
         cl: Clam,
           pushable,
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open
-        pp: PearlPedestal,
-          bumpable, goes away after getting pearl, but only if all other pedestals
-          have also gotten a pearl (all go away at once then)
+
         ky: Key,
           item
         ch: Chest,
