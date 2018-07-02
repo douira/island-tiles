@@ -272,6 +272,11 @@ const LevelFileReader = stampit.compose({
         89: "sk",
         81: "pr",
         52: "pp",
+        101: "tb1", //translate to tablet numbers
+        102: "tb2",
+        103: "tb3",
+        104: "tb4",
+        105: "tb5",
         /*80: "pb",
         83: "sl",
         71: "ch",
@@ -290,7 +295,7 @@ const LevelFileReader = stampit.compose({
     },
 
     //pads a string with the given length of chars
-    padString(str, { length = 2, char = "0" } = { }) {
+    padString(str, { length = 3, char = "0" } = { }) {
       return (char.repeat(length) + str).substr(-length, length)
     }
   },
@@ -367,7 +372,7 @@ const LevelFileReader = stampit.compose({
         }
 
         //chars to put in the field/string print
-        const add = this.data[byteAddress] || "__"
+        const add = this.data[byteAddress] || "___"
 
         //add padded to
         str += LevelFileReader.padString(add)
@@ -423,7 +428,7 @@ const LevelFileReader = stampit.compose({
               pos[0] = "l"
             } else if (terrain <= 24) {
               pos[0] = "g"
-            } else if (terrain !== "__") {
+            } else if (terrain !== "___") {
               //unknown if out of range but still specified
               pos[0] = "u"
             }

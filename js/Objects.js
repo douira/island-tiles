@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
-Ice, Pearl, PearlPedestal*/
+Ice, Pearl, PearlPedestal, Tablet*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -1033,3 +1033,56 @@ const Player = FloatingObject.compose(Movable, {
     }
   }
 })
+
+//tablet can be pushed and requires pushing of all five in order for them to be valid
+const Tablet = FloatingObject.compose(Pushable, {
+  props: {
+    imageName: "tablet-clear",
+    tileType: "Tablet",
+
+    //flag is set to true when this tablet is uncovered properly
+    uncovered: false
+  },
+
+  //register on init and get number
+  init({ extraInitData }) {
+    this.level.registry.register(this)
+
+    //parse tablet number
+    this.number = parseInt(extraInitData)
+  },
+
+  methods: {
+    //when pushed, show number and check for other uncovered tablets
+    notifyPush() {
+      //get all tablets on the field
+      const tablets = this.level.registry.getOfType(this)
+
+      //display uncovered
+      this.changeImageName("tablet-" + this.number)
+
+      //check if this tablet was opened in the right order,
+      //there shouldn't be a covered tablet with a lower number
+      if (tablets.some(t => ! t.uncovered && t.number < this.number)) {
+        //uncovering is not ok, start animation to cover all
+        this.level.anim.registerAction(
+          () => tablets.forEach(t => t.changeImageName("tablet-clear")),
+          { actionType: "longAnimation" })
+      } else {
+        //uncovering is ok, set flag
+        this.uncovered = true
+      }
+    },
+
+    //don't allow pushing if uncovered
+    checkPush() {
+      return ! this.uncovered
+    },
+
+    //must be uncovered forfield complestion
+    checkFinish() {
+      return this.uncovered
+    }
+  }
+})
+

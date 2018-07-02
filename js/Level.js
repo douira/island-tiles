@@ -12,7 +12,8 @@ const AnimationQueue = stampit.compose({
       //interval times for player interaction and normal animation
       interaction: 0,
       animation: 100,
-      slowAnimation: 300
+      slowAnimation: 300,
+      longAnimation: 600
     }
   },
 
