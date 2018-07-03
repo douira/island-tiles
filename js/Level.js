@@ -4,7 +4,7 @@ Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
-Key, Coin, Chest*/
+Key, Coin, Chest, Pebble, Slingshot, Coconut*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -376,18 +376,17 @@ const Level = stampit.compose({
         ch: Chest,
           //is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
         ci: Coin,
-        /*
         sl: Slingshot,
-          bumpable, shoots pebble in defined direction,
+          /*bumpable, shoots pebble in defined direction,
           triggers action on certain things it hits: hitting clam makes it open
           hitting palm produces a coconut next to the palm in the direction of the pebble
           can open multiple clams in one go
-          pebble stops when it makes a coconut and is also stopped by rock piles
+          pebble stops when it makes a coconut and is also stopped by rock piles*/
         pb: Pebble,
-          item, used for slingshot
         cc: Coconut,
-          see slingshot for creation, goes until it hits something, (also stops at water)
-          if it hits empty CoconutHole, closes CoconutHole
+          /*see slingshot for creation, goes until it hits something, (also stops at water)
+          if it hits empty CoconutHole, closes CoconutHole*/
+        /*
         ch: CoconutHole,
           needs to be hit by coconut to close and become walkable
         lt: LeafTop,
@@ -407,7 +406,7 @@ const Level = stampit.compose({
           player can push things standing on land (or on wetbox) from raft
           example: raft can move until it hits another raft (then player can transfer)
         pi: PirateRaft,
-          is next to pirate hut, after getting all money on the map, goes into gut and
+          is next to pirate hut, after getting all money on the map, goes into hut and
           leaves Raft behind (apparently pirate can also go away without a hut)
           only accepts from the left
         ph: PirateHut,

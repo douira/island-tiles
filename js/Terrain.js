@@ -106,6 +106,20 @@ const Terrain = Displayable.compose(Vector, {
       this.objs.splice(this.objs.indexOf(obj), 1)
     },
 
+    //called to check if objects of tile allow leave
+    checkLeave(movement, actors, targetTile) {
+      //check all objects
+      return this.objs.reduce(
+        (ok, o) => ok && (! o.checkLeave || o.checkLeave(movement, actors, targetTile)), true)
+    },
+
+    //called by projectile that is about to schedule a leaving animation
+    checkProjLeave(movement, proj) {
+      //check all objects
+      return this.objs.reduce(
+        (ok, o) => ok && (! o.checkProjLeave || o.checkProjLeave(movement, proj)), true)
+    },
+
     //by default, ask all contained objects in order of display order
     checkMove(movement, actors) {
       //first check tile requirements
@@ -147,8 +161,6 @@ const Terrain = Displayable.compose(Vector, {
     getSuchObject(type) {
       return this.objs.find(o => o.tileType === type)
     }
-
-    //registers all event handlers (called on level start)
   }
 })
 

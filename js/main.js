@@ -280,9 +280,9 @@ const LevelFileReader = stampit.compose({
         82: "ci",
         58: "ch",
         60: "ky",
-        /*80: "pb",
+        80: "pb",
         83: "sl",
-        71: "ch",
+        /*
         85: "lu",
         86: "lr",
         87: "ld",

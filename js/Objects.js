@@ -1,9 +1,9 @@
 /*global stampit,
 Displayable, Vector, directionOffsets*/
-/*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
-BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
+/*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab, BabyCrab,
+Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
-Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest*/
+Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -96,6 +96,12 @@ const FloatingObject = Displayable.compose(Vector, {
 
       //chaining
       return this
+    },
+
+    //returns the target tile for a given movement away from this tile
+    getTargetTile(movement) {
+      //add offset to own position and get tile from there from level
+      return this.level.getTileAt(Vector.add(this, movement.offset))
     }
   }
 })
@@ -108,14 +114,6 @@ const Rock = FloatingObject.compose(NonWalkableObject).props({
 
   //low height prio, isn't on top of anything
   heightPrio: 0
-})
-
-//Palm tile is stationary
-const Palm = FloatingObject.compose(NonWalkableObject).props({
-  //init with image name
-  tileType: "Palm",
-  heightPrio: 0,
-  imageName: ["palm-1", "palm-2"]
 })
 
 //movable supplies methods for trying to move (being the subject of the move)
@@ -134,16 +132,14 @@ const Movable = stampit.compose({
   },
 
   methods: {
-    //returns the target tile for a given movement from this tile
-    getTargetTile(movement) {
-      //add offset to own position and get tile from there from level
-      return this.level.getTileAt(Vector.add(this, movement.offset))
-    },
-
     //tries to perform a move
     attemptMove(targetTile, movement, initiator) {
+      //construct actors
+      const actors = { subject: this, initiator }
+
       //check if target tile is ok with movement to it, no action if out of bounds
-      return targetTile && targetTile.checkMove(movement, { subject: this, initiator })
+      return this.parent.checkLeave(movement, actors, targetTile) &&
+        targetTile && targetTile.checkMove(movement, actors)
     },
 
     //does the actual moving
@@ -365,7 +361,7 @@ const Receptacle = stampit.compose({
 
         //if present and any items received, call callbacck of specific type
         if (gottenItems && this.receiveItems) {
-          this.receiveItems(gottenItems)
+          this.receiveItems(gottenItems, movement)
         }
       }
     }
@@ -1144,6 +1140,124 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
         //give player a coin
         this.level.inventory.addItem("Coin")
       })
+    }
+  }
+})
+
+//projectile moves on it's own until it hits something
+const Projectile = Movable.compose({
+  //init with movement
+  init({ movement, startTile }) {
+    //immediately add to tile to start at
+    this.addToTile(startTile)
+
+    //only do immediate move if given movement
+    if (movement) {
+      //try to move with offset
+      this.move(movement)
+    }
+  },
+
+  methods: {
+    //checkMove can be used to allow or disallow movement
+
+    //when projectile moves to another tile
+    checkLeave(movement, actors) {
+      //if asking for leaveing of this projectile
+      if (actors.subject === this) {
+        //check that tile is ok with this projectile leaving (and also does processing with it)
+        return this.parent.checkProjLeave(movement, this)
+      }
+
+      //don't care otherwise, allow by default
+      return true
+    },
+
+    //register next movement on leaving (like arrival)
+    notifyLeave(movement, actors) {
+      //if notified of own arrival
+      if (actors.subject === this) {
+        //in animation, move again
+        this.level.anim.registerAction(() => this.move(movement))
+      }
+    }
+  }
+})
+
+//Pebble is an item
+const Pebble = FloatingObject.compose(Pickable).props({
+  imageName: "pebble",
+  tileType: "Pebble"
+})
+
+//pebble projectile is created by slingshot
+const PebbleProj = FloatingObject.compose(Projectile, {
+  props: {
+    imageName: "pebble",
+    tileType: "PebbleProj"
+  }
+})
+
+//coconut is projectile that moves in the direction it was pushed
+//projectile handler overwrites pushable notify move handler,
+//so projectile movement is triggered on push
+const Coconut = FloatingObject.compose(Pushable, Projectile).props({
+  imageName: "coconut",
+  tileType: "Coconut"
+})
+
+//Palm tile is stationary
+const Palm = FloatingObject.compose({
+  props: {
+    //init with image name
+    tileType: "Palm",
+    heightPrio: 0,
+    imageName: ["palm-1", "palm-2"]
+  },
+
+  methods: {
+    //allow pebbles to move onto palm
+    checkMove(movement, actors) {
+      return actors.subject.tileType === "PebbleProj"
+    },
+
+    //when pebble projectile tries to leave
+    checkProjLeave(movement, proj) {
+      //if pebble projectile
+      if (proj.tileType === "PebbleProj") {
+        //delete projectile
+        proj.delete()
+
+        //add coconut to next tile
+        Coconut({ level: this.level, startTile: this.getTargetTile(movement) })
+
+        //absorb projectile
+        return false
+      } else {
+        //allow other projectiles to pass
+        return true
+      }
+    }
+  }
+})
+
+//singshot shoots pebble items from the inventory
+const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
+  props: {
+    tileType: "Slingshot",
+    imageName: "slingshot-land",
+
+    //interacts with bottom (upwards movement) and receives single pebbles
+    requireDirection: 0,
+    itemType: "Pebble",
+    itemReceiveType: 1
+  },
+
+  methods: {
+    //when pebble is received
+    receiveItems(items, movement) {
+      //create a new pebble projectile on this tile that will move itself
+      PebbleProj({ level: this.level, movement, startTile: this.parent })
     }
   }
 })
