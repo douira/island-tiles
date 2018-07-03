@@ -3,7 +3,8 @@ Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
-Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet*/
+Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
+Key, Coin, Chest*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -90,27 +91,28 @@ const Inventory = stampit.compose({
     itemDisplayInfo: { }
   },
 
-  init({ tileList, itemDisplayElem }) {
-    //init item list
-    this.items = { }
-
-    //counts number of present item objects
-    this.initItems = { }
-
-    //count all objects
-    tileList.forEach(t => t.objs.forEach(o => {
-      //increment if object is item
-      if (o.isItem) {
-        //add to type of item
-        this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
-      }
-    }))
-
-    //save display element
-    this.itemDisplayElem = itemDisplayElem
-  },
-
   methods: {
+    //called after all onjects are created
+    countItems({ tileList, itemDisplayElem }) {
+      //init item list
+      this.items = { }
+
+      //counts number of present item objects
+      this.initItems = { }
+
+      //count all objects
+      tileList.forEach(t => t.objs.forEach(o => {
+        //increment if object is item
+        if (o.isItem) {
+          //add to type of item
+          this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
+        }
+      }))
+
+      //save display element
+      this.itemDisplayElem = itemDisplayElem
+    },
+
     //updates the item inventory display
     updateItemDisplay() {
       //get list for item display and empty
@@ -163,14 +165,14 @@ const Inventory = stampit.compose({
       }
     },
 
-    //adds an item of the given name to the item store
-    addItem(item, amount = 1) {
-      //get item name as tile type from item and register item
-      const itemName = item.tileType
-
+    //registers an item's imageName
+    registerImageName(instance) {
       //place into list
-      this.itemDisplayInfo[itemName] = item.imageName
+      this.itemDisplayInfo[instance.tileType] = instance.imageName
+    },
 
+    //adds an item of the given name to the item store
+    addItem(itemName, amount = 1) {
       //create empty entry if not present and add amount
       this.items[itemName] = (this.items[itemName] || 0) + amount
 
@@ -370,6 +372,10 @@ const Level = stampit.compose({
           have been "uncovered", (goes away again otherwise)
           all numbers have to be visible to win,
           resets all to no number visible if one pushed out of order*/
+        ky: Key,
+        ch: Chest,
+          //is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
+        ci: Coin,
         /*
         sl: Slingshot,
           bumpable, shoots pebble in defined direction,
@@ -394,11 +400,6 @@ const Level = stampit.compose({
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open
-        ky: Key,
-          item
-        ch: Chest,
-          is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
-        ci: Coin,
         ra: Raft,
           raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
@@ -785,14 +786,17 @@ const Level = stampit.compose({
       //get a new animation queue manager
       this.anim = AnimationQueue({ level: this })
 
+      //create inventory and allow items to register images
+      this.inventory = Inventory()
+
       //parse the field into tiles and floating objects
       this.parseField()
 
       //save game
       this.game = game
 
-      //init inventory
-      this.inventory = Inventory({
+      //init inventory after object creation
+      this.inventory.countItems({
         tileList: this.tileList,
         itemDisplayElem: this.game.elems.itemDisplay
       })

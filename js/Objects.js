@@ -3,7 +3,7 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab,
 BabyCrab, Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
-Ice, Pearl, PearlPedestal, Tablet*/
+Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -295,6 +295,11 @@ const Pickable = stampit.compose({
     isItem: true
   },
 
+  //register item image name
+  init() {
+    this.level.inventory.registerImageName(this)
+  },
+
   methods: {
     //only allow picking up/walking on by player
     checkMove(movement, actors) {
@@ -308,13 +313,13 @@ const Pickable = stampit.compose({
         return
       }
 
-      //do as animation
+      //do as normal animation
       this.level.anim.registerAction(() => {
         //remove self
         this.delete()
 
         //register item pickup
-        this.level.inventory.addItem(this)
+        this.level.inventory.addItem(this.tileType)
       })
     }
   }
@@ -347,7 +352,9 @@ const Receptacle = stampit.compose({
       //require player to be moving into us and moving in specified direction if set
       if (
         actors.subject.tileType === "Player" &&
-        (typeof this.requireDirection !== "number" || movement.direction === this.requireDirection)
+        (typeof this.requireDirection !== "number" ||
+         movement.direction === this.requireDirection) &&
+        (! this.checkReceiveItems || this.checkReceiveItems(movement, actors))
       ) {
         //take all items specified in prop from level
         const gottenItems = this.level.inventory.takeItems(
@@ -1086,3 +1093,57 @@ const Tablet = FloatingObject.compose(Pushable, {
   }
 })
 
+//coin is a item
+const Coin = FloatingObject.compose(Pickable).props({
+  imageName: "coin",
+  tileType: "Coin"
+})
+
+//key is a item that can be used to get coins from chests
+const Key = FloatingObject.compose(Pickable).props({
+  imageName: "key",
+  tileType: "Key"
+})
+
+//Chest gives a coin in exchange for a key
+const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
+  props: {
+    tileType: "Chest",
+    imageName: "chest-closed",
+
+    //interacts with bottom (upwards movement) and receives single keys
+    requireDirection: 0,
+    itemType: "Key",
+    itemReceiveType: 1,
+
+    //flag wether or not this chest has been opened
+    opened: false
+  },
+
+  //init to register for total coin count
+  init() {
+    this.level.registry.register(this)
+  },
+
+  methods: {
+    //only take items if not opened yet
+    checkReceiveItems() {
+      return ! this.opened
+    },
+
+    //when key received
+    receiveItems() {
+      //mark as open
+      this.opened = true
+
+      //in animation
+      this.level.anim.registerAction(() => {
+        //change image to open chest
+        this.changeImageName("chest-open")
+
+        //give player a coin
+        this.level.inventory.addItem("Coin")
+      })
+    }
+  }
+})
