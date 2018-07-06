@@ -223,7 +223,7 @@ let levels = [
     dim: Vector({ x: 0, y: 0 }),
     field: [
       "wwwwwlll",
-      ["wwwww", ["l", "bx"], "lll", ["l", "bx"], "ww"],
+      ["wwlww", ["l", "bx"], "lll", ["l", "bx"], "ww"],
       ["wwwwll", ["l", "bc"], ["g", "pa"], ["g", "mc"], ["g", "pl"], ["l", "bx"]],
       ["l", ["l", "bc"], "ww", "ll", ["l", "sh"], "gggl"],
       [["l", "se"], ["l", "bx"], "lww", ["l", "wb"],

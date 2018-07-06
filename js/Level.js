@@ -130,7 +130,7 @@ const Inventory = stampit.compose({
         if (itemAmount) {
           //add to sort list with mapped name (from tile type to image name)
           sortList.push({
-            imageName: this.itemDisplayInfo[itemName],
+            display: this.itemDisplayInfo[itemName],
             amount: itemAmount
           })
         }
@@ -146,14 +146,13 @@ const Inventory = stampit.compose({
           .forEach(
             //add a display item to the display list
             item => list.append(
-              //with a span
-              $("<span>").append(
-                //that has an amount
-                item.amount).append(
+              //with a span that has an amount
+              $("<span>").append(item.amount)
 
-                //and an image of the item tile
-                $("<img>", { src: Displayable.makeImgAttrib(item.imageName) })
-              )
+              //and an image of the item tile
+              .append($("<img>", {
+                src: Displayable.makeImgAttrib(item.display.name, item.display.locationIndex)
+              }))
             )
           )
       } else {
@@ -167,8 +166,11 @@ const Inventory = stampit.compose({
 
     //registers an item's imageName
     registerImageName(instance) {
-      //place into list
-      this.itemDisplayInfo[instance.tileType] = instance.imageName
+      //generate image elements for items
+      instance.getImgElem(true)
+
+      //place item into list, only one to be present
+      this.itemDisplayInfo[instance.tileType] = instance.elems[0]
     },
 
     //adds an item of the given name to the item store

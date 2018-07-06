@@ -75,12 +75,26 @@ const Displayable = stampit.compose({
     //returns the attribute value for a given image name
     makeImgAttrib(forName, index = 0) {
       return `${Displayable.imgLocations[index]}/${forName}.png`
+    },
+
+    //list of what location idnex to use for all images
+    imageSourceRegistry: { },
+
+    //returns the current image source for the given image name
+    getImageSource(imageName) {
+      //set to initial 0 if not present
+      if (! (imageName in Displayable.imageSourceRegistry)) {
+        Displayable.imageSourceRegistry[imageName] = 0
+      }
+
+      //return current
+      return Displayable.imageSourceRegistry[imageName]
     }
   },
 
   methods: {
     //generates a dom object for this tile; an image element
-    getImgElem() {
+    getImgElem(noReturn) {
       //check that img element doesn't exist yet
       if (! this.elems) {
         //if image name is an object
@@ -108,10 +122,15 @@ const Displayable = stampit.compose({
 
         //for all image names
         this.elems = this.imageName.map(imageName => {
+          //locaion index for this one image
+          const locationIndex = Displayable.getImageSource(imageName)
+
           //img elem attribs
           const attribs = {
             class: "tile",
-            src: Displayable.makeImgAttrib(imageName)
+
+            //init with first location
+            src: Displayable.makeImgAttrib(imageName, locationIndex)
           }
 
           //check if present, and call get tile id (present on terrain tiles)
@@ -122,25 +141,41 @@ const Displayable = stampit.compose({
           //generate new with prepared attribs
           return {
             elem: $("<img>", attribs),
-            locationIndex: 0,
-            name: imageName
+            name: imageName,
+            ownLocationIndex: locationIndex
           }
         })
 
         //attach error handler to switch to next location if current one fails
         this.elems.forEach(item => item.elem.on("error", e => {
+          //get current location index
+          let locationIndex = Displayable.getImageSource(item.name)
+
           //stop if no other locations left
-          if (item.locationIndex === Displayable.imgLocations.length - 1) {
+          if (locationIndex === Displayable.imgLocations.length - 1) {
+            console.log(locationIndex)
             return
           }
 
+          //increment image source location index if current own is the same
+          //otherwise many tiles trigger an error and the location is incremented too many times
+          if (item.ownLocationIndex === locationIndex) {
+            Displayable.imageSourceRegistry[item.name] = ++locationIndex
+
+            //update own
+            item.ownLocationIndex = locationIndex
+          }
+
           //set to try other location (increment index)
-          $(e.target).attr("src", Displayable.makeImgAttrib(item.name, ++item.locationIndex))
+          $(e.target).attr("src", Displayable.makeImgAttrib(item.name, locationIndex))
         }))
       }
 
-      //return list of elements
-      return this.elems.map(item => item.elem)
+      //don't make list of elements if not necessary (if flag on)
+      if (! noReturn) {
+        //return list of elements
+        return this.elems.map(item => item.elem)
+      }
     },
 
     //updates the display image with a given new image name
