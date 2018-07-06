@@ -65,67 +65,103 @@ const directionOffsets = [
 //handles rendering of a tile
 const Displayable = stampit.compose({
   statics: {
+    //list of locations to look for the images
+    imgLocations: [
+      "tiles-new",
+      "tiles",
+      "tiles-common"
+    ],
+
     //returns the attribute value for a given image name
-    makeImgAttrib(forName) {
-      return "tiles/" + forName + ".png"
+    makeImgAttrib(forName, index = 0) {
+      return `${Displayable.imgLocations[index]}/${forName}.png`
     }
   },
 
   methods: {
     //generates a dom object for this tile; an image element
     getImgElem() {
-      //if image name is an array
-      if (this.imageName instanceof Array) {
-        //on lengths of array
-        if (! this.imageName.length) {
-          //error for missing
-          throw Error("no image names given in array of names")
-        } else if (this.imageName.length === 1) {
-          //choose the only one
-          this.imageName = this.imageName[0]
-        } else {
-          //choose one at random
-          this.imageName = this.imageName[Math.floor(Math.random() * this.imageName.length)]
-        }
-      } else if (! this.imageName) {
-        throw Error(
-          "must pass image name or call calcImageName to generate before getting img element"
-        )
-      }
-
       //check that img element doesn't exist yet
-      if (! this.elem) {
-        //img elem attribs
-        const attribs = {
-          class: "tile",
-          src: Displayable.makeImgAttrib(this.imageName)
+      if (! this.elems) {
+        //if image name is an object
+        if (typeof this.imageName === "object") {
+          //if image name is an array
+          if (this.imageName instanceof Array) {
+            //choose one at random
+            if (this.imageName.length === 1) {
+              //choose the only one
+              this.imageName = this.imageName[0]
+            } else {
+              //choose one at random
+              this.imageName = this.imageName[Math.floor(Math.random() * this.imageName.length)]
+            }
+          } else {
+            //is normal object, interpret to dispaly as several layered images
+            this.imageName = this.imageName.layers
+          }
         }
 
-        //check if present, and call get tile id (present on terrain tiles)
-        if (this.getTileIdAttrib) {
-          attribs.id = this.getTileIdAttrib()
+        //wrap in array if not array yet
+        if (! (this.imageName instanceof Array)) {
+          this.imageName = [this.imageName]
         }
 
-        //generate new with prepared attribs
-        this.elem = $("<img>", attribs)
+        //for all image names
+        this.elems = this.imageName.map(imageName => {
+          //img elem attribs
+          const attribs = {
+            class: "tile",
+            src: Displayable.makeImgAttrib(imageName)
+          }
+
+          //check if present, and call get tile id (present on terrain tiles)
+          if (this.getTileIdAttrib) {
+            attribs.id = this.getTileIdAttrib()
+          }
+
+          //generate new with prepared attribs
+          return {
+            elem: $("<img>", attribs),
+            locationIndex: 0,
+            name: imageName
+          }
+        })
+
+        //attach error handler to switch to next location if current one fails
+        this.elems.forEach(item => item.elem.on("error", e => {
+          //stop if no other locations left
+          if (item.locationIndex === Displayable.imgLocations.length - 1) {
+            return
+          }
+
+          //set to try other location (increment index)
+          $(e.target).attr("src", Displayable.makeImgAttrib(item.name, ++item.locationIndex))
+        }))
       }
 
-      //return current element
-      return this.elem
+      //return list of elements
+      return this.elems.map(item => item.elem)
     },
 
     //updates the display image with a given new image name
-    changeImageName(newImageName) {
+    changeImageName(newImageName, index = 0) {
+      //get element itm to modify, default to index 0 because the only,
+      //tiles that have several layers are terain tiles which don't normally change images
+      const item = this.elems[index]
+
       //stop if image name didn't actually change
-      if (newImageName === this.imageName) {
+      if (newImageName === item.name) {
         return
       }
 
       //set new as image name
-      this.imageName = newImageName
+      item.name = newImageName
+
+      //reset location index, new image -> new search
+      item.locationIndex = 0
 
       //set a new name in the img element
-      this.elem.attr("src", Displayable.makeImgAttrib(this.imageName))
+      item.elem.attr("src", Displayable.makeImgAttrib(item.name))
     }
   }
 })

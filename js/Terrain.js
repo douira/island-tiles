@@ -18,7 +18,7 @@ const Terrain = Displayable.compose(Vector, {
       //if flag not set, empty container first
       if (! needsNoEmpty) {
         //empty without destroying contained elements (but leave terrain)
-        this.tableCellElem.children().slice(1).detach()
+        this.tableCellElem.children().slice(this.elems.length).detach()
       }
 
       //add own img elem to that table cell
@@ -190,14 +190,45 @@ const RoundedTerrain = Terrain.compose({
       oioo: "onlyRight",
       ooio: "onlyBottom",
       oooi: "onlyLeft"
-    }
+    },
+
+    //small connectoes have an extra section for the tip touching tiles,
+    //counting starting at top right corner, _ means doesn't matter
+    //for respecting and searchign with _, we need to use an array and strings as keys
+    connNeighbourNameMap: [
+      {
+        pos: "ii__o___",
+        name: "connRightTop"
+      },
+      {
+        pos: "_ii__o__",
+        name: "connRightBottom"
+      },
+      {
+        pos: "__ii__o_",
+        name: "connLeftBottom"
+      },
+      {
+        pos: "i__i___o",
+        name: "connLeftTop"
+      },
+    ],
+
+    //connector directions offsets for tip touching tiles
+    tipDirectionOffsets: [
+      Vector({ x: 1, y: -1 }),
+      Vector({ x: 1, y: 1 }),
+      Vector({ x: -1, y: 1 }),
+      Vector({ x: -1, y: -1 }),
+    ]
   },
 
   //determine image name from surrouding tile types
   methods: {
     calcImageName(level) {
       //for all possible neighbour positions, determine inside or outside status
-      const neighbourConfig = directionOffsets.map(offset => {
+      const neighbourConfigs = [directionOffsets, RoundedTerrain.tipDirectionOffsets]
+      .map(map => map.map(offset => {
         //get tile at neighbour position
         const neighbourTile = level.getTileAt(Vector.add(this, offset))
 
@@ -213,14 +244,35 @@ const RoundedTerrain = Terrain.compose({
           neighbourTile.terrainType === this.terrainType ||
           this.insideTypes.length && this.insideTypes.includes(neighbourTile.terrainType)
         ) ? "i" : "o"
-      }).join("")
+      }).join(""))
 
       //set from name map and choose base image if special one not present
       this.imageName = this.imageNameMap[
-        //get name in image name map from neighbourhoodNameMap,
+        //get image type in image name map from neighbourhoodNameMap,
         //choose center if unknown neighbour config
-        RoundedTerrain.neighbourConfigNameMap[neighbourConfig] || "center"
+        RoundedTerrain.neighbourConfigNameMap[neighbourConfigs[0]] || "center"
       ] || this.imageNameMap.center
+
+      //construct the extended neighbourhood config string, split into chars for char comparison
+      const extNeighbours = neighbourConfigs.join("").split("")
+
+      //find a connection neighbour item that fits this extended neighbour config
+      const connImageType = RoundedTerrain.connNeighbourNameMap.find(
+        //make sure every positions fits or doesn't matter
+        item => extNeighbours.every((c, i) => item.pos[i] === "_" || c === item.pos[i])
+      )
+
+      //get image name if anything found
+      if (connImageType) {
+        //get image name from terrain specific map
+        const connImageName = this.imageNameMap[connImageType.name]
+
+        //if a connection image name exists
+        if (connImageName) {
+          //create image name as a object that contains both the base and the extra image name
+          this.imageName = { layers: [this.imageName, connImageName] }
+        }
+      }
     }
   }
 })
@@ -233,6 +285,11 @@ const NonWalkableTerrain = stampit.methods({
     return false
   }
 })
+
+//utility function for generating arrays of tile variation names
+const tileVariation = (baseName, variations = 5, connector = "-") =>
+  //make array and fill with strings from base name and number suffix after connector
+  Array.from({ length: variations }, (e, i) => baseName + connector + (i + 1))
 
 //the Land tile
 const Land = RoundedTerrain.props({
@@ -253,7 +310,11 @@ const Land = RoundedTerrain.props({
     onlyTop: "land-only-t",
     onlyRight: "land-only-r",
     onlyBottom: "land-only-b",
-    onlyLeft: "land-only-l"
+    onlyLeft: "land-only-l",
+    connRightTop: "land-conn-rt",
+    connRightBottom: "land-conn-rb",
+    connLeftBottom: "land-conn-lb",
+    connLeftTop: "land-conn-lt"
   },
   insideTypes: ["Grass"]
 })
@@ -293,7 +354,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
   props: {
     terrainType: "Water",
     imageNameMap: {
-      center: Array.from({ length: 8 }, (e, index) => "water-" + (index + 1)),
+      center: tileVariation("water", 8),
       edgeTop: "water-border-t",
       rightTop: "water-border-t",
       leftTop: "water-border-corner",
