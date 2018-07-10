@@ -486,8 +486,9 @@ const WaterBottle = FloatingObject.compose(Pushable, {
         //set filled flag
         this.filled = true
 
-        //in animation, change to full display
-        this.level.anim.registerAction(() => this.changeImageName("bottle-full"))
+        //in long animation, change to full display
+        this.level.anim.registerAction(
+          () => this.changeImageName("bottle-full"), { actionType: "slowAnimation" })
       }
     }
   }
@@ -1201,7 +1202,7 @@ const PebbleProj = FloatingObject.compose(Projectile, {
 
 //coconut is projectile that moves in the direction it was pushed
 //projectile handler overwrites pushable notify move handler,
-//so projectile movement is triggered on push
+//so that projectile movement is triggered on push
 const Coconut = FloatingObject.compose(Pushable, Projectile).props({
   imageName: "coconut",
   tileType: "Coconut"
