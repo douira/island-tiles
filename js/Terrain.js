@@ -311,10 +311,10 @@ const Land = RoundedTerrain.props({
     onlyRight: tileVariation("land-only-r", 2),
     onlyBottom: tileVariation("land-only-b", 2),
     onlyLeft: tileVariation("land-only-l", 2),
-    connRightTop: "land-conn-rt",
+    /*connRightTop: "land-conn-rt",
     connRightBottom: "land-conn-rb",
     connLeftBottom: "land-conn-lb",
-    connLeftTop: "land-conn-lt"
+    connLeftTop: "land-conn-lt"*/
   },
   insideTypes: ["Grass"]
 })

@@ -67,8 +67,8 @@ const Displayable = stampit.compose({
   statics: {
     //list of locations to look for the images
     imgLocations: [
-      "tiles-new",
       "tiles",
+      "tiles-new",
       "tiles-common"
     ],
 
@@ -153,7 +153,6 @@ const Displayable = stampit.compose({
 
           //stop if no other locations left
           if (locationIndex === Displayable.imgLocations.length - 1) {
-            console.log(locationIndex)
             return
           }
 
