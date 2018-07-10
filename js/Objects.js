@@ -3,7 +3,8 @@ Displayable, Vector, directionOffsets*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab, BabyCrab,
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
-Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut*/
+Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
+CoconutHole*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -1206,37 +1207,92 @@ const Coconut = FloatingObject.compose(Pushable, Projectile).props({
   tileType: "Coconut"
 })
 
+//is triggered by projectile
+const ProjTrigger = stampit.methods({
+  //allow projectiles for this type to move onto palm
+  checkMove(movement, actors) {
+    return actors.subject.tileType === this.projType ||
+      this.checkMoveTrigger && this.checkMoveTrigger(movement, actors)
+  },
+
+  //when pebble projectile tries to leave
+  checkProjLeave(movement, proj) {
+    //if pebble projectile
+    if (proj.tileType === this.projType) {
+      //if set to absorb projectiles of given type
+      if (this.absorbProj) {
+        //delete the projectile to absorb
+        proj.delete()
+      }
+
+      //call trigger handler
+      this.projTriggered(movement, proj)
+
+      //if absorbing projectile, disallow further movement
+      return ! this.absorbProj
+    }
+
+    //allow other projectiles to pass
+    return true
+  }
+})
+
 //Palm tile is stationary
-const Palm = FloatingObject.compose({
+const Palm = FloatingObject.compose(ProjTrigger, {
   props: {
     //init with image name
     tileType: "Palm",
     heightPrio: 0,
-    imageName: ["palm-1", "palm-2"]
+    imageName: ["palm-1", "palm-2"],
+
+    //triggered on pebble projectile
+    projType: "PebbleProj",
+
+    //does absorb (remove) pebble projectile
+    absorbProj: true
   },
 
   methods: {
-    //allow pebbles to move onto palm
-    checkMove(movement, actors) {
-      return actors.subject.tileType === "PebbleProj"
+    //when triggered by the pebble projectile
+    projTriggered(movement) {
+      //add coconut to next tile
+      Coconut({ level: this.level, startTile: this.getTargetTile(movement) })
+    }
+  }
+})
+
+//coconut hole is filled by absorbing a coconut projectile
+const CoconutHole = FloatingObject.compose(ProjTrigger, {
+  props: {
+    imageName: "dark-hole",
+    tileType: "CoconutHole",
+    heightPrio: 0,
+    projType: "Coconut",
+    absorbProj: true,
+
+    //flag wether or not this hole has been filled with a coconut
+    filled: false
+  },
+
+  methods: {
+    //when triggered by the coconut projectile
+    projTriggered() {
+      //change projectiel type to nothing to prevent absorbing another projectile
+      this.projType = false
+
+      //in animation
+      this.level.anim.registerAction(() => {
+        //set flag to be filled
+        this.filled = true
+
+        //change to filled image
+        this.changeImageName("dark-hole-closed")
+      }, { actionType: "animation" })
     },
 
-    //when pebble projectile tries to leave
-    checkProjLeave(movement, proj) {
-      //if pebble projectile
-      if (proj.tileType === "PebbleProj") {
-        //delete projectile
-        proj.delete()
-
-        //add coconut to next tile
-        Coconut({ level: this.level, startTile: this.getTargetTile(movement) })
-
-        //absorb projectile
-        return false
-      } else {
-        //allow other projectiles to pass
-        return true
-      }
+    checkMoveTrigger() {
+      //disallow movement until filled
+      return this.filled
     }
   }
 })

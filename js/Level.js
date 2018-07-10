@@ -4,7 +4,7 @@ Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
-Key, Coin, Chest, Pebble, Slingshot, Coconut*/
+Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -388,10 +388,9 @@ const Level = stampit.compose({
         cc: Coconut,
           /*see slingshot for creation, goes until it hits something, (also stops at water)
           if it hits empty CoconutHole, closes CoconutHole*/
-        /*
-        ch: CoconutHole,
-          needs to be hit by coconut to close and become walkable
-        lt: LeafTop,
+        cl: CoconutHole,
+          //needs to be hit by coconut to close and become walkable
+        /*lt: LeafTop,
           redirects pebble in direction its pointing, can redirect pebble coming from any side
         lr: LeafRight,
         lb: LeafBottom,
