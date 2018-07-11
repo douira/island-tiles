@@ -425,12 +425,13 @@ Level = stampit.compose({
           only accepts coins from the left
         ph: PirateHut,
           basically just an unmovable prop
-        sf: Sunflower,
+        fl: Flower,
           extends with copies until reached terrain border (border of grass or land),
-          pushing any sunflower makes it extend in that direction
-        ss: SunflowerSeed,
-          all seeds must be converted to a sunflower, can step on sunflowers?
-          both sunflower and sunflower seed have a red variant that only wants red counterparts
+          pushing any flower makes it extend in that direction,
+          cannot be walked on
+        fs: FlowerSeed,
+          all seeds must be covered with a flower of the same color,
+          both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass
         br: Barrel,
@@ -444,6 +445,7 @@ Level = stampit.compose({
         ct: CoconutTarget,
           path segment that when all targets have a coconut, triggers all coconut holes to close
 
+        source level 170 is very confusing
         */
       }
     },
