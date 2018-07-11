@@ -282,11 +282,12 @@ const LevelFileReader = stampit.compose({
         60: "ky",
         80: "pb",
         83: "sl",
-        71: "cl",
+        71: "co",
         85: "lf0", //leaf directions
         86: "lf1",
         87: "lf2",
         88: "lf3",
+        94: "cl"
         /*
         90: "pi", //TODO: conflict with non-pirate raft
         92: "ph"
@@ -437,7 +438,8 @@ const LevelFileReader = stampit.compose({
           //if second item is number
           if (typeof item[1] === "number") {
             //map to object abbrev or unknown if not present
-            pos.push(LevelFileReader.binFormatMaps.objectTypes[item[1]] || "uk")
+            //add all objects, enabled adding of multiple objects in bin format map
+            pos = pos.concat(LevelFileReader.binFormatMaps.objectTypes[item[1]] || "uk")
           }
 
           //return processed position

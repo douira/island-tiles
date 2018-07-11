@@ -68,8 +68,8 @@ const Displayable = stampit.compose({
     //list of locations to look for the images
     imgLocations: [
       "tiles",
+      "tiles-common",
       "tiles-new",
-      "tiles-common"
     ],
 
     //returns the attribute value for a given image name
@@ -133,11 +133,6 @@ const Displayable = stampit.compose({
             src: Displayable.makeImgAttrib(imageName, locationIndex)
           }
 
-          //check if present, and call get tile id (present on terrain tiles)
-          if (this.getTileIdAttrib) {
-            attribs.id = this.getTileIdAttrib()
-          }
-
           //generate new with prepared attribs
           return {
             elem: $("<img>", attribs),
@@ -179,7 +174,7 @@ const Displayable = stampit.compose({
 
     //updates the display image with a given new image name
     changeImageName(newImageName, index = 0) {
-      //get element itm to modify, default to index 0 because the only,
+      //get element item to modify, default to index 0 because the only,
       //tiles that have several layers are terain tiles which don't normally change images
       const item = this.elems[index]
 

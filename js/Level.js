@@ -4,7 +4,8 @@ Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
-Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf*/
+Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
+Clam*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -84,11 +85,32 @@ const AnimationQueue = stampit.compose({
   }
 })
 
+//order of declaration
+let Level
+
 //keeps track of the inventory
 const Inventory = stampit.compose({
-  props: {
-    //list of item names and tile types (does not need to be reset)
+  statics: {
+    //list of item image names
     itemDisplayInfo: { }
+  },
+
+  //init itemDisplayInfo with all items from positionDescriptorMapping
+  init() {
+    //if not filled already
+    if (! Object.keys(Inventory.itemDisplayInfo).length) {
+      //for all objects
+      for (const objAbbrev in Level.positionDescriptorMapping.objs) {
+        //get constructor of object
+        const constructor = Level.positionDescriptorMapping.objs[objAbbrev]
+
+        //if image name is attached statically, this is a item
+        if (constructor.imageName) {
+          //register image name
+          Inventory.itemDisplayInfo[constructor.tileType] = constructor.imageName
+        }
+      }
+    }
   },
 
   methods: {
@@ -115,8 +137,8 @@ const Inventory = stampit.compose({
 
     //updates the item inventory display
     updateItemDisplay() {
-      //get list for item display and empty
-      const list = this.itemDisplayElem.empty()
+      //empty dispaly item list
+      this.itemDisplayElem.empty()
 
       //array of list items to create
       const sortList = []
@@ -130,7 +152,7 @@ const Inventory = stampit.compose({
         if (itemAmount) {
           //add to sort list with mapped name (from tile type to image name)
           sortList.push({
-            display: this.itemDisplayInfo[itemName],
+            name: itemName,
             amount: itemAmount
           })
         }
@@ -139,42 +161,33 @@ const Inventory = stampit.compose({
       //if any items present
       if (sortList.length) {
         //sort list of present items by amount
-        sortList
-          .sort((a, b) => a.amount - b.amount)
+        sortList.sort((a, b) => a.amount - b.amount)
 
-          //and for all list items
-          .forEach(
-            //add a display item to the display list
-            item => list.append(
-              //with a span that has an amount
-              $("<span>").append(item.amount)
+        //and for all list items
+        .forEach(item => {
+          //create displayable instance
+          const displayer = Displayable()
 
-              //and an image of the item tile
-              .append($("<img>", {
-                src: Displayable.makeImgAttrib(item.display.name, item.display.locationIndex)
-              }))
-            )
+          //set image name on displayer
+          displayer.imageName = Inventory.itemDisplayInfo[item.name]
+
+          //add a display item to the display list
+          this.itemDisplayElem.append(
+            //with a span that has an amount and an image of the item tile
+            $("<span>").append(item.amount).append(displayer.getImgElem())
           )
+        })
       } else {
         //add no items message
-        list.append($("<div>", {
+        this.itemDisplayElem.append($("<div>", {
           text: "No Items",
           id: "no-items-msg"
         }))
       }
     },
 
-    //registers an item's imageName
-    registerImageName(instance) {
-      //generate image elements for items
-      instance.getImgElem(true)
-
-      //place item into list, only one to be present
-      this.itemDisplayInfo[instance.tileType] = instance.elems[0]
-    },
-
     //adds an item of the given name to the item store
-    addItem(itemName, amount = 1) {
+    addItems(itemName, amount = 1) {
       //create empty entry if not present and add amount
       this.items[itemName] = (this.items[itemName] || 0) + amount
 
@@ -294,7 +307,7 @@ const Registry = stampit.compose({
 })
 
 //level describes the configuration of the playing field
-const Level = stampit.compose({
+Level = stampit.compose({
   //is constructed in the level store, parses the level format
   init({ name, dim, field }) {
     //copy fields
@@ -388,27 +401,29 @@ const Level = stampit.compose({
         cc: Coconut,
           /*see slingshot for creation, goes until it hits something, (also stops at water)
           if it hits empty CoconutHole, closes CoconutHole*/
-        cl: CoconutHole,
+        co: CoconutHole,
           //needs to be hit by coconut to close and become walkable
         lf: Leaf,
           //redirects pebble in direction its pointing, can redirect pebble coming from any side,
           //pass through on exit and opposite of exit side
-        /*cl: Clam,
-          pushable,
+        cl: Clam,
+          /*pushable,
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
-          absorbs flying pebble if already open
+          absorbs flying pebble if already open*/
+        /*
         ra: Raft,
           raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
           things can be pushed over raft like wetbox,
           player can push things standing on land (or on wetbox) from raft
           example: raft can move until it hits another raft (then player can transfer)
-        pi: PirateRaft,
+        pi: Pirate,
           is next to pirate hut, after getting all money on the map, goes into hut and
           leaves Raft behind (apparently pirate can also go away without a hut)
-          only accepts from the left
+          only accepts coins from the left
         ph: PirateHut,
+          basically just an unmovable prop
         sf: Sunflower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any sunflower makes it extend in that direction
@@ -463,7 +478,7 @@ const Level = stampit.compose({
           length: fieldDim.y
         }
       ]
-    }
+    },
   },
 
   methods: {
@@ -705,6 +720,25 @@ const Level = stampit.compose({
       }
     },
 
+    //creates an object instance from a descriptor string
+    createInstanceDescr(str) {
+      //get obj factory, select from obj mapping
+      const objMaker = Level.positionDescriptorMapping.objs[str.substr(0, 2)]
+
+      //check for validity
+      if (! objMaker) {
+        throw Error(`obj abbrev given in level description is invalid '${str}'`)
+      }
+
+      //create object of given class
+      return objMaker({
+        level: this,
+
+        //extra init data is all that comes after the two char object abbrev
+        extraInitData: str.substr(2)
+      })
+    },
+
     //parses the field into tiles and floating objects
     parseField() {
       //init empty list of tiles for better iteration
@@ -732,21 +766,8 @@ const Level = stampit.compose({
               return
             }
 
-            //get obj factory, select from obj mapping
-            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev.substr(0, 2)]
-
-            //check for validity
-            if (! objMaker) {
-              throw Error(`obj abbrev given in level description is invalid '${objAbbrev}'`)
-            }
-
-            //create object of given class
-            const obj = objMaker({
-              level: this,
-
-              //extra init data is all that comes after the two char object abbrev
-              extraInitData: objAbbrev.substr(2)
-            })
+            //create object from descriptor
+            const obj = this.createInstanceDescr(objAbbrev)
 
             //if is player instance
             if (obj.tileType === "Player") {

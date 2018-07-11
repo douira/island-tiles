@@ -4,7 +4,7 @@ Displayable, Vector, directionOffsets*/
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
-CoconutHole, Leaf*/
+CoconutHole, Leaf, Clam*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -74,8 +74,11 @@ const FloatingObject = Displayable.compose(Vector, {
 
     //removes this object completely (should not be moved afterwards)
     delete() {
-      //normal remove
-      this.remove()
+      //if parent set at all
+      if (this.parent) {
+        //normal remove
+        this.remove()
+      }
 
       //unregister from registry
       this.level.registry.unregister(this)
@@ -312,14 +315,18 @@ const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
 
 //items can be picked up and are stored in a fixed type inventory
 const Pickable = stampit.compose({
+  //on composition with pickable
+  composers({ stamp, composables }) {
+    //copy image name and tile tpye into statics
+    //so inventory can dispaly items of which no instance exists
+    const props = composables[composables.length - 1].properties
+    stamp.imageName = props.imageName
+    stamp.tileType = props.tileType
+  },
+
   props: {
     //signal to be item (for counting on whole level)
     isItem: true
-  },
-
-  //register item image name
-  init() {
-    this.level.inventory.registerImageName(this)
   },
 
   methods: {
@@ -332,6 +339,7 @@ const Pickable = stampit.compose({
     notifyMove(movement, actors) {
       //require player to be moving into us
       if (actors.subject.tileType !== "Player") {
+        //should theoretically never occur, as checkMove prevents this
         return
       }
 
@@ -341,7 +349,7 @@ const Pickable = stampit.compose({
         this.delete()
 
         //register item pickup
-        this.level.inventory.addItem(this.tileType)
+        this.level.inventory.addItems(this.tileType)
       })
     }
   }
@@ -1165,7 +1173,7 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
         this.changeImageName("chest-open")
 
         //give player a coin
-        this.level.inventory.addItem("Coin")
+        this.level.inventory.addItems("Coin")
       })
     }
   }
@@ -1440,6 +1448,73 @@ const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
 
         //return false to stop
         return false
+      }
+    }
+  }
+})
+
+//clam opens and allows pearl item to be taken
+const Clam = FloatingObject.compose(PushableProjTrigger, {
+  props: {
+    imageName: "cross-blue",
+    tileType: "Clam",
+
+    //state of the clam, 0 is closed, 1 is open with pearl, 2 is open without pearl
+    clamState: 0,
+
+    //triggers on pebble but doesn't interact with it
+    projType: "PebbleProj",
+    absorbProj: false
+  },
+
+  statics: {
+    //images for the two other states
+    clamStates: {
+      1: "cross-red",
+      2: "cross-green"
+    }
+  },
+
+  methods: {
+    //changes the calm state and adjusts the image name accordingly
+    changeClamState(newState) {
+      //set new state
+      this.clamState = newState
+
+      //set image with gotten name
+      this.changeImageName(Clam.clamStates[this.clamState])
+    },
+
+    //on check move, deal with player and projectile
+    checkMove(movement, actors) {
+      //if clam is open but without pearl and player is pushing
+      if (this.clamState === 1 && actors.subject.tileType === "Player") {
+        //in animation
+        this.level.anim.registerAction(() => {
+          //give player an pearl item
+          this.level.inventory.addItems("Pearl")
+
+          //change to open and empty state
+          this.changeClamState(2)
+        })
+      }
+
+      //handle walkability with projectile trigger method and pushable handler
+      return this.projTriggerCheckMove(movement, actors) || this.pushableCheckMove(movement, actors)
+    },
+
+    //on hit by the specified pebble projectile
+    projTriggered(movement, proj) {
+      //in animation, move to state open with pearl
+      this.level.anim.registerAction(() => this.changeClamState(1))
+
+      //determine if we are absorbing the projectile
+      if (this.clamState > 0) {
+        //delte pebble projectile
+        proj.delete()
+
+        //return true to stop
+        return true
       }
     }
   }

@@ -55,11 +55,6 @@ const Terrain = Displayable.compose(Vector, {
       this.updateImgOrder()
     },
 
-    //returns id to be put on non moving img element
-    getTileIdAttrib() {
-      return "tile" + this.x + "-" + this.y
-    },
-
     //sets up a given nw object with data from this tile
     setupNewObj(newObj) {
       //attach self as parent
