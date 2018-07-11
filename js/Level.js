@@ -309,7 +309,7 @@ const Registry = stampit.compose({
 //level describes the configuration of the playing field
 Level = stampit.compose({
   //is constructed in the level store, parses the level format
-  init({ name, dim, field }) {
+  init({ name, dim, field, noPadding }) {
     //copy fields
     this.name = name
     this.dim = dim
@@ -319,7 +319,7 @@ Level = stampit.compose({
     this.normalize()
 
     //apply padding to field
-    this.applyPadding()
+    this.applyPadding(noPadding)
 
     //level cannot be used in this stage yet,
     //needs to parse into tile objects and init in table to work
@@ -340,6 +340,7 @@ Level = stampit.compose({
       objs: {
         rc: Rock,
         pa: Palm,
+          //makes a coconut when hit by pebble
         pl: Player,
         bx: Box,
         bw: WetBox,
@@ -437,7 +438,12 @@ Level = stampit.compose({
         bb: BarrelBase,
           a spot where a barrel has to be pushed
         ls: LeafSwitcher,
-          switches (all) leaves to point in the direction the switcher was bumped in
+          switches all leaves to point in the direction the switcher was bumped in
+        cp: CoconutPath,
+          special path on which coconuts move until they hit the end of a path
+        ct: CoconutTarget,
+          path segment that when all targets have a coconut, triggers all coconut holes to close
+
         */
       }
     },
@@ -543,7 +549,7 @@ Level = stampit.compose({
     },
 
     //applies padding to the field
-    applyPadding() {
+    applyPadding(noPadding) {
       //determine size of the field
       const fieldDim = Vector({
         x: this.field.reduce((max, line) => Math.max(max, line.length), 0),
@@ -573,6 +579,11 @@ Level = stampit.compose({
       } else {
         //set padding necessary flag
         needsPadding = true
+      }
+
+      //stop if padding disabled
+      if (noPadding) {
+        return
       }
 
       //total padding needed on axis, divide by 2 for the padding needed on each side
