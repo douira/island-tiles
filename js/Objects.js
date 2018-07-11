@@ -1456,7 +1456,7 @@ const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
 //clam opens and allows pearl item to be taken
 const Clam = FloatingObject.compose(PushableProjTrigger, {
   props: {
-    imageName: "cross-blue",
+    imageName: "clam-closed",
     tileType: "Clam",
 
     //state of the clam, 0 is closed, 1 is open with pearl, 2 is open without pearl
@@ -1470,8 +1470,8 @@ const Clam = FloatingObject.compose(PushableProjTrigger, {
   statics: {
     //images for the two other states
     clamStates: {
-      1: "cross-red",
-      2: "cross-green"
+      1: "clam-open",
+      2: "clam-empty"
     }
   },
 
@@ -1506,7 +1506,7 @@ const Clam = FloatingObject.compose(PushableProjTrigger, {
     //on hit by the specified pebble projectile
     projTriggered(movement, proj) {
       //in animation, move to state open with pearl
-      this.level.anim.registerAction(() => this.changeClamState(1))
+      this.level.anim.registerAction(() => this.changeClamState(1), { priority: 1 })
 
       //determine if we are absorbing the projectile
       if (this.clamState > 0) {
