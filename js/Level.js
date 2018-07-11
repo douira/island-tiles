@@ -427,9 +427,17 @@ Level = stampit.compose({
         sf: Sunflower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any sunflower makes it extend in that direction
-        ss: SunflowerSeed
+        ss: SunflowerSeed,
           all seeds must be converted to a sunflower, can step on sunflowers?
-
+          both sunflower and sunflower seed have a red variant that only wants red counterparts
+          stops like other obstacle when reached seed of wrong color
+          only ever seems to be placed on grass, doesn't propagate down grass
+        br: Barrel,
+          all barrels have to be on a barrel base to finish
+        bb: BarrelBase,
+          a spot where a barrel has to be pushed
+        ls: LeafSwitcher,
+          switches (all) leaves to point in the direction the switcher was bumped in
         */
       }
     },
@@ -720,25 +728,6 @@ Level = stampit.compose({
       }
     },
 
-    //creates an object instance from a descriptor string
-    createInstanceDescr(str) {
-      //get obj factory, select from obj mapping
-      const objMaker = Level.positionDescriptorMapping.objs[str.substr(0, 2)]
-
-      //check for validity
-      if (! objMaker) {
-        throw Error(`obj abbrev given in level description is invalid '${str}'`)
-      }
-
-      //create object of given class
-      return objMaker({
-        level: this,
-
-        //extra init data is all that comes after the two char object abbrev
-        extraInitData: str.substr(2)
-      })
-    },
-
     //parses the field into tiles and floating objects
     parseField() {
       //init empty list of tiles for better iteration
@@ -766,8 +755,21 @@ Level = stampit.compose({
               return
             }
 
-            //create object from descriptor
-            const obj = this.createInstanceDescr(objAbbrev)
+            //get obj factory, select from obj mapping
+            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev.substr(0, 2)]
+
+            //check for validity
+            if (! objMaker) {
+              throw Error(`obj abbrev given in level description is invalid '${objAbbrev}'`)
+            }
+
+            //create object of given class
+            const obj = objMaker({
+              level: this,
+
+              //extra init data is all that comes after the two char object abbrev
+              extraInitData: objAbbrev.substr(2)
+            })
 
             //if is player instance
             if (obj.tileType === "Player") {

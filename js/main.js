@@ -477,6 +477,7 @@ const LevelFileReader = stampit.compose({
       //create level with descriptor, file name as name and standard size
       this.level = Level({
         name: `${this.levelName} (${this.fileName})`,
+        noPadding: true,
         field: descr,
         dim: Vector(20, 12)
       })
