@@ -4,7 +4,7 @@ Displayable, Vector, directionOffsets*/
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
-CoconutHole*/
+CoconutHole, Leaf*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -163,6 +163,17 @@ const Movable = stampit.compose({
       //get target tile for movement
       const targetTile = this.getTargetTile(movement)
 
+      //if target tile is invalid
+      if (! targetTile) {
+        //if handler specified
+        if (this.outOfFieldMove) {
+          this.outOfFieldMove(movement, initiator)
+        }
+
+        //return to stop, nowhere to go
+        return
+      }
+
       //check if move is possible
       if (this.attemptMove(targetTile, movement, initiator)) {
         //perform possible move
@@ -177,13 +188,21 @@ const Pushable = Movable.compose({
   methods: {
     //check if next can be walked on by this object
     checkMove(movement, actors) {
+      return this.pushableCheckMove(movement, actors)
+    },
+
+    //actual checking function, is broken out to make external call possible
+    pushableCheckMove(movement, actors) {
       //require subject and initiator to be the same (don't allow double pushing)
       return actors.initiator === actors.subject &&
+        //don't allow pushing by projectiles
+        ! actors.subject.isProjectile &&
+
         //deny pushing down grass
         ! (actors.subject.parent.terrainType === "Grass" && this.parent.terrainType === "Land") &&
 
         //check if push movement ok in general (for this object)
-        (! this.checkMoveExtra || this.checkMoveExtra(movement, actors)) &&
+        (! this.checkPush || this.checkPush(movement, actors)) &&
 
         //try to move in direction of current movement, this is the subject but keep initiator
         this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
@@ -191,6 +210,12 @@ const Pushable = Movable.compose({
 
     //when move actually happens (movement to parent tile), do move to next tile
     notifyMove(movement, actors) {
+      //no own notify move
+      this.pushableNotifyMove(movement, actors)
+    },
+
+    //notify move breakout to allow interception of main notify move
+    pushableNotifyMove(movement, actors) {
       //get target tile for movement on this object
       const targetTile = this.getTargetTile(movement)
 
@@ -1148,6 +1173,10 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
 
 //projectile moves on it's own until it hits something
 const Projectile = Movable.compose({
+  props: {
+    isProjectile: true
+  },
+
   //init with movement
   init({ movement, startTile }) {
     //immediately add to tile to start at
@@ -1165,7 +1194,7 @@ const Projectile = Movable.compose({
 
     //when projectile moves to another tile
     checkLeave(movement, actors) {
-      //if asking for leaveing of this projectile
+      //if asking for leaving of this projectile
       if (actors.subject === this) {
         //check that tile is ok with this projectile leaving (and also does processing with it)
         return this.parent.checkProjLeave(movement, this)
@@ -1193,10 +1222,19 @@ const Pebble = FloatingObject.compose(Pickable).props({
 })
 
 //pebble projectile is created by slingshot
-const PebbleProj = FloatingObject.compose(Projectile, {
+//is sinkable to allow movement away over water, doesn't actually respond to sink event
+const PebbleProj = FloatingObject.compose(Projectile, Sinkable, {
   props: {
     imageName: "pebble",
     tileType: "PebbleProj"
+  },
+
+  methods: {
+    //when moving out of field
+    outOfFieldMove() {
+      //remove to disappear
+      this.delete()
+    }
   }
 })
 
@@ -1212,8 +1250,14 @@ const Coconut = FloatingObject.compose(Pushable, Projectile).props({
 const ProjTrigger = stampit.methods({
   //allow projectiles for this type to move onto palm
   checkMove(movement, actors) {
+    return this.projTriggerCheckMove(movement, actors)
+  },
+
+  //break out to allow for external call to checking without checkMove
+  projTriggerCheckMove(movement, actors) {
+    //has to be specified type of projectile and other check, if present, has to be ok
     return actors.subject.tileType === this.projType ||
-      this.checkMoveTrigger && this.checkMoveTrigger(movement, actors)
+      this.checkMoveProj && this.checkMoveProj(movement, actors)
   },
 
   //when pebble projectile tries to leave
@@ -1227,10 +1271,10 @@ const ProjTrigger = stampit.methods({
       }
 
       //call trigger handler
-      this.projTriggered(movement, proj)
+      const triggerResult = this.projTriggered(movement, proj)
 
-      //if absorbing projectile, disallow further movement
-      return ! this.absorbProj
+      //or trigger result or if absorbing projectile, disallow further movement
+      return typeof triggerResult === "undefined" ? ! this.absorbProj : triggerResult
     }
 
     //allow other projectiles to pass
@@ -1257,7 +1301,7 @@ const Palm = FloatingObject.compose(ProjTrigger, {
     //when triggered by the pebble projectile
     projTriggered(movement) {
       //add coconut to next tile
-      Coconut({ level: this.level, startTile: this.getTargetTile(movement) })
+      Coconut({ startTile: this.getTargetTile(movement) })
     }
   }
 })
@@ -1291,7 +1335,8 @@ const CoconutHole = FloatingObject.compose(ProjTrigger, {
       }, { actionType: "animation" })
     },
 
-    checkMoveTrigger() {
+    //called to check if prijectile can ome onto this tile
+    checkMoveProj() {
       //disallow movement until filled
       return this.filled
     }
@@ -1314,7 +1359,88 @@ const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
     //when pebble is received
     receiveItems(items, movement) {
       //create a new pebble projectile on this tile that will move itself
-      PebbleProj({ level: this.level, movement, startTile: this.parent })
+      PebbleProj({ movement, startTile: this.parent })
+    }
+  }
+})
+
+//combines pushable and projtrigger because they both have a checkMove which both have to be checked
+const PushableProjTrigger = Pushable.compose(ProjTrigger).methods({
+  //combined check move, checks pushable and proj trigger
+  checkMove(movement, actors) {
+    return this.projTriggerCheckMove(movement, actors) || this.pushableCheckMove(movement, actors)
+  },
+
+  //notify move doesn't call pushable notify move (which triggers pushing) for our projectile
+  notifyMove(movement, actors) {
+    //if not our projectile
+    if (actors.subject.tileType !== this.projType) {
+      //call pushable notify move to allow pushing
+      this.pushableNotifyMove(movement, actors)
+    }
+  }
+})
+
+//leaf redirects pebble
+const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
+  props: {
+    tileType: "Leaf",
+    projType: "PebbleProj",
+    absorbProj: false
+  },
+
+  statics: {
+    //specify subtypes for leaf directions
+    subtypes: {
+      0: {
+        imageName: "leaf-t",
+        tileType: "LeafTop",
+        redirection: 0
+      },
+      1: {
+        imageName: "leaf-r",
+        tileType: "LeafRight",
+        redirection: 1
+      },
+      2: {
+        imageName: "leaf-b",
+        tileType: "LeafBottom",
+        redirection: 2
+      },
+      3: {
+        imageName: "leaf-l",
+        tileType: "LeafLeft",
+        redirection: 3
+      }
+    }
+  },
+
+  methods: {
+    projTriggered(movement, proj) {
+      //redirect if movement is perpendicular to axis, not forward and backwards directions
+      if (
+        movement.direction !== this.typeData.redirection &&
+        movement.direction !== (this.typeData.redirection + 2) % 4
+      ) {
+        //in animation
+        //TODO: make pebble animation over leaf not stop for one frame on the leaf
+        this.level.anim.registerAction(() => {
+          //delete projectile to absorb
+          proj.delete()
+
+          //make movement descriptor for redirected pebble
+          const newMovement = Movable.makeMovementDescr(this.typeData.redirection)
+
+          //make new prjectile in redirection direction
+          PebbleProj({
+            startTile: this.getTargetTile(newMovement),
+            movement: newMovement
+          })
+        })
+
+        //return false to stop
+        return false
+      }
     }
   }
 })

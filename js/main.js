@@ -282,15 +282,14 @@ const LevelFileReader = stampit.compose({
         60: "ky",
         80: "pb",
         83: "sl",
-        71: "cl"
+        71: "cl",
+        85: "lf0", //leaf directions
+        86: "lf1",
+        87: "lf2",
+        88: "lf3",
         /*
-        85: "lu",
-        86: "lr",
-        87: "ld",
-        88: "ll",
         90: "pi", //TODO: conflict with non-pirate raft
-        92: "ph",
-        94: "cl"
+        92: "ph"
         */
       }
     },
