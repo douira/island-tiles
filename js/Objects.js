@@ -4,7 +4,7 @@ Displayable, Vector, directionOffsets*/
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
-CoconutHole, Leaf, Clam, Barrel, BarrelBase*/
+CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -82,6 +82,9 @@ const FloatingObject = Displayable.compose(Vector, {
 
       //unregister from registry
       this.level.registry.unregister(this)
+
+      //set flag for not doing any further movement, even when deleted in notifyMove handler
+      this.deleted = true
     },
 
     //changes this object to a new type by creating a new one and re-adding to to the terrain
@@ -129,7 +132,7 @@ const Movable = stampit.compose({
         //copy direction
         direction,
 
-        //and lookup in movement offsets for offset
+        //and lookup offset in movement offsets
         offset: directionOffsets[direction]
       }
     }
@@ -142,8 +145,8 @@ const Movable = stampit.compose({
       const actors = { subject: this, initiator }
 
       //check if target tile is ok with movement to it, no action if out of bounds
-      return this.parent.checkLeave(movement, actors, targetTile) &&
-        targetTile && targetTile.checkMove(movement, actors)
+      return targetTile && this.parent.checkLeave(movement, actors, targetTile) &&
+        targetTile.checkMove(movement, actors)
     },
 
     //does the actual moving
@@ -152,10 +155,16 @@ const Movable = stampit.compose({
       const actors = { subject: this, initiator }
 
       //notify current tile that this object is leaving
-      this.parent.notifyLeave(movement, actors)
+      this.parent.notifyLeave(movement, actors, targetTile)
 
       //notify terrain tiles and objects and so on
       targetTile.notifyMove(movement, actors)
+
+      //stop if deleted in the mean time
+      if (this.deleted) {
+        //stop doing anything
+        return
+      }
 
       //do movement to target tile, if target file is falsy attemptMove wasn't checked first!
       this.moveToTile(targetTile)
@@ -163,6 +172,11 @@ const Movable = stampit.compose({
 
     //move is called as the initial impulse (this is default initiator)
     move(movement, initiator = this) {
+      //stop if deleted i nthe mean time
+      if (this.deleted) {
+        return
+      }
+
       //get target tile for movement
       const targetTile = this.getTargetTile(movement)
 
@@ -533,17 +547,19 @@ const WaterHole = FloatingObject.props({
   tileType: "WaterHole"
 })
 
+//registers the object in the level registry for things
+//where an array of all objects of a certain type needs to be accessed
+const Registered = stampit.init(function() {
+  //register in level
+  this.level.registry.register(this)
+})
+
 //telporter transports player from one teleporter to the other (only the player)
-const Teleporter = FloatingObject.compose({
+const Teleporter = FloatingObject.compose(Registered, {
   props: {
     imageName: "teleporter-land",
     tileType: "Teleporter",
     isTeleporter: true
-  },
-
-  init() {
-    //register in level
-    this.level.registry.register(this)
   },
 
   methods: {
@@ -606,16 +622,10 @@ const Subtyped = stampit.compose({
 })
 
 //figures can be pushed and move all other figures of the same color with it if possible
-const Figure = FloatingObject.compose(Subtyped, Pushable, {
+const Figure = FloatingObject.compose(Registered, Subtyped, Pushable, {
   props: {
     heightPrio: 1,
     tileType: "Figure"
-  },
-
-  //register
-  init() {
-    //register figure in level for pushing others of this type
-    this.level.registry.register(this)
   },
 
   statics: {
@@ -713,7 +723,7 @@ const AnimationParticle = FloatingObject.compose({
 })
 
 //Bomb removes rocks directly adjacent to it
-const Bomb = FloatingObject.compose(Pushable, {
+const Bomb = FloatingObject.compose(Registered, Pushable, {
   props: {
     imageName: "bomb",
     tileType: "Bomb"
@@ -725,12 +735,6 @@ const Bomb = FloatingObject.compose(Pushable, {
 
     //delay time between individual explosions
     explosionDelay: 30
-  },
-
-  //register
-  init() {
-    //register to be found by bomb trigger
-    this.level.registry.register(this)
   },
 
   methods: {
@@ -870,19 +874,13 @@ const Weighted = stampit.compose({
 })
 
 //spikes register and can be changed by a spike button
-const Spikes = FloatingObject.compose(Weighted, {
+const Spikes = FloatingObject.compose(Registered, Weighted, {
   props: {
     imageName: "spikes-up",
     tileType: "Spikes",
 
     //draw at bottom
     heightPrio: 0
-  },
-
-  //on creation
-  init() {
-    //register with level for discovery by spike buttons
-    this.level.registry.register(this)
   },
 
   statics: {
@@ -952,7 +950,8 @@ const Pearl = FloatingObject.compose(Pickable).props({
 })
 
 //accepts a pearl and goes away once all other pedestals also have a pearl
-const PearlPedestal = FloatingObject.compose(Receptacle, NonWalkableObject, RequireGone, {
+const PearlPedestal = FloatingObject.compose(
+  Registered, Receptacle, NonWalkableObject, RequireGone, {
   props: {
     imageName: "pearl-pedestal",
     tileType: "PearlPedestal",
@@ -960,11 +959,6 @@ const PearlPedestal = FloatingObject.compose(Receptacle, NonWalkableObject, Requ
     //takes one pearl
     itemReceiveType: 1,
     itemType: "Pearl"
-  },
-
-  //registers so all can be triggered at once
-  init() {
-    this.level.registry.register(this)
   },
 
   methods: {
@@ -1073,7 +1067,7 @@ const Player = FloatingObject.compose(Movable, {
 })
 
 //tablet can be pushed and requires pushing of all five in order for them to be valid
-const Tablet = FloatingObject.compose(Pushable, {
+const Tablet = FloatingObject.compose(Registered, Pushable, {
   props: {
     imageName: "tablet-clear",
     tileType: "Tablet",
@@ -1084,8 +1078,6 @@ const Tablet = FloatingObject.compose(Pushable, {
 
   //register on init and get number
   init({ extraInitData }) {
-    this.level.registry.register(this)
-
     //parse tablet number
     this.number = parseInt(extraInitData)
   },
@@ -1137,7 +1129,7 @@ const Key = FloatingObject.compose(Pickable).props({
 })
 
 //Chest gives a coin in exchange for a key
-const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
+const Chest = FloatingObject.compose(Registered, Receptacle, NonWalkableObject, {
   props: {
     tileType: "Chest",
     imageName: "chest-closed",
@@ -1149,11 +1141,6 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
 
     //flag wether or not this chest has been opened
     opened: false
-  },
-
-  //init to register for total coin count
-  init() {
-    this.level.registry.register(this)
   },
 
   methods: {
@@ -1179,16 +1166,49 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
   }
 })
 
+//Pebble is an item
+const Pebble = FloatingObject.compose(Pickable).props({
+  imageName: "pebble",
+  tileType: "Pebble"
+})
+
+//barrel can be pushed and needs to be on a barrel base to allow finishing
+const Barrel = FloatingObject.compose(Pushable, {
+  props: {
+    imageName: "barrel",
+    tileType: "Barrel",
+    heightPrio: 1
+  },
+
+  methods: {
+    //when finish check happens
+    checkFinish() {
+      //require to be on a base
+      return this.parent.getSuchObject("BarrelBase")
+    }
+  }
+})
+
+//barrelBase is used to check that all barrels have been put in the right place
+const BarrelBase = FloatingObject.props({
+  imageName: "barrel-base",
+  tileType: "BarrelBase"
+})
+
 //projectile moves on it's own until it hits something
 const Projectile = Movable.compose({
   props: {
-    isProjectile: true
+    isProjectile: true,
+    heightPrio: 2
   },
 
   //init with movement
   init({ movement, startTile }) {
-    //immediately add to tile to start at
-    this.addToTile(startTile)
+    //if start tile not given, it will be added later (used as initial object in field)
+    if (startTile) {
+      //immediately add to tile to start at
+      this.addToTile(startTile)
+    }
 
     //only do immediate move if given movement
     if (movement) {
@@ -1198,20 +1218,6 @@ const Projectile = Movable.compose({
   },
 
   methods: {
-    //checkMove can be used to allow or disallow movement
-
-    //when projectile moves to another tile
-    checkLeave(movement, actors) {
-      //if asking for leaving of this projectile
-      if (actors.subject === this) {
-        //check that tile is ok with this projectile leaving (and also does processing with it)
-        return this.parent.checkProjLeave(movement, this)
-      }
-
-      //don't care otherwise, allow by default
-      return true
-    },
-
     //register next movement on leaving (like arrival)
     notifyLeave(movement, actors) {
       //if notified of own arrival
@@ -1221,12 +1227,6 @@ const Projectile = Movable.compose({
       }
     }
   }
-})
-
-//Pebble is an item
-const Pebble = FloatingObject.compose(Pickable).props({
-  imageName: "pebble",
-  tileType: "Pebble"
 })
 
 //pebble projectile is created by slingshot
@@ -1254,103 +1254,6 @@ const Coconut = FloatingObject.compose(Pushable, Projectile).props({
   tileType: "Coconut"
 })
 
-//is triggered by projectile
-const ProjTrigger = stampit.methods({
-  //allow projectiles for this type to move onto palm
-  checkMove(movement, actors) {
-    return this.projTriggerCheckMove(movement, actors)
-  },
-
-  //break out to allow for external call to checking without checkMove
-  projTriggerCheckMove(movement, actors) {
-    //has to be specified type of projectile and other check, if present, has to be ok
-    return actors.subject.tileType === this.projType ||
-      this.checkMoveProj && this.checkMoveProj(movement, actors)
-  },
-
-  //when pebble projectile tries to leave
-  checkProjLeave(movement, proj) {
-    //if pebble projectile
-    if (proj.tileType === this.projType) {
-      //if set to absorb projectiles of given type
-      if (this.absorbProj) {
-        //delete the projectile to absorb
-        proj.delete()
-      }
-
-      //call trigger handler
-      const triggerResult = this.projTriggered(movement, proj)
-
-      //or trigger result or if absorbing projectile, disallow further movement
-      return typeof triggerResult === "undefined" ? ! this.absorbProj : triggerResult
-    }
-
-    //allow other projectiles to pass
-    return true
-  }
-})
-
-//Palm tile is stationary
-const Palm = FloatingObject.compose(ProjTrigger, {
-  props: {
-    //init with image name
-    tileType: "Palm",
-    heightPrio: 0,
-    imageName: ["palm-1", "palm-2"],
-
-    //triggered on pebble projectile
-    projType: "PebbleProj",
-
-    //does absorb (remove) pebble projectile
-    absorbProj: true
-  },
-
-  methods: {
-    //when triggered by the pebble projectile
-    projTriggered(movement) {
-      //add coconut to next tile
-      Coconut({ startTile: this.getTargetTile(movement) })
-    }
-  }
-})
-
-//coconut hole is filled by absorbing a coconut projectile
-const CoconutHole = FloatingObject.compose(ProjTrigger, {
-  props: {
-    imageName: "dark-hole",
-    tileType: "CoconutHole",
-    heightPrio: 0,
-    projType: "Coconut",
-    absorbProj: true,
-
-    //flag wether or not this hole has been filled with a coconut
-    filled: false
-  },
-
-  methods: {
-    //when triggered by the coconut projectile
-    projTriggered() {
-      //change projectiel type to nothing to prevent absorbing another projectile
-      this.projType = false
-
-      //in animation
-      this.level.anim.registerAction(() => {
-        //set flag to be filled
-        this.filled = true
-
-        //change to filled image
-        this.changeImageName("dark-hole-closed")
-      }, { actionType: "animation" })
-    },
-
-    //called to check if prijectile can ome onto this tile
-    checkMoveProj() {
-      //disallow movement until filled
-      return this.filled
-    }
-  }
-})
-
 //singshot shoots pebble items from the inventory
 const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
   props: {
@@ -1372,29 +1275,130 @@ const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
   }
 })
 
-//combines pushable and projtrigger because they both have a checkMove which both have to be checked
-const PushableProjTrigger = Pushable.compose(ProjTrigger).methods({
-  //combined check move, checks pushable and proj trigger
-  checkMove(movement, actors) {
-    return this.projTriggerCheckMove(movement, actors) || this.pushableCheckMove(movement, actors)
+//Palm tile is stationary
+const Palm = FloatingObject.compose( {
+  props: {
+    //init with image name
+    tileType: "Palm",
+    heightPrio: 0,
+    imageName: ["palm-1", "palm-2"]
   },
 
-  //notify move doesn't call pushable notify move (which triggers pushing) for our projectile
+  methods: {
+    //only allow to be entered by pebble
+    checkMove(movement, actors) {
+      return actors.subject.tileType === "PebbleProj"
+    },
+
+    //when object enters palm tile
+    notifyMove(movement, actors) {
+      //verify that pebble entered
+      if (actors.subject.tileType === "PebbleProj") {
+        //expect pebble to enter, delete and replace with coconut
+        actors.subject.delete()
+
+        //get tile to place coonut on
+        const startTile = this.getTargetTile(movement)
+
+        //if no coconut there yet
+        if (! startTile.getSuchObject("Coconut")) {
+          //add coconut to target start tile
+          Coconut({ startTile })
+        }
+      }
+    }
+  }
+})
+
+//coconut hole is filled by absorbing a coconut projectile
+const CoconutHole = FloatingObject.compose(Registered, {
+  props: {
+    imageName: "dark-hole",
+    tileType: "CoconutHole",
+    heightPrio: 0,
+
+    //flag wether or not this hole has been filled with a coconut
+    filled: false
+  },
+
+  methods: {
+    //closes this hole (flag and image change)
+    closeHole() {
+      //set flag to be filled
+      this.filled = true
+
+      //change to filled image
+      this.changeImageName("dark-hole-closed")
+    },
+
+    //when triggered by the coconut projectile
+    checkMove(movement, actors) {
+      //coconut entering unfilled hole
+      if (actors.subject.tileType === "Coconut" && ! this.filled) {
+        //in animation
+        this.level.anim.registerAction(() => {
+          //absorb coconut
+          actors.subject.delete()
+
+          //and close hole
+          this.closeHole()
+        }, { actionType: "animation" })
+      }
+
+      //otherweise allow if filled
+      return this.filled
+    },
+  }
+})
+
+//incepts checkMove for an additional check, same for notifyMove
+//TODO: make animations also halt on object itself,
+//now the object is absorbed before it can be displayed on the absorbing tile
+const PushProxy = Pushable.methods({
+  //on checkMove do specific and push check
+  checkMove(movement, actors, targetTile) {
+    //if method even present
+    if (this.pushProxyCheckMove) {
+      //get result from extra check
+      const proxyResult = this.pushProxyCheckMove(movement, actors, targetTile)
+
+      //if anything returned, use that
+      if (typeof proxyResult !== "undefined") {
+        return proxyResult
+      }
+    }
+
+    //otherwise handle with push
+    return this.pushableCheckMove(movement, actors)
+  },
+
+  //notify both on check move
   notifyMove(movement, actors) {
-    //if not our projectile
-    if (actors.subject.tileType !== this.projType) {
-      //call pushable notify move to allow pushing
+    //notify proxied extra first, if handler present
+    let doPush = true
+    if (this.pushProxyNotifyMove) {
+      const result = this.pushProxyNotifyMove(movement, actors)
+
+      //overwrite if result returned
+      if (typeof result !== "undefined") {
+        doPush = result
+      }
+    }
+
+    //do push hanlder that triggers push if not disabled
+    if (doPush) {
+      //then also notify push handler
       this.pushableNotifyMove(movement, actors)
     }
   }
 })
 
 //leaf redirects pebble
-const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
+const Leaf = FloatingObject.compose(PushProxy, Subtyped, {
   props: {
-    tileType: "Leaf",
-    projType: "PebbleProj",
-    absorbProj: false
+    tileType: "Leaf"
+
+    //image determined later
   },
 
   statics: {
@@ -1424,29 +1428,40 @@ const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
   },
 
   methods: {
-    projTriggered(movement, proj) {
+    //on chek move allow pebble proj
+    pushProxyCheckMove(movement, actors) {
+      //allow pebble to enter
+      if (actors.subject.tileType === "PebbleProj") {
+        return true
+      }
+
+      //push is allowed for permitted objects by a later check when this doesn't return a value
+    },
+
+    //when movement to this tile happens
+    pushProxyNotifyMove(movement, actors) {
+      //pebble is entering tile,
       //redirect if movement is perpendicular to axis, not forward and backwards directions
-      if (
+      if (actors.subject.tileType === "PebbleProj" &&
         movement.direction !== this.typeData.redirection &&
         movement.direction !== (this.typeData.redirection + 2) % 4
       ) {
-        //in animation
-        //TODO: make pebble animation over leaf not stop for one frame on the leaf
-        this.level.anim.registerAction(() => {
-          //delete projectile to absorb
-          proj.delete()
+        //delete projectile to absorb
+        actors.subject.delete()
 
+        //in animation
+        this.level.anim.registerAction(() => {
           //make movement descriptor for redirected pebble
           const newMovement = Movable.makeMovementDescr(this.typeData.redirection)
 
           //make new prjectile in redirection direction
           PebbleProj({
-            startTile: this.getTargetTile(newMovement),
+            startTile: this.parent,
             movement: newMovement
           })
         })
 
-        //return false to stop
+        //do not allow push
         return false
       }
     }
@@ -1454,17 +1469,13 @@ const Leaf = FloatingObject.compose(PushableProjTrigger, Subtyped, {
 })
 
 //clam opens and allows pearl item to be taken
-const Clam = FloatingObject.compose(PushableProjTrigger, {
+const Clam = FloatingObject.compose(PushProxy, {
   props: {
     imageName: "clam-closed",
     tileType: "Clam",
 
     //state of the clam, 0 is closed, 1 is open with pearl, 2 is open without pearl
-    clamState: 0,
-
-    //triggers on pebble but doesn't interact with it
-    projType: "PebbleProj",
-    absorbProj: false
+    clamState: 0
   },
 
   statics: {
@@ -1486,8 +1497,8 @@ const Clam = FloatingObject.compose(PushableProjTrigger, {
     },
 
     //on check move, deal with player and projectile
-    checkMove(movement, actors) {
-      //if clam is open but without pearl and player is pushing
+    pushProxyCheckMove(movement, actors) {
+      //if clam is open but without pearl and player is pushing, do bump
       if (this.clamState === 1 && actors.subject.tileType === "Player") {
         //in animation
         this.level.anim.registerAction(() => {
@@ -1499,47 +1510,88 @@ const Clam = FloatingObject.compose(PushableProjTrigger, {
         })
       }
 
-      //handle walkability with projectile trigger method and pushable handler
-      return this.projTriggerCheckMove(movement, actors) || this.pushableCheckMove(movement, actors)
+      //always allow pebble
+      if (actors.subject.tileType === "PebbleProj") {
+        return true
+      } //disallow push over stage 0
+      else if (this.clamState > 0) {
+        return false
+      }
     },
 
-    //on hit by the specified pebble projectile
-    projTriggered(movement, proj) {
-      //in animation, move to state open with pearl
-      this.level.anim.registerAction(() => this.changeClamState(1), { priority: 1 })
+    //when object moves onto this tile
+    pushProxyNotifyMove(movement, actors) {
+      //if pebble
+      if (actors.subject.tileType === "PebbleProj") {
+        //determine if we are absorbing the projectile
+        if (this.clamState === 0) {
+          //in animation, move to state open with pearl
+          this.level.anim.registerAction(() => this.changeClamState(1), { priority: 1 })
+        } else {
+          //delete pebble projectile (absorb)
+          actors.subject.delete()
+        }
 
-      //determine if we are absorbing the projectile
-      if (this.clamState > 0) {
-        //delte pebble projectile
-        proj.delete()
+        //disallow push
+        return false
+      }
+    }
+  }
+})
 
-        //return true to stop
+//coconut path constrains coconut to move on it
+const CoconutPath = FloatingObject.compose({
+  props: {
+    imageName: "coconut-path",
+    tileType: "CoconutPath",
+    isCoconutPath: true,
+  },
+
+  methods: {
+    //when object tries to leave this tile
+    checkLeave(movement, actors, targetTile) {
+      //allow if not a coconut moving
+      if (actors.subject.tileType === "Coconut") {
+        //allow if target tile is also a coconut path (has such an object)
+        return targetTile.objs.find(o => o.isCoconutPath)
+      } else {
         return true
       }
     }
   }
 })
 
-//barrel can be pushed and needs to be on a barrel base to allow finishing
-const Barrel = FloatingObject.compose(Pushable, {
+//coconut path segment that needs to be filled with a coconut to finish
+const CoconutPathTarget = CoconutPath.compose(Registered, {
   props: {
-    imageName: "barrel",
-    tileType: "Barrel",
-    heightPrio: 1
+    imageName: "coconut-path-target",
+    tileType: "CoconutPathTarget",
+
+    //is set to true when all targets have coconuts and the holes are filled
+    stopped: false
   },
 
   methods: {
-    //when finish check happens
-    checkFinish() {
-      //require to be on a base
-      return this.parent.getSuchObject("BarrelBase")
+    //on movement onto this tile, check for coconut placement on targets
+    notifyMove(movement, actors) {
+      //not stopped yet and if moving object is coconut
+      if (! this.stopped && actors.subject.tileType === "Coconut") {
+        //get coconut targets
+        const otherTargets = this.level.registry.getOthers(this)
+
+        //if other targets present and all targets have a coconut
+        if (otherTargets && otherTargets.every(o => o.parent.getSuchObject("Coconut"))) {
+          //mark all targets as stopped
+          otherTargets.forEach(o => o.stopped = true)
+        }
+
+        //also mark this target as stopped
+        this.stopped = true
+
+        //in animation, close all coconut holes
+        this.level.registry.getOfType("CoconutHole").forEach(
+          hole => this.level.anim.registerAction(() => hole.closeHole()))
+      }
     }
   }
 })
-
-//barrelBase is used to check that all barrels have been put in the right place
-const BarrelBase = FloatingObject.props({
-  imageName: "barrel-base",
-  tileType: "BarrelBase"
-})
-

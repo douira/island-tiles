@@ -108,14 +108,14 @@ const Terrain = Displayable.compose(Vector, {
         (ok, o) => ok && (! o.checkLeave || o.checkLeave(movement, actors, targetTile)), true)
     },
 
-    //called by projectile that is about to schedule a leaving animation
-    checkProjLeave(movement, proj) {
-      //check all objects
-      return this.objs.reduce(
-        (ok, o) => ok && (! o.checkProjLeave || o.checkProjLeave(movement, proj)), true)
+    //called by movable right before it leaves this tile
+    notifyLeave(movement, actors, targetTile) {
+      //notify objects that movement is happening (away from this tile)
+      this.objs.forEach(
+        ownObj => ownObj.notifyLeave && ownObj.notifyLeave(movement, actors, targetTile))
     },
 
-    //by default, ask all contained objects in order of display order
+    //by default, ask all contained objects in order of display order, movement to this tile
     checkMove(movement, actors) {
       //first check tile requirements
       if (this.checkMoveTerrain && ! this.checkMoveTerrain(movement, actors)) {
@@ -135,7 +135,7 @@ const Terrain = Displayable.compose(Vector, {
       }, true)
     },
 
-    //called when movement actually happens
+    //called when movement actually happens, movement of object to this tile
     notifyMove(movement, actors) {
       //do extra notify if present
       if (this.notifyMoveTerrain) {
@@ -144,12 +144,6 @@ const Terrain = Displayable.compose(Vector, {
 
       //notify objects that movement is actually happening
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
-    },
-
-    //called by movable right before it leaves this tile
-    notifyLeave(movement, actors) {
-      //notify objects that movement is happening (away from this tile)
-      this.objs.forEach(ownObj => ownObj.notifyLeave && ownObj.notifyLeave(movement, actors))
     },
 
     //checks if object of given type is contained in this terrain tile

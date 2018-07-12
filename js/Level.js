@@ -5,7 +5,7 @@ Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
-Clam, Barrel, BarrelBase*/
+Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -26,7 +26,7 @@ const AnimationQueue = stampit.compose({
     //queue of animation actions
     this.queue = []
 
-    //action lock has to be taken before actions are performed
+    //action timeout lock has to be taken before actions are performed
     this.lock = false
   },
 
@@ -277,7 +277,7 @@ const Registry = stampit.compose({
       //get list of objects for this type and filter out the given one
       const otherObjs = this.getOfType(forObj).filter(o => o !== forObj)
 
-      //return if non empty, falsy otherwise
+      //return if non-empty, falsy otherwise
       if (otherObjs.length) {
         return otherObjs
       }
@@ -297,7 +297,7 @@ const Registry = stampit.compose({
       //get index of obj in list of objects
       const index = objs.indexOf(forObj)
 
-      //if is number and not -1 (real index)
+      //if is number and not -1 (found)
       if (typeof index === "number" && index >= 0) {
         //return object at next index, wrap around
         return objs[(index + 1) % objs.length]
@@ -416,6 +416,10 @@ Level = stampit.compose({
           //all barrels have to be on a barrel base to finish
         bb: BarrelBase,
           //a spot where a barrel has to be pushed
+        cp: CoconutPath,
+          //special path on which coconuts move until they hit the end of a path
+        ct: CoconutPathTarget,
+          //path segment that when all targets have a coconut, triggers all coconut holes to close
         /*
         ra: Raft,
           raft goes as far as possible on water, movement of player triggers
@@ -438,13 +442,8 @@ Level = stampit.compose({
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass
-
         ls: LeafSwitcher,
           switches all leaves to point in the direction the switcher was bumped in
-        cp: CoconutPath,
-          special path on which coconuts move until they hit the end of a path
-        ct: CoconutTarget,
-          path segment that when all targets have a coconut, triggers all coconut holes to close
 
         source level 170 is very confusing
         */

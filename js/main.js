@@ -249,7 +249,10 @@ const LevelFileReader = stampit.compose({
         28: "crg",
         36: "bt",
         30: "sb",
-        25: "bb"
+        25: "bb",
+        46: ["l"], //coconut path helper element that we don't need,
+        45: "ct",
+        44: "cp"
         //38: ["w", "ra"],
       },
       objectTypes: {
@@ -289,7 +292,8 @@ const LevelFileReader = stampit.compose({
         87: "lf2",
         88: "lf3",
         94: "cl",
-        116: "br"
+        116: "br",
+        70: "cc"
         /*
         90: "pi", //TODO: conflict with non-pirate raft
         92: "ph"
