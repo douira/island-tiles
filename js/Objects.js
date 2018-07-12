@@ -4,7 +4,7 @@ Displayable, Vector, directionOffsets*/
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
-CoconutHole, Leaf, Clam*/
+CoconutHole, Leaf, Clam, Barrel, BarrelBase*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -1519,3 +1519,27 @@ const Clam = FloatingObject.compose(PushableProjTrigger, {
     }
   }
 })
+
+//barrel can be pushed and needs to be on a barrel base to allow finishing
+const Barrel = FloatingObject.compose(Pushable, {
+  props: {
+    imageName: "barrel",
+    tileType: "Barrel",
+    heightPrio: 1
+  },
+
+  methods: {
+    //when finish check happens
+    checkFinish() {
+      //require to be on a base
+      return this.parent.getSuchObject("BarrelBase")
+    }
+  }
+})
+
+//barrelBase is used to check that all barrels have been put in the right place
+const BarrelBase = FloatingObject.props({
+  imageName: "barrel-base",
+  tileType: "BarrelBase"
+})
+

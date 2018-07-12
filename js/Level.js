@@ -5,7 +5,7 @@ Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
-Clam*/
+Clam, Barrel, BarrelBase*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -412,6 +412,10 @@ Level = stampit.compose({
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open*/
+        br: Barrel,
+          //all barrels have to be on a barrel base to finish
+        bb: BarrelBase,
+          //a spot where a barrel has to be pushed
         /*
         ra: Raft,
           raft goes as far as possible on water, movement of player triggers
@@ -434,10 +438,7 @@ Level = stampit.compose({
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass
-        br: Barrel,
-          all barrels have to be on a barrel base to finish
-        bb: BarrelBase,
-          a spot where a barrel has to be pushed
+
         ls: LeafSwitcher,
           switches all leaves to point in the direction the switcher was bumped in
         cp: CoconutPath,
