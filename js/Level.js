@@ -5,7 +5,8 @@ Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
-Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget*/
+Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
+Pirate, PirateHut*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -114,8 +115,8 @@ const Inventory = stampit.compose({
   },
 
   methods: {
-    //called after all onjects are created
-    countItems({ tileList, itemDisplayElem }) {
+    //called after all objects are created
+    setup({ tileList, itemDisplayElem }) {
       //init item list
       this.items = { }
 
@@ -420,19 +421,20 @@ Level = stampit.compose({
           //special path on which coconuts move until they hit the end of a path
         ct: CoconutPathTarget,
           //path segment that when all targets have a coconut, triggers all coconut holes to close
-        /*
         ra: Raft,
-          raft goes as far as possible on water, movement of player triggers
+          /*raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
           things can be pushed over raft like wetbox,
           player can push things standing on land (or on wetbox) from raft
-          example: raft can move until it hits another raft (then player can transfer)
+          example: raft can move until it hits another raft (then player can transfer)*/
         pi: Pirate,
-          is next to pirate hut, after getting all money on the map, goes into hut and
+          /*is next to pirate hut, after getting all money on the map, goes into hut and
           leaves Raft behind (apparently pirate can also go away without a hut)
-          only accepts coins from the left
+          only accepts coins from the left*/
         ph: PirateHut,
-          basically just an unmovable prop
+          //basically just an unmovable prop
+        /*
+
         fl: Flower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any flower makes it extend in that direction,
@@ -829,8 +831,8 @@ Level = stampit.compose({
       //save game
       this.game = game
 
-      //init inventory after object creation
-      this.inventory.countItems({
+      //init inventory with item counting after object creation
+      this.inventory.setup({
         tileList: this.tileList,
         itemDisplayElem: this.game.elems.itemDisplay
       })

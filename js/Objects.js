@@ -4,7 +4,8 @@ Displayable, Vector, directionOffsets*/
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
-CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget*/
+CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
+Raft, Pirate, PirateHut*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -221,7 +222,7 @@ const Pushable = Movable.compose({
         //check if push movement ok in general (for this object)
         (! this.checkPush || this.checkPush(movement, actors)) &&
 
-        //try to move in direction of current movement, this is the subject but keep initiator
+        //try to move in direction of current movement, keep initiator
         this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
     },
 
@@ -257,7 +258,7 @@ const Sinkable = Pushable.props({
 //watertight objects can be in water and suport other objects if pushed onto them
 const Watertight = stampit.props({
   watertight: true,
-  heightPrio: 0
+  heightPrio: -1
 })
 
 //WetBox is created when box is sunken in water
@@ -284,7 +285,7 @@ const Box = FloatingObject.compose(Sinkable, {
   }
 })
 
-//requires objects with this behavior to be all gone fro mthe field before finishing the level
+//requires objects with this behavior to be all gone from the field before finishing the level
 const RequireGone = stampit.props({
   requireGone: true
 })
@@ -328,7 +329,7 @@ const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
 })
 
 //items can be picked up and are stored in a fixed type inventory
-const Pickable = stampit.compose({
+const Item = stampit.compose({
   //on composition with pickable
   composers({ stamp, composables }) {
     //copy image name and tile tpye into statics
@@ -370,14 +371,14 @@ const Pickable = stampit.compose({
 })
 
 //baby crabs can be picked up and given to the mother crab all at once
-const BabyCrab = FloatingObject.compose(Pickable, RequireGone).props({
+const BabyCrab = FloatingObject.compose(Item, RequireGone).props({
   //image name and type
   tileType: "BabyCrab",
   imageName: "crab-small"
 })
 
 //seeds can be picked up and planted in a seed hole
-const Seed = FloatingObject.compose(Pickable).props({
+const Seed = FloatingObject.compose(Item).props({
   //image name and type
   tileType: "Seed",
   imageName: "seed"
@@ -944,7 +945,7 @@ const Ice = FloatingObject.compose(Weighted, Watertight, {
 })
 
 //pearl is a item
-const Pearl = FloatingObject.compose(Pickable).props({
+const Pearl = FloatingObject.compose(Item).props({
   imageName: "pearl",
   tileType: "Pearl"
 })
@@ -1117,13 +1118,13 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
 })
 
 //coin is a item
-const Coin = FloatingObject.compose(Pickable).props({
+const Coin = FloatingObject.compose(Registered, Item).props({
   imageName: "coin",
   tileType: "Coin"
 })
 
 //key is a item that can be used to get coins from chests
-const Key = FloatingObject.compose(Pickable).props({
+const Key = FloatingObject.compose(Item).props({
   imageName: "key",
   tileType: "Key"
 })
@@ -1167,7 +1168,7 @@ const Chest = FloatingObject.compose(Registered, Receptacle, NonWalkableObject, 
 })
 
 //Pebble is an item
-const Pebble = FloatingObject.compose(Pickable).props({
+const Pebble = FloatingObject.compose(Item).props({
   imageName: "pebble",
   tileType: "Pebble"
 })
@@ -1276,7 +1277,7 @@ const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
 })
 
 //Palm tile is stationary
-const Palm = FloatingObject.compose( {
+const Palm = FloatingObject.compose({
   props: {
     //init with image name
     tileType: "Palm",
@@ -1591,6 +1592,56 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
         //in animation, close all coconut holes
         this.level.registry.getOfType("CoconutHole").forEach(
           hole => this.level.anim.registerAction(() => hole.closeHole()))
+      }
+    }
+  }
+})
+
+//raft can be used to travel on water, always moves until it hits an obstacle
+//movement is initiated by player moving on it and the raft can move in the direction
+//player can move off of the raft by moving on it but and raft can't follow
+//raft moves player with it until it can't
+const Raft = FloatingObject.compose(Projectile, Watertight, {
+  props: {
+    imageName: "raft",
+    tileType: "Raft"
+  },
+
+  methods: {
+    //on check leave the raft will try to move in front of the player
+
+  }
+})
+
+//unmovable pirate hut prop
+const PirateHut = FloatingObject.compose(NonWalkableObject).props({
+  imageName: "pirate-hut",
+  tileType: "PriateHut"
+})
+
+//pirate leaves raft behind when received all coins possible in level (also those from chests)
+const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight, {
+  props: {
+    imageName: "pirate-raft",
+    tileType: "Pirate",
+
+    //takes all coins from the player from the left (moving direction is to the right)
+    requireDirection: 1,
+    itemReceiveType: "all",
+    itemType: "Coin"
+  },
+
+  methods: {
+    //when the pirate gets coins
+    receiveItems() {
+      //if all coins from the ground and out of chests have been given
+      if (this.receivedItems === (this.level.inventory.initItems.Coin || 0) +
+        (this.level.inventory.initItems.Chest || 0)) {
+        //create a raft
+        Raft().addToTile(this.parent)
+
+        //and remove the priate
+        this.delete()
       }
     }
   }
