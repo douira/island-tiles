@@ -5,7 +5,7 @@ Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
-Raft, Pirate, PirateHut, LeafSwitcher*/
+Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -1745,6 +1745,38 @@ const LeafSwitcher = FloatingObject.compose({
 
       //not walkable, just bumpable
       return false
+    }
+  }
+})
+
+//hidden path can be made visible by reveal button
+const HiddenPath = FloatingObject.compose(Registered, Watertight, {
+  props: {
+    imageName: "hidden-path-hidden",
+    tileType: "HiddenPath"
+  },
+
+  methods: {
+    //changes the hidden state of this object
+    setVisibility(setVisible) {
+      //changes image name to match new set state
+      this.changeImageName(setVisible ? "hidden-path-visible" : "hidden-path-hidden")
+    }
+  }
+})
+
+//button that makes hidden path visible while pushed
+const RevealEye = FloatingObject.compose(Weighted, {
+  props: {
+    imageName: "path-reveal-button",
+    tileType: "RevealEye"
+  },
+
+  methods: {
+    //when button push state changes
+    weightStateChanged(isPushed) {
+      //update all hidden path objects' visibility
+      this.level.registry.getOfType("HiddenPath").forEach(p => p.setVisibility(isPushed))
     }
   }
 })

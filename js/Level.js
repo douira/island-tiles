@@ -6,7 +6,7 @@ UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
-Pirate, PirateHut, LeafSwitcher*/
+Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -435,6 +435,10 @@ Level = stampit.compose({
           //basically just an unmovable prop
         ls: LeafSwitcher,
           //switches all leaves to point in the direction the switcher was bumped in
+        hp: HiddenPath,
+          //like wet box, is hidden while not revealed with reveal button
+        re: RevealEye,
+          //makes all hidden path objects visible while pushed (weighted button)
         /*
 
         fl: Flower,
@@ -446,7 +450,25 @@ Level = stampit.compose({
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass
-
+        sq: Squid,
+          can be "reverse pushed": moving away from it after being adjacent causes it to follow
+          cannot be pushed in a normal way
+        sg: ShellGuy,
+          has three stages, every push makes it switch to the next stage
+          and also wraps back to the first, only allows finish in third stage
+        sn: ShellGuySign,
+          for whatever reason a sign that shows the three stages of the shell guys exists,
+          unwalkable, usually floating in water near the top left corner
+        sf: SmallFlower,
+          exists in green and red variant (subtypes), to win,
+          all small flowers on the level have to be of the same type
+        fa: FlowerAnchor
+          when the player walks through one of these, a line is drawn out for every step,
+          this line cannot be crossed (non walkable) and ends
+          when the player steps on another anchor. finishing the line changes the color of all
+          touched flowers if only flowers of the same color were touched,
+          (doesn't have to touch all flowers of a color in the level to work)
+          leaves a walkable closed coconut hole behind
 
         source level 170 is very confusing
         */
