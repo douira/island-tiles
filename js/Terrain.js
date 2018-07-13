@@ -146,7 +146,7 @@ const Terrain = Displayable.compose(Vector, {
       this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
     },
 
-    //checks if object of given type is contained in this terrain tile
+    //checks if object of given type is contained in this terrain tile and returns it if found
     getSuchObject(type) {
       return this.objs.find(o => o.tileType === type)
     }
@@ -181,7 +181,7 @@ const RoundedTerrain = Terrain.compose({
       oooi: "onlyLeft"
     },
 
-    //small connectoes have an extra section for the tip touching tiles,
+    //small connectors have an extra section for the tip touching tiles,
     //counting starting at top right corner, _ means doesn't matter
     //for respecting and searchign with _, we need to use an array and strings as keys
     connNeighbourNameMap: [
@@ -373,7 +373,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
     notifyMoveTerrain(movement, actors) {
       //if actor is sinkable and no wet box present
       if (
-        actors.subject.notifySink && //only if present at all
+        actors.subject.notifySink && //only if handler present at all
         actors.subject.sinkable && ! this.checkWatertightPresent()
       ) {
         //notify box of sinking

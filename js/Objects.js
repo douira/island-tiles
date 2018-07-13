@@ -1232,10 +1232,13 @@ const Projectile = Movable.compose({
 
 //pebble projectile is created by slingshot
 //is sinkable to allow movement away over water, doesn't actually respond to sink event
-const PebbleProj = FloatingObject.compose(Projectile, Sinkable, {
+const PebbleProj = FloatingObject.compose(Projectile, {
   props: {
     imageName: "pebble",
-    tileType: "PebbleProj"
+    tileType: "PebbleProj",
+
+    //allow movement into water tiles
+    sinkable: true
   },
 
   methods: {
@@ -1601,15 +1604,50 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
 //movement is initiated by player moving on it and the raft can move in the direction
 //player can move off of the raft by moving on it but and raft can't follow
 //raft moves player with it until it can't
-const Raft = FloatingObject.compose(Projectile, Watertight, {
+const Raft = FloatingObject.compose(Movable, Watertight, {
   props: {
     imageName: "raft",
-    tileType: "Raft"
+    tileType: "Raft",
+
+    //allow movement into water tiles
+    sinkable: true
   },
 
   methods: {
     //on check leave the raft will try to move in front of the player
+    checkLeave(movement, actors, targetTile) {
+      //if dealing with player
+      if (actors.subject.tileType === "Player") {
+        //try to move with same movement
+        //to be present when player does checkMove check on target tile
+        this.move(movement, actors.subject)
+      } else if (actors.subject.tileType === "Raft") {
+        //disallow movement onto walkable water
+        return targetTile.terrainType === "Water" && ! targetTile.checkWatertightPresent()
+      }
 
+      //otherwise allow leaving
+      return true
+    },
+
+    //on leave of self
+    notifyLeave(movement, actors) {
+      //if notified of own leaving this tile, must be player moving it
+      if (actors.subject === this) {
+        //if player is being dragged along (not on initial move)
+        if (actors.initiator === this) {
+          //in immediate animation (after raft is done moving)
+          const player = this.parent.getSuchObject("Player")
+          this.level.anim.registerAction(() => {
+            //move player with the raft
+            player.move(movement, this)
+          }, { delay: 0, priority: 1 })
+        }
+
+        //in animation, move again
+        this.level.anim.registerAction(() => this.move(movement))
+      }
+    }
   }
 })
 
