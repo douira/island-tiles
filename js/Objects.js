@@ -5,7 +5,7 @@ Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
-Raft, Pirate, PirateHut*/
+Raft, Pirate, PirateHut, LeafSwitcher*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -610,15 +610,26 @@ const RedTeleporter = Teleporter.compose({
 const Subtyped = stampit.compose({
   //init subtype
   init({ extraInitData }, { stamp }) {
-    //get type specific data (expects the composed object to specify a static type array)
-    this.typeData = stamp.subtypes[extraInitData]
-
     //save more general tile type
     this.superTileType = this.tileType
 
-    //setup image name and specific tileType subtype
-    this.imageName = this.typeData.imageName
-    this.tileType = this.typeData.tileType
+    //save reference to static subtype data
+    this.subtypes = stamp.subtypes
+
+    //initially setup subtype
+    this.setupSubtype(extraInitData)
+  },
+
+  methods: {
+    //sets this tile up for using a specific subtype
+    setupSubtype(subtypeIndex) {
+      //get type specific data (expects the composed object to specify a static type array)
+      this.typeData = this.subtypes[subtypeIndex]
+
+      //setup image name and specific tileType subtype
+      this.imageName = this.typeData.imageName
+      this.tileType = this.typeData.tileType
+    }
   }
 })
 
@@ -1398,7 +1409,7 @@ const PushProxy = Pushable.methods({
 })
 
 //leaf redirects pebble
-const Leaf = FloatingObject.compose(PushProxy, Subtyped, {
+const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
   props: {
     tileType: "Leaf"
 
@@ -1636,12 +1647,14 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
       if (actors.subject === this) {
         //if player is being dragged along (not on initial move)
         if (actors.initiator === this) {
-          //in immediate animation (after raft is done moving)
+          //prefetch player from tile as player will be in tile the raft is leaving
+          //when player move aniamtion is triggered
           const player = this.parent.getSuchObject("Player")
-          this.level.anim.registerAction(() => {
-            //move player with the raft
-            player.move(movement, this)
-          }, { delay: 0, priority: 1 })
+
+          //in immediate animation (right after raft is done moving to allow player to move to it)
+          this.level.anim.registerAction(
+            //move palyer with the raft
+            () => player.move(movement, this), { delay: 0, priority: 1 })
         }
 
         //in animation, move again
@@ -1681,6 +1694,57 @@ const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight,
         //and remove the priate
         this.delete()
       }
+    }
+  }
+})
+
+//leaf switcher switches all leaves to point in the direction it was dumped in
+const LeafSwitcher = FloatingObject.compose({
+  props: {
+    //start with up direction
+    imageName: "leaf-switcher-t",
+    tileType: "LeafSwitcher",
+
+    //current facing direction starts off with 0 (up)
+    facingDirection: 0
+  },
+
+  statics: {
+    //images for the four bumpable directions
+    switcherDirections: [
+      "leaf-switcher-t",
+      "leaf-switcher-r",
+      "leaf-switcher-b",
+      "leaf-switcher-l"
+    ]
+  },
+
+  methods: {
+    //when bumped into
+    checkMove(movement, actors) {
+      //if player bumped into this and movement direction changed
+      if (actors.subject.tileType === "Player" && movement.direction !== this.facingDirection) {
+        //change direction
+        this.facingDirection = movement.direction
+
+        //in animation
+        this.level.anim.registerAction(() => {
+          //update image of the switcher with new direction
+          this.changeImageName(LeafSwitcher.switcherDirections[this.facingDirection])
+
+          //for all leaves in level, change to the new direction
+          this.level.registry.getOfType("Leaf").forEach(leaf => {
+            //setup with the new direction subtype
+            leaf.setupSubtype(this.facingDirection)
+
+            //update the image display
+            leaf.changeImageName()
+          })
+        })
+      }
+
+      //not walkable, just bumpable
+      return false
     }
   }
 })

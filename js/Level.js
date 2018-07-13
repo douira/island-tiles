@@ -6,7 +6,7 @@ UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
-Pirate, PirateHut*/
+Pirate, PirateHut, LeafSwitcher*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -433,6 +433,8 @@ Level = stampit.compose({
           only accepts coins from the left*/
         ph: PirateHut,
           //basically just an unmovable prop
+        ls: LeafSwitcher,
+          //switches all leaves to point in the direction the switcher was bumped in
         /*
 
         fl: Flower,
@@ -444,8 +446,7 @@ Level = stampit.compose({
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass
-        ls: LeafSwitcher,
-          switches all leaves to point in the direction the switcher was bumped in
+
 
         source level 170 is very confusing
         */

@@ -173,7 +173,7 @@ const Displayable = stampit.compose({
     },
 
     //updates the display image with a given new image name
-    changeImageName(newImageName, index = 0) {
+    changeImageName(newImageName = this.imageName, index = 0) {
       //get element item to modify, default to index 0 because the only,
       //tiles that have several layers are terain tiles which don't normally change images
       const item = this.elems[index]
