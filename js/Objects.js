@@ -1676,6 +1676,7 @@ const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight,
   props: {
     imageName: "pirate-raft",
     tileType: "Pirate",
+    heightPrio: 1,
 
     //takes all coins from the player from the left (moving direction is to the right)
     requireDirection: 1,
@@ -1689,8 +1690,11 @@ const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight,
       //if all coins from the ground and out of chests have been given
       if (this.receivedItems === (this.level.inventory.initItems.Coin || 0) +
         (this.level.inventory.initItems.Chest || 0)) {
-        //create a raft
-        Raft().addToTile(this.parent)
+        //if no raft present on this tile yet
+        if (! this.parent.getSuchObject("Raft")) {
+          //create a raft
+          Raft().addToTile(this.parent)
+        }
 
         //and remove the priate
         this.delete()
