@@ -5,7 +5,8 @@ Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
-Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath*/
+Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
+ShellGuySign*/
 
 //disallows walking on the tile if this object is on it
 const NonWalkableObject = stampit.methods({
@@ -1777,6 +1778,76 @@ const RevealEye = FloatingObject.compose(Weighted, {
     weightStateChanged(isPushed) {
       //update all hidden path objects' visibility
       this.level.registry.getOfType("HiddenPath").forEach(p => p.setVisibility(isPushed))
+    }
+  }
+})
+
+//shell guy sig is suptyped but static
+const ShellGuySign = FloatingObject.compose(NonWalkableObject, Subtyped, {
+  props: {
+    tileType: "ShellGuySign"
+  },
+
+  statics: {
+    //specify subtypes for the three different image components
+    subtypes: {
+      0: {
+        imageName: "shell-guy-stages-1",
+        tileType: "ShellGuySignFirst"
+      },
+      1: {
+        imageName: "shell-guy-stages-2",
+        tileType: "ShellGuySignSecond"
+      },
+      2: {
+        imageName: "shell-guy-stages-3",
+        tileType: "ShellGuySignThird"
+      }
+    }
+  },
+})
+
+const ShellGuy = FloatingObject.compose(Pushable, {
+  props: {
+    tileType: "ShellGuy",
+    imageName: "shell-guy-1"
+
+    //current stage is set in init
+  },
+
+  //use given stage if present
+  init({ extraInitData = "0" }) {
+    //parse stage from given extra data string
+    this.stage = parseInt(extraInitData, 10)
+
+    //setup image name for the first time if not default
+    if (this.stage) {
+      this.imageName = ShellGuy.stages[this.stage]
+    }
+  },
+
+  statics: {
+    //the three stages, wraps when out of bounds
+    stages: [
+      "shell-guy-1",
+      "shell-guy-2",
+      "shell-guy-3"
+    ]
+  },
+
+  methods: {
+    //when pushed
+    notifyPush() {
+      //increment stage and wrap to fit stages list
+      this.stage = (this.stage + 1) % ShellGuy.stages.length
+
+      //set image name for new stage
+      this.changeImageName(ShellGuy.stages[this.stage])
+    },
+
+    //require to be in last stage to finish
+    checkFinish() {
+      return this.stage === ShellGuy.stages.length - 1
     }
   }
 })

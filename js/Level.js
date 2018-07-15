@@ -6,7 +6,8 @@ UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
 Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
-Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath*/
+Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
+ShellGuySign*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -439,8 +440,13 @@ Level = stampit.compose({
           //like wet box, is hidden while not revealed with reveal button
         re: RevealEye,
           //makes all hidden path objects visible while pushed (weighted button)
+        sg: ShellGuy,
+          //has three stages, every push makes it switch to the next stage
+          //and also wraps back to the first, only allows finish in third stage
+        sn: ShellGuySign,
+          //for whatever reason a sign that shows the three stages of the shell guys exists,
+          //unwalkable, usually floating in water near the top left corner
         /*
-
         fl: Flower,
           extends with copies until reached terrain border (border of grass or land),
           pushing any flower makes it extend in that direction,
@@ -453,12 +459,6 @@ Level = stampit.compose({
         sq: Squid,
           can be "reverse pushed": moving away from it after being adjacent causes it to follow
           cannot be pushed in a normal way
-        sg: ShellGuy,
-          has three stages, every push makes it switch to the next stage
-          and also wraps back to the first, only allows finish in third stage
-        sn: ShellGuySign,
-          for whatever reason a sign that shows the three stages of the shell guys exists,
-          unwalkable, usually floating in water near the top left corner
         sf: SmallFlower,
           exists in green and red variant (subtypes), to win,
           all small flowers on the level have to be of the same type

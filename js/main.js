@@ -298,7 +298,13 @@ const LevelFileReader = stampit.compose({
         70: "cc",
         90: "pi",
         92: "ph",
-        118: "ls"
+        118: "ls",
+        53: "sn0", //three shell guy sign types
+        100: "sn1",
+        113: "sn2",
+        97: "sg0",
+        98: "sg1",
+        99: "sg2" //speculative assignment
       }
     },
 
