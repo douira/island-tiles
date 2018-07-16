@@ -258,7 +258,9 @@ const LevelFileReader = stampit.compose({
         41: "re",
         40: ["w", "ic"],
         47: ["g", "fsy"],
-        48: ["g", "fsr"]
+        48: ["g", "fsr"],
+        10: "sfg",
+        35: "sfr"
       },
       objectTypes: {
         56: "pl",
@@ -376,6 +378,9 @@ const LevelFileReader = stampit.compose({
       //counts the index in the individual field positions
       let fieldIndex = -1
 
+      //string used to mark unused/empty fields
+      const placeholder = "___"
+
       //read whole file
       while (byteAddress < this.data.length) {
         //for print, insert break every line
@@ -392,7 +397,7 @@ const LevelFileReader = stampit.compose({
         }
 
         //chars to put in the field/string print
-        const add = this.data[byteAddress] || "___"
+        const add = this.data[byteAddress] || placeholder
 
         //add padded to
         str += LevelFileReader.padString(add)
@@ -444,12 +449,13 @@ const LevelFileReader = stampit.compose({
             }
           } else {
             //is land if byte is certain ranges
+            //10 is the green small flower but all others 1-12 are land types
             if (terrain <= 12) {
               pos[0] = "l"
             } else if (terrain <= 24) {
               pos[0] = "g"
-            } else if (terrain !== "___") {
-              //unknown if out of range but still specified
+            } else if (terrain !== placeholder) {
+              //unknown terrain if out of range but still specified
               pos[0] = "u"
             }
           }

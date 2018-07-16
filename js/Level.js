@@ -7,7 +7,7 @@ Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
 Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed, Squid*/
+ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -458,10 +458,11 @@ Level = stampit.compose({
         sq: Squid,
           //can be pulled: moving away from it after being adjacent causes it to follow
           //cannot be pushed in a normal way
-        /*
         sf: SmallFlower,
-          exists in green and red variant (subtypes), to win,
-          all small flowers on the level have to be of the same type
+          //exists in green and red variant (subtypes), to win,
+          //all small flowers on the level have to be of the same type
+        /*
+
         fa: FlowerAnchor
           when the player walks through one of these, a line is drawn out for every step,
           this line cannot be crossed (non walkable) and ends

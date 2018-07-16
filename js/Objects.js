@@ -8,7 +8,7 @@ UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
 Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed, Squid*/
+ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower*/
 
 //rock tile is stationary
 const Rock = FloatingObject.compose(NonWalkableObject).props({
@@ -863,7 +863,7 @@ const CoconutHole = FloatingObject.compose(Registered, {
   }
 })
 
-//leaf redirects pebble
+//leaf redirects pebble, is registered as leaf and not subtype because Subtype is inited later
 const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
   props: {
     tileType: "Leaf"
@@ -1423,6 +1423,30 @@ const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
       if (this.parent.getSuchObject("WaterHole")) {
         //delete in animation
         this.level.anim.registerAction(() => this.delete(), { actionType: "slowAnimation" })
+      }
+    }
+  }
+})
+
+//small flower has green and red variant, must all be the same color to win
+//also registers (like Leaf) before setting up subtype
+const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
+  props: {
+    tileType: "SmallFlower"
+  },
+
+  statics: {
+    //has red and green variant
+    subtypes: {
+      r: {
+        imageName: "flower-hole-red",
+        imageNameActive: "flower-hole-active-red",
+        tileType: "SmallFlowerRed"
+      },
+      g: {
+        imageName: "flower-hole-green",
+        imageNameActive: "flower-hole-active-green",
+        tileType: "SmallFlowerGreen"
       }
     }
   }
