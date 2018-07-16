@@ -256,7 +256,9 @@ const LevelFileReader = stampit.compose({
         38: ["w", "ra"], //pirate doesn't spawn a raft if there is one already beneath it
         43: ["w", "hp"],
         41: "re",
-        40: ["w", "ic"]
+        40: ["w", "ic"],
+        47: ["g", "fsy"],
+        48: ["g", "fsr"]
       },
       objectTypes: {
         56: "pl",
@@ -305,7 +307,9 @@ const LevelFileReader = stampit.compose({
         113: "sn2",
         97: "sg0",
         98: "sg1",
-        99: "sg2" //speculative assignment
+        99: "sg2", //speculative assignment
+        111: "fly",
+        112: "flr"
       }
     },
 

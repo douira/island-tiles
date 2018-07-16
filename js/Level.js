@@ -7,7 +7,7 @@ Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
 Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign*/
+ShellGuySign, Flower, FlowerSeed*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -446,16 +446,16 @@ Level = stampit.compose({
         sn: ShellGuySign,
           //for whatever reason a sign that shows the three stages of the shell guys exists,
           //unwalkable, usually floating in water near the top left corner
-        /*
         fl: Flower,
-          extends with copies until reached terrain border (border of grass or land),
+          /*extends with copies until reached terrain border (end of grass),
           pushing any flower makes it extend in that direction,
-          cannot be walked on
+          cannot be walked on, doesn't go onto the seed of a different color*/
         fs: FlowerSeed,
-          all seeds must be covered with a flower of the same color,
+          /*all seeds must be covered with a flower of the same color,
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
-          only ever seems to be placed on grass, doesn't propagate down grass
+          only ever seems to be placed on grass, doesn't propagate down grass*/
+        /*
         sq: Squid,
           can be "reverse pushed": moving away from it after being adjacent causes it to follow
           cannot be pushed in a normal way

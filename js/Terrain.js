@@ -147,8 +147,10 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //checks if object of given type is contained in this terrain tile and returns it if found
-    getSuchObject(type) {
-      return this.objs.find(o => o.tileType === type)
+    getSuchObject(type, useSupertype = false) {
+      return this.objs.find(
+        //use super tile type is specified but fall back of not present
+        o => ((useSupertype ? o.superTileType : o.tileType) || o.tileType) === type)
     }
   }
 })

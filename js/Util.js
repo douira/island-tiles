@@ -198,14 +198,6 @@ const Displayable = stampit.compose({
   }
 })
 
-//disallows walking on the tile if this object is on it
-const NonWalkableObject = stampit.methods({
-  //disallow putting things on this by default, called to check if something can move onto this
-  checkMove() {
-    return false
-  }
-})
-
 //a basic object that can be on top of a terrain tile
 const FloatingObject = Displayable.compose(Vector, {
   //copy level on init
@@ -302,6 +294,14 @@ const FloatingObject = Displayable.compose(Vector, {
       //add offset to own position and get tile from there from level
       return this.level.getTileAt(Vector.add(this, movement.offset))
     }
+  }
+})
+
+//disallows walking on the tile if this object is on it
+const NonWalkableObject = stampit.methods({
+  //disallow putting things on this by default, called to check if something can move onto this
+  checkMove() {
+    return false
   }
 })
 
@@ -560,6 +560,9 @@ const Subtyped = stampit.compose({
   methods: {
     //sets this tile up for using a specific subtype
     setupSubtype(subtypeIndex) {
+      //save given init data
+      this.subtypeIndex = subtypeIndex
+
       //get type specific data (expects the composed object to specify a static type array)
       this.typeData = this.subtypes[subtypeIndex]
 

@@ -8,7 +8,7 @@ UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
 Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower*/
+ShellGuySign, Flower, FlowerSeed*/
 
 //rock tile is stationary
 const Rock = FloatingObject.compose(NonWalkableObject).props({
@@ -1307,6 +1307,103 @@ const ShellGuy = FloatingObject.compose(Pushable, {
     //require to be in last stage to finish
     checkFinish() {
       return this.stage === ShellGuy.stages.length - 1
+    }
+  }
+})
+
+//flower is subtyped into yellow and red, if pushed extends wall of flowers until it hits land
+const Flower = FloatingObject.compose(Subtyped, {
+  props: {
+    tileType: "Flower"
+  },
+
+  statics: {
+    //has yellow and red variants
+    subtypes: {
+      r: {
+        imageName: "flower-red",
+        tileType: "FlowerRed"
+      },
+      y: {
+        imageName: "flower-yellow",
+        tileType: "FlowerYellow"
+      }
+    }
+  },
+
+  methods: {
+    //when bumped
+    checkMove(movement, actors) {
+      //on player pushing
+      if (actors.subject.tileType === "Player") {
+        //create flower in that direction
+        this.createFlower(movement, actors.initiator)
+      }
+
+      //not walkable in any case
+      return false
+    },
+
+    //tries to create a new flower in the specified direction
+    createFlower(withMovement, initiator) {
+      //get target of movement
+      const targetTile = this.getTargetTile(withMovement)
+
+      //if target tile is ok and flower can be there,
+      //not wrong type of seed (checked in terrain checkMove)
+      if (targetTile && targetTile.terrainType === "Grass" &&
+        targetTile.checkMove(withMovement, { subject: this, initiator })) {
+        //in animation, create new flower there
+        this.level.anim.registerAction(() => {
+          //create a flower of the same type and add it to the new target
+          const newFlower = Flower({ extraInitData: this.subtypeIndex }).addToTile(targetTile)
+
+          //spawn new flower in same direction
+          newFlower.createFlower(withMovement, initiator)
+        })
+      }
+    }
+  }
+})
+
+//flower seed requires a flower of the same color to be on it to finish
+const FlowerSeed = FloatingObject.compose(Subtyped, {
+  props: {
+    tileType: "FlowerSeed"
+  },
+
+  statics: {
+    //the two colors of flowers both have their own seed type
+    subtypes: {
+      r: {
+        imageName: "flower-seed-red",
+        tileType: "FlowerSeedRed",
+        flowerType: "FlowerRed"
+      },
+      y: {
+        imageName: "flower-seed-yellow",
+        tileType: "FlowerSeedYellow",
+        flowerType: "FlowerYellow"
+      }
+    }
+  },
+
+  methods: {
+    //when flower tries to spawn here
+    checkMove(movement, actors) {
+      //flower is trying to move/spawn here
+      if (actors.subject.superTileType === "Flower") {
+        //only ok if matches this seed
+        return actors.subject.tileType === this.typeData.flowerType
+      }
+
+      //allow others
+      return true
+    },
+
+    //allow finish if covered by right type of flower
+    checkFinish() {
+      return this.parent.getSuchObject(this.typeData.flowerType)
     }
   }
 })
