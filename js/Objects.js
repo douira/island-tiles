@@ -961,6 +961,16 @@ const Clam = FloatingObject.compose(PushProxy, {
     }
   },
 
+  //optinally init with extra data
+  init({ extraInitData }) {
+    //if extra data is "o", init in open state
+    if (extraInitData === "o") {
+      //manual set because we're not part of a tile yet
+      this.clamState = 1
+      this.imageName = Clam.clamStates[1]
+    }
+  },
+
   methods: {
     //changes the calm state and adjusts the image name accordingly
     changeClamState(newState) {

@@ -310,7 +310,10 @@ const LevelFileReader = stampit.compose({
         70: "cc",
         90: "pi",
         92: "ph",
+        117: "ls", //leafswitcher starting positons
         118: "ls",
+        119: "ls",
+        120: "ls", //speculative assignment
         53: "sn0", //three shell guy sign types
         100: "sn1",
         113: "sn2",
@@ -319,7 +322,8 @@ const LevelFileReader = stampit.compose({
         99: "sg2", //speculative assignment
         111: "fly",
         112: "flr",
-        114: "sq"
+        114: "sq",
+        95: "clo" //open clam
       }
     },
 
