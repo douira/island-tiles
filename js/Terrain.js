@@ -135,6 +135,13 @@ const Terrain = Displayable.compose(Vector, {
       }, true)
     },
 
+    //notifies the tile in the opposite direction (mainly for squid)
+    oppositeNotifyLeave(movement, actors, targetTile) {
+      //tell all objects, targeting of the opposite tile is done by the moving object
+      this.objs.forEach(ownObj => ownObj.oppositeNotifyLeave &&
+        ownObj.oppositeNotifyLeave(movement, actors, targetTile))
+    },
+
     //called when movement actually happens, movement of object to this tile
     notifyMove(movement, actors) {
       //do extra notify if present

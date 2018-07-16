@@ -309,7 +309,8 @@ const LevelFileReader = stampit.compose({
         98: "sg1",
         99: "sg2", //speculative assignment
         111: "fly",
-        112: "flr"
+        112: "flr",
+        114: "sq"
       }
     },
 

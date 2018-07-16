@@ -2,7 +2,7 @@
 /*exported Vector, directionOffsets, NonWalkableObject, Sinkable,
 Watertight, RequireGone, Item, ReceptacleAllItems, Registered,
 Subtyped, Weighted, Projectile, PushProxy, FloatingObject, Pushable,
-Receptacle, AnimationParticle, Movable, UnknownObject*/
+Receptacle, AnimationParticle, Movable, UnknownObject, Pullable*/
 
 //Vector class represents a 2D position
 const Vector = stampit.compose({
@@ -342,6 +342,10 @@ const Movable = stampit.compose({
       //notify terrain tiles and objects and so on
       targetTile.notifyMove(movement, actors)
 
+      //notify tile on opposite side of movement, target tile is this terrain tile
+      this.level.getTileAt(Vector.sub(this, movement.offset))
+        .oppositeNotifyLeave(movement, actors, this.parent)
+
       //stop if deleted in the mean time
       if (this.deleted) {
         //stop doing anything
@@ -383,48 +387,46 @@ const Movable = stampit.compose({
 })
 
 //pushable allows floating objects to be pushed by the player
-const Pushable = Movable.compose({
-  methods: {
-    //check if next can be walked on by this object
-    checkMove(movement, actors) {
-      return this.pushableCheckMove(movement, actors)
-    },
+const Pushable = Movable.methods({
+  //check if next can be walked on by this object
+  checkMove(movement, actors) {
+    return this.pushableCheckMove(movement, actors)
+  },
 
-    //actual checking function, is broken out to make external call possible
-    pushableCheckMove(movement, actors) {
-      //require subject and initiator to be the same (don't allow double pushing)
-      return actors.initiator === actors.subject &&
-        //don't allow pushing by projectiles
-        ! actors.subject.isProjectile &&
+  //actual checking function, is broken out to make external call possible
+  pushableCheckMove(movement, actors) {
+    //require subject and initiator to be the same (don't allow double pushing)
+    return actors.initiator === actors.subject &&
+      //don't allow pushing by projectiles
+      ! actors.subject.isProjectile &&
 
-        //deny pushing down grass
-        ! (actors.subject.parent.terrainType === "Grass" && this.parent.terrainType === "Land") &&
+      //deny pushing down grass
+      ! (actors.subject.parent.terrainType === "Grass" && this.parent.terrainType === "Land") &&
 
-        //check if push movement ok in general (for this object)
-        (! this.checkPush || this.checkPush(movement, actors)) &&
+      //check if push movement ok in general (for this object)
+      (! this.checkPush || this.checkPush(movement, actors)) &&
 
-        //try to move in direction of current movement, keep initiator
-        this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
-    },
+      //try to move in direction of current movement, keep initiator
+      this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
+  },
 
-    //when move actually happens (movement to parent tile), do move to next tile
-    notifyMove(movement, actors) {
-      //no own notify move
-      this.pushableNotifyMove(movement, actors)
-    },
+  //when move actually happens (movement to parent tile), do move to next tile
+  notifyMove(movement, actors) {
+    //no own notify move
+    this.pushableNotifyMove(movement, actors)
+  },
 
-    //notify move breakout to allow interception of main notify move
-    pushableNotifyMove(movement, actors) {
-      //get target tile for movement on this object
-      const targetTile = this.getTargetTile(movement)
+  //notify move breakout to allow interception of main notify move
+  pushableNotifyMove(movement, actors) {
+    //get target tile for movement on this object
+    const targetTile = this.getTargetTile(movement)
 
-      //do own move to tile, has to get target tile again (other target because of push)
-      this.performMove(targetTile, movement, actors.initiator)
+    //do own move to tile, has to get target tile again (other target because of push)
+    this.performMove(targetTile, movement, actors.initiator)
 
-      //call pushed callback on self
-      if (this.notifyPush) {
-        this.notifyPush(targetTile, movement, actors)
-      }
+    //call pushed callback on self
+    if (this.notifyPush) {
+      this.notifyPush(targetTile, movement, actors)
     }
   }
 })
@@ -667,7 +669,6 @@ const Weighted = stampit.compose({
   }
 })
 
-
 //unknown item is a placeholder
 const UnknownObject = FloatingObject.props({
   tileType: "UnknownObject",
@@ -710,7 +711,7 @@ const Projectile = Movable.compose({
 
 //incepts checkMove for an additional check, same for notifyMove
 //TODO: make animations also halt on object itself,
-//now the object is absorbed before it can be displayed on the absorbing tile
+//currently the object is absorbed before it can be displayed on the absorbing tile
 const PushProxy = Pushable.methods({
   //on checkMove do specific and push check
   checkMove(movement, actors, targetTile) {
@@ -750,3 +751,21 @@ const PushProxy = Pushable.methods({
   }
 })
 
+//moves with pulling, the player moves away after being adjacent and this object follows
+const Pullable = Movable.methods({
+  //when player moves away
+  oppositeNotifyLeave(movement, actors, targetTile) {
+    //is player moving
+    if (actors.subject.tileType === "Player") {
+      //move to target tile which is where player moves away from
+      this.move(movement, actors.initiator)
+
+      //if present, execute notify pull,
+      //note that this handler is called after the movement
+      //as opposed to before the movement like the other notify handlers are
+      if (this.notifyPull) {
+        this.notifyPull(movement, actors, targetTile)
+      }
+    }
+  }
+})

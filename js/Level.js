@@ -7,7 +7,7 @@ Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
 Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed*/
+ShellGuySign, Flower, FlowerSeed, Squid*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -455,10 +455,10 @@ Level = stampit.compose({
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass*/
-        /*
         sq: Squid,
-          can be "reverse pushed": moving away from it after being adjacent causes it to follow
-          cannot be pushed in a normal way
+          //can be pulled: moving away from it after being adjacent causes it to follow
+          //cannot be pushed in a normal way
+        /*
         sf: SmallFlower,
           exists in green and red variant (subtypes), to win,
           all small flowers on the level have to be of the same type
@@ -468,9 +468,9 @@ Level = stampit.compose({
           when the player steps on another anchor. finishing the line changes the color of all
           touched flowers if only flowers of the same color were touched,
           (doesn't have to touch all flowers of a color in the level to work)
-          leaves a walkable closed coconut hole behind
-
-        source level 170 is very confusing
+          leaves a walkable closed coconut hole behind,
+          can be used without a second one,just as a barrier that
+          appears on the player's walking path, can be active and/or present on finish
         */
       }
     },

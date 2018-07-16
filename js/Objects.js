@@ -1,14 +1,14 @@
 /*global Vector, directionOffsets, NonWalkableObject, Sinkable,
 Watertight, RequireGone, Item, ReceptacleAllItems, Registered,
 Subtyped, Weighted, Projectile, PushProxy, FloatingObject, Pushable,
-Receptacle, AnimationParticle, Movable*/
+Receptacle, AnimationParticle, Movable, Pullable*/
 /*exported Rock, Palm, Box, WetBox, Goal, Starfish, MommyCrab, BabyCrab,
 Seed, SeedHole, WaterHole, WaterBottle, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
 Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed*/
+ShellGuySign, Flower, FlowerSeed, Squid*/
 
 //rock tile is stationary
 const Rock = FloatingObject.compose(NonWalkableObject).props({
@@ -1311,7 +1311,8 @@ const ShellGuy = FloatingObject.compose(Pushable, {
   }
 })
 
-//flower is subtyped into yellow and red, if pushed extends wall of flowers until it hits land
+//flower is subtyped into yellow and red,
+//if pushed extends wall of flowers until it hits non-grass
 const Flower = FloatingObject.compose(Subtyped, {
   props: {
     tileType: "Flower"
@@ -1404,6 +1405,25 @@ const FlowerSeed = FloatingObject.compose(Subtyped, {
     //allow finish if covered by right type of flower
     checkFinish() {
       return this.parent.getSuchObject(this.typeData.flowerType)
+    }
+  }
+})
+
+//squid is pulled by player, not moveable/alkable in the normal sense
+const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
+  props: {
+    imageName: "octopus",
+    tileType: "Squid"
+  },
+
+  methods: {
+    //on done being pulled, check if on water hole
+    notifyPull() {
+      //check if on water hole now
+      if (this.parent.getSuchObject("WaterHole")) {
+        //delete in animation
+        this.level.anim.registerAction(() => this.delete(), { actionType: "slowAnimation" })
+      }
     }
   }
 })
