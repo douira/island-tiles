@@ -124,6 +124,11 @@ const Game = stampit.compose({
 
     //inits the currently selected level
     startCurrentLevel() {
+      //unregister on last level
+      if (this.currentLevel) {
+        this.currentLevel.unregisterHandlers()
+      }
+
       //set as current level
       this.currentLevel = this.levels[this.levelIndex]
 
@@ -260,7 +265,9 @@ const LevelFileReader = stampit.compose({
         47: ["g", "fsy"],
         48: ["g", "fsr"],
         10: "sfg",
-        35: "sfr"
+        35: "sfr",
+        42: ["l"] //also land? appears underneath coconut hole in source level 62
+          //but doesn't seem to do anything
       },
       objectTypes: {
         56: "pl",

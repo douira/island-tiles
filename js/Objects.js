@@ -566,6 +566,11 @@ const Player = FloatingObject.compose(Movable, {
     }
   },
 
+  //add to level on creation
+  init() {
+    this.level.player = this
+  },
+
   methods: {
     //register event handlers when called on start of level
     registerHandlers() {

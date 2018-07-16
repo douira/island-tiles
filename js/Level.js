@@ -135,6 +135,9 @@ const Inventory = stampit.compose({
 
       //save display element
       this.itemDisplayElem = itemDisplayElem
+
+      //initial update of item display
+      this.updateItemDisplay()
     },
 
     //updates the item inventory display
@@ -810,12 +813,6 @@ Level = stampit.compose({
               extraInitData: objAbbrev.substr(2)
             })
 
-            //if is player instance
-            if (obj.tileType === "Player") {
-              //register as _the_ player
-              this.player = obj
-            }
-
             //return created object
             return obj
           })
@@ -837,9 +834,6 @@ Level = stampit.compose({
 
     //inits the level in the page
     initInPage(game, elems, levelIndex) {
-      //unregister any previously registered things
-      this.unregisterHandlers()
-
       //init registry for objects that interact with other objects in non-movement related ways
       this.registry = Registry()
 
@@ -860,9 +854,6 @@ Level = stampit.compose({
         tileList: this.tileList,
         itemDisplayElem: this.game.elems.itemDisplay
       })
-
-      //initial item list update
-      this.inventory.updateItemDisplay()
 
       //set title text
       elems.levelIndex.text(`#${levelIndex + 1}`)
@@ -930,11 +921,8 @@ Level = stampit.compose({
 
     //takes down registered components of this level
     unregisterHandlers() {
-      //if player present
-      if (this.player) {
-        //remove handlers of player
-        this.player.unregisterHandlers()
-      }
+      //remove handlers of player
+      this.player.unregisterHandlers()
     },
 
     //triggered when the goal is stepped on,
