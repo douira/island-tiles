@@ -342,9 +342,11 @@ const Movable = stampit.compose({
       //notify terrain tiles and objects and so on
       targetTile.notifyMove(movement, actors)
 
-      //notify tile on opposite side of movement, target tile is this terrain tile
-      this.level.getTileAt(Vector.sub(this, movement.offset))
-        .oppositeNotifyLeave(movement, actors, this.parent)
+      //notify tile on opposite side of movement, target tile is this terrain tile is present
+      const oppositeTargetTile = this.level.getTileAt(Vector.sub(this, movement.offset));
+      if (oppositeTargetTile) {
+        oppositeTargetTile.oppositeNotifyLeave(movement, actors, this.parent)
+      }
 
       //stop if deleted in the mean time
       if (this.deleted) {
