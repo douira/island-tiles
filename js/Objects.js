@@ -265,7 +265,7 @@ const RedTeleporter = Teleporter.compose({
 })
 
 //figures can be pushed and move all other figures of the same color with it if possible
-const Figure = FloatingObject.compose(Registered, Subtyped, Pushable, {
+const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
   props: {
     heightPrio: 1,
     tileType: "Figure"
