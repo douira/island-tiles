@@ -7,7 +7,7 @@ Buoy, Spikes, SpikesButton, Ice, Pearl, PearlPedestal, Tablet,
 Key, Coin, Chest, Pebble, Slingshot, Coconut, CoconutHole, Leaf,
 Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget, Raft,
 Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower*/
+ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower, FlowerAnchor*/
 
 //handles animation
 const AnimationQueue = stampit.compose({
@@ -256,7 +256,7 @@ const Registry = stampit.compose({
       this.getOfType(obj).push(obj)
     },
 
-    //removes this object from its list
+    //removes this object from its list, on removal of object
     unregister(obj) {
       //find and remove at index
       const list = this.getOfType(obj)
@@ -464,18 +464,15 @@ Level = stampit.compose({
         sf: SmallFlower,
           //exists in green and red variant (subtypes), to win,
           //all small flowers on the level have to be of the same type
-        /*
-
         fa: FlowerAnchor
-          when the player walks through one of these, a line is drawn out for every step,
+          /*when the player walks through one of these, a line is drawn out for every step,
           this line cannot be crossed (non walkable) and ends
           when the player steps on another anchor. finishing the line changes the color of all
           touched flowers if only flowers of the same color were touched,
           (doesn't have to touch all flowers of a color in the level to work)
           leaves a walkable closed coconut hole behind,
           can be used without a second one,just as a barrier that
-          appears on the player's walking path, can be active and/or present on finish
-        */
+          appears on the player's walking path, can be active and/or present on finish*/
       }
     },
 

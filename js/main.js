@@ -323,7 +323,8 @@ const LevelFileReader = stampit.compose({
         111: "fly",
         112: "flr",
         114: "sq",
-        95: "clo" //open clam
+        95: "clo", //open clam
+        122: "fa"
       }
     },
 

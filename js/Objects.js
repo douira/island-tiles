@@ -8,7 +8,7 @@ UnknownObject, Figure, Cross, Bomb, BombTrigger, Buoy, Spikes, SpikesButton,
 Ice, Pearl, PearlPedestal, Tablet, Key, Coin, Chest, Pebble, Slingshot, Coconut,
 CoconutHole, Leaf, Clam, Barrel, BarrelBase, CoconutPath, CoconutPathTarget,
 Raft, Pirate, PirateHut, LeafSwitcher, RevealEye, HiddenPath, ShellGuy,
-ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower*/
+ShellGuySign, Flower, FlowerSeed, Squid, SmallFlower, FlowerAnchor*/
 
 //rock tile is stationary
 const Rock = FloatingObject.compose(NonWalkableObject).props({
@@ -1207,13 +1207,9 @@ const LeafSwitcher = FloatingObject.compose({
           this.changeImageName(LeafSwitcher.switcherDirections[this.facingDirection])
 
           //for all leaves in level, change to the new direction
-          this.level.registry.getOfType("Leaf").forEach(leaf => {
-            //setup with the new direction subtype
-            leaf.setupSubtype(this.facingDirection)
-
-            //update the image display
-            leaf.changeImageName()
-          })
+          this.level.registry.getOfType("Leaf").forEach(
+            //setup to the new direction subtype
+            leaf => leaf.changeSubtype(this.facingDirection))
         })
       }
 
@@ -1255,7 +1251,7 @@ const RevealEye = FloatingObject.compose(Weighted, {
   }
 })
 
-//shell guy sig is suptyped but static
+//shell guy sign is subtyped but static (no interaction)
 const ShellGuySign = FloatingObject.compose(NonWalkableObject, Subtyped, {
   props: {
     tileType: "ShellGuySign"
@@ -1424,7 +1420,7 @@ const FlowerSeed = FloatingObject.compose(Subtyped, {
   }
 })
 
-//squid is pulled by player, not moveable/alkable in the normal sense
+//squid is pulled by player, not moveable/walkable in the normal sense
 const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
   props: {
     imageName: "octopus",
@@ -1444,7 +1440,7 @@ const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
 })
 
 //small flower has green and red variant, must all be the same color to win
-//also registers (like Leaf) before setting up subtype
+//registers before subtyping to avoid needing to re-register when subtype changes
 const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
   props: {
     tileType: "SmallFlower"
@@ -1462,6 +1458,119 @@ const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
         imageName: "flower-hole-green",
         imageNameActive: "flower-hole-active-green",
         tileType: "SmallFlowerGreen"
+      }
+    }
+  },
+
+  methods: {
+    //on finish check, require all flowers to be of the same color
+    checkFinish() {
+      //get all small flowers present
+      const flowers = this.level.registry.getOfType("SmallFlower")
+
+      //get type of one of them
+      const baseType = flowers.pop().tileType
+
+      //for all remaining ones, require all to be the same type
+      return flowers.every(f => f.tileType === baseType)
+    },
+
+    //sets the activation state of this flower
+    setActivationState(newState) {
+      //set image name with state
+      this.changeImageName(this.typeData[newState ? "imageNameActive" : "imageName"])
+    }
+  }
+})
+
+//flower path is created by walking player after touching a flower anchor
+const FlowerPath = FloatingObject.compose(NonWalkableObject, Registered, {
+  props: {
+    imageName: "flower-path",
+    tileType: "FlowerPath",
+    heightPrio: 1
+  },
+
+  methods: {
+    //on leave of player
+    notifyLeave(movement, actors, targetTile) {
+      //on leaving of player
+      if (actors.subject.tileType === "Player") {
+        //create another flower path object on the walking target tile
+        FlowerPath({ level: this.level }).addToTile(targetTile)
+
+        //activate flower on tile, if flower present
+        const flower = targetTile.getSuchObject("SmallFlower", true)
+        if (flower) {
+          flower.setActivationState(true)
+        }
+      }
+    }
+  }
+})
+
+//flower anchor creates flower path on stepping on,
+//flips color of touched small flowers when another flower anchor is touched with a path
+const FlowerAnchor = FloatingObject.compose(Registered, {
+  props: {
+    imageName: "color-switcher",
+    tileType: "FlowerAnchor",
+
+    //if still active (not used yet)
+    unused: true
+  },
+
+  methods: {
+    //when stepped on by player
+    notifyMove(movement, actors) {
+      //is player moving onto and not already used
+      if (actors.subject.tileType === "Player" && this.unused) {
+        //get flower paths objects
+        const flowerPaths = this.level.registry.getOfType("FlowerPath")
+
+        //if flower path is already present, player has already touched an anchor
+        if (flowerPaths.length) {
+          //for all flowers touched by path
+          const touchedFlowers = flowerPaths
+            .map(p => p.parent.getSuchObject("SmallFlower", true)) //use supertype to get both type
+            .filter(f => f)
+
+          //get type of one of them
+          const baseType = touchedFlowers[0].tileType
+
+          //if all are the same
+          if (touchedFlowers.every(f => f.tileType === baseType)) {
+            //change subtype to opposite type, automatically changes to inactive state
+            const newType = baseType === "SmallFlowerRed" ? "g" : "r"
+            touchedFlowers.forEach(f => f.changeSubtype(newType))
+          } else {
+            //at least inactivate all
+            touchedFlowers.forEach(f => f.setActivationState(false))
+          }
+
+          //get source anchor by looking for anchor that has a path on it
+          const sourceAnchor = this.level.registry.getOfType("FlowerAnchor")
+            .find(a => a.parent.getSuchObject("FlowerPath"))
+
+          //remove paths, forEach is messed up when the array of objects is modified
+          flowerPaths.slice().forEach(p => p.delete())
+
+          //in animation, change to done (closed) image
+          this.level.anim.registerAction(() => {
+            this.changeImageName("dark-hole-closed")
+            sourceAnchor.changeImageName("dark-hole-closed")
+          })
+
+          //set flags for being used
+          this.unused = false
+          sourceAnchor.unused = false
+
+          //stop processing, don't make new path
+          return
+        } else {
+          //no path object created yet, create path on this tile, will follow player
+          FlowerPath({ level: this.level }).addToTile(this.parent)
+        }
       }
     }
   }

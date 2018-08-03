@@ -573,6 +573,15 @@ const Subtyped = stampit.compose({
       //setup image name and specific tileType subtype
       this.imageName = this.typeData.imageName
       this.tileType = this.typeData.tileType
+    },
+
+    //changes the subtype later
+    changeSubtype(newSubtype) {
+      //setup with new given subtype
+      this.setupSubtype(newSubtype)
+
+      //update image name for new image of subtype (already set so not passing it)
+      this.changeImageName()
     }
   }
 })
