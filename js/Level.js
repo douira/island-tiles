@@ -521,6 +521,9 @@ Level = stampit.compose({
         }
       ]
     },
+
+    //array of possible tile sizes
+    tileSizes: [128, 96, 64, 32, 16]
   },
 
   methods: {
@@ -856,20 +859,17 @@ Level = stampit.compose({
       elems.levelIndex.text(`#${levelIndex + 1}`)
       elems.levelName.text(this.name)
 
-      //init in field table
-      this.initInTable(elems.table)
-    },
+      //save game size element
+      this.gameSize = elems.gameSize
 
-    //adds all tiles to the given table
-    initInTable(table) {
       //save table
-      this.table = table
+      this.table = elems.table
 
       //empty present contents of table
-      table.empty()
+      this.table.empty()
 
       //add a table row
-      const row = $("<tr>").appendTo(table)
+      const row = $("<tr>").appendTo(this.table)
 
       //add item to row
       const item = $("<td>").appendTo(row)
@@ -886,20 +886,46 @@ Level = stampit.compose({
       //clone whole row h - 1 times
       for (let i = 1; i < this.dim.y; i ++) {
         //add cloned row and set correct y pos
-        table.append(row.clone().addClass("row-" + i))
+        this.table.append(row.clone().addClass("row-" + i))
       }
 
       //set class for first row
       row.addClass("row-0")
 
       //simply iterate and call method on each tile
-      this.tileList.forEach(tile => tile.initDisplay(this, table))
+      this.tileList.forEach(tile => tile.initDisplay(this, this.table))
 
-      //set min width of table to current width to prevent squishing
-      //table.css("min-width", table[0].offsetWidth)
+      //update the table size for the new field
+      this.updateTableSize()
 
       //start game by registering event handler of player
       this.player.registerHandlers()
+    },
+
+    //updates the size of the image display according to the size of the window
+    updateTableSize() {
+      //remove the current size class from the table
+      this.table.removeClass((i, className) => className.startsWith("img-size-") ? className : "")
+
+      //calculate the maximum acceptable tile size
+      const maxTileSize = Math.min(
+        ($(window).width() - 35) / this.dim.x,
+        ($(window).height() - this.gameSize.height() + this.table.height() - 10) / this.dim.y
+      )
+
+      //current tile size index
+      let tileSizeIndex = 0
+
+      //until current chosen tile size fits in max tile size
+      while (
+        Level.tileSizes[tileSizeIndex] > maxTileSize &&
+        tileSizeIndex < Level.tileSizes.length - 1) {
+        //increment index
+        tileSizeIndex ++
+      }
+
+      //use largest fitting tile size
+      this.table.addClass("img-size-" + Level.tileSizes[tileSizeIndex])
     },
 
     //returns the tile at the given position

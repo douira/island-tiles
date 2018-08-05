@@ -67,10 +67,29 @@ a {
   border: none;
   padding: 0px;
   vertical-align: top;
-  width: 64px;
-  height: 64px;
   position: relative;
   vertical-align: top;
+}
+
+#field.img-size-128 tr, #field.img-size-128 td {
+  width: 128px;
+  height: 128px;
+}
+#field.img-size-96 tr, #field.img-size-96 td {
+  width: 96px;
+  height: 96px;
+}
+#field.img-size-64 tr, #field.img-size-64 td {
+  width: 64px;
+  height: 64px;
+}
+#field.img-size-32 tr, #field.img-size-32 td {
+  width: 32px;
+  height: 32px;
+}
+#field.img-size-16 tr, #field.img-size-16 td {
+  width: 16px;
+  height: 16px;
 }
 
 #field img, #item-list img {
@@ -80,10 +99,29 @@ a {
 }
 
 #field img {
-  width: 64px;
-  height: 64px;
   display: block;
   position: absolute;
+}
+
+#field.img-size-128 img {
+  width: 128px;
+  height: 128px;
+}
+#field.img-size-96 img {
+  width: 96px;
+  height: 96px;
+}
+#field.img-size-64 img {
+  width: 64px;
+  height: 64px;
+}
+#field.img-size-32 img {
+  width: 32px;
+  height: 32px;
+}
+#field.img-size-16 img {
+  width: 16px;
+  height: 16px;
 }
 
 .hide-this {

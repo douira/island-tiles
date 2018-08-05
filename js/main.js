@@ -33,7 +33,8 @@ const Game = stampit.compose({
       controls: $("#controls"),
       prevBtn: $("#prev-level"),
       resetBtn: $("#reset-level"),
-      progress: $("#progress-info")
+      progress: $("#progress-info"),
+      gameSize: $("#game-size")
     }
 
     //save levels
@@ -565,6 +566,9 @@ $(document).ready(function() {
     //reload page to set up new
     location.reload()
   })
+
+  //register handler on resize to update table image size when the dispaly size changes
+  $(window).resize(() => game.currentLevel.updateTableSize())
 
   //hide file load if not in debugging mode
   if (debugging) {
