@@ -15,7 +15,7 @@ body {
   display: block;
 }
 
-#subtitle a {
+a {
   color: cadetblue;
 }
 
@@ -131,7 +131,7 @@ body {
 }
 
 #info {
-  font-size: 22px;
+  font-size: 26px;
 }
 
 #file-wrapper span {
