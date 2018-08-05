@@ -14,10 +14,10 @@ const Game = stampit.compose({
     reachedIndex: 0,
 
     //the index of the highest completed level
-    completedIndex: 0,
+    completedIndex: -1,
 
-    //start with current index at -1 as init will increment to 0
-    levelIndex: -1
+    //start with current index at first level
+    levelIndex: 0
   },
 
   //constructed with a level object
@@ -39,8 +39,22 @@ const Game = stampit.compose({
     //save levels
     this.levels = levels
 
-    //init the first level
-    this.startNextLevel(1)
+    //attempt to read previous saved progress
+    try {
+      this.completedIndex = parseInt(window.localStorage.getItem("completed"), 10)
+
+      //also set reached and current level
+      if (this.completedIndex >= 0) {
+        this.levelIndex = this.completedIndex + 1
+        this.reachedIndex = this.levelIndex
+
+        //update controls for changed info
+        this.updateControls()
+      }
+    } catch (e) { }
+
+    //init the first level (currently set)
+    this.startNextLevel(0)
 
     //register handler to start next level when link is clicked
     this.elems.nextBtn.on("click.controls", e => {
@@ -121,7 +135,7 @@ const Game = stampit.compose({
       Game.setEnabled(this.elems.nextBtn, debugging || this.enableNextBtn, "active-control")
 
       //update progress info text
-      this.elems.progress.text(`(${this.completedIndex}/${this.levels.length} Levels done)`)
+      this.elems.progress.text(`(${this.completedIndex + 1}/${this.levels.length} Levels done)`)
     },
 
     //inits the currently selected level
@@ -160,10 +174,15 @@ const Game = stampit.compose({
     //called by the current level when the player completes it
     levelCompleted() {
       //update max completed
-      this.completedIndex = Math.max(this.completedIndex, this.reachedIndex, this.levelIndex + 1)
+      this.completedIndex = Math.max(this.completedIndex, this.levelIndex)
 
       //set reached level to at least the next level, cap at max level
       this.reachedIndex = Math.min(this.levels.length - 1, this.completedIndex)
+
+      //try to save reached level in local storage for persistence
+      try {
+        window.localStorage.setItem("completed", this.completedIndex)
+      } catch (e) { }
 
       //make completed message visible and make next button bold
       this.elems.message.removeClass("hide-this")
