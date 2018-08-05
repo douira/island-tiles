@@ -50,6 +50,9 @@ const Game = stampit.compose({
 
         //update controls for changed info
         this.updateControls()
+      } else {
+        //set back to original -1 if invalid
+        this.completedIndex = -1
       }
     } catch (e) { }
 
@@ -553,6 +556,15 @@ let game
 $(document).ready(function() {
   //make a game with the levels
   game = Game({ levels })
+
+  //register handler on clear link
+  $("#clear").click(() => {
+    //remove local storage for this page
+    window.localStorage.clear()
+
+    //reload page to set up new
+    location.reload()
+  })
 
   //hide file load if not in debugging mode
   if (debugging) {
