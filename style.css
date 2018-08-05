@@ -5,6 +5,20 @@ body {
   text-align: center;
 }
 
+#title {
+  font-size: 50px;
+}
+
+#subtitle {
+  margin-bottom: 20px;
+  font-size: 27px;
+  display: block;
+}
+
+#subtitle a {
+  color: cadetblue;
+}
+
 #controls, #level-title {
   font-size: 40px;
   margin: 0px;
