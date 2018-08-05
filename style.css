@@ -116,6 +116,10 @@ body {
   vertical-align: middle;
 }
 
+#info {
+  font-size: 22px;
+}
+
 #file-wrapper span {
   margin-left: 30px;
   margin-right: 5px;

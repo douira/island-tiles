@@ -1,5 +1,8 @@
-/*global stampit, Level, Vector*/
+/*global stampit, Level, Vector, levelData*/
 //Note: props is a shallow copy and thereby partially shared among instances
+
+//determine debug mode status
+const debugging = window.location.search === "?debug=true"
 
 //the game object has a field of tiles
 const Game = stampit.compose({
@@ -114,9 +117,8 @@ const Game = stampit.compose({
       //reset button is always enabled
 
       //enable next button when reached level is higher than current level
-      //TODO: remove true || (for testing only)
       this.enableNextBtn = this.reachedIndex > this.levelIndex
-      Game.setEnabled(this.elems.nextBtn, true || this.enableNextBtn, "active-control")
+      Game.setEnabled(this.elems.nextBtn, debugging || this.enableNextBtn, "active-control")
 
       //update progress info text
       this.elems.progress.text(`(${this.completedIndex}/${this.levels.length} Levels done)`)
@@ -173,8 +175,11 @@ const Game = stampit.compose({
   }
 })
 
-//game level definitions, is padded with water if field is smaller than specified size
-let levels = [
+//create levels from raw level data
+let levels = levelData.map(data => Level(data))
+
+//custom game level definitions, is padded with water if field is smaller than specified size
+levels.push(...[
   Level({
     name: "Kramba Radidi",
     dim: Vector({ x: 0, y: 0 }),
@@ -236,7 +241,7 @@ let levels = [
       [["l", "bc"], ["l", "bc"], "lwwwllll"],
     ]
   })
-]
+])
 
 //loads and processes level files
 const LevelFileReader = stampit.compose({
@@ -508,16 +513,16 @@ const LevelFileReader = stampit.compose({
         return line
       })
 
-      //print json of descriptor
-      console.log(JSON.stringify(descr))
-
-      //create level with descriptor, file name as name and standard size
-      this.level = Level({
+      //create object for level creation
+      this.levelInfo = {
         name: `${this.levelName} (${this.fileName})`,
         noPadding: true,
         field: descr,
         dim: Vector(20, 12)
-      })
+      }
+
+      //create level with descriptor, file name as name and standard size
+      this.level = Level(this.levelInfo)
     }
   }
 })
@@ -528,44 +533,53 @@ let game
 //when document is present
 $(document).ready(function() {
   //make a game with the levels
-  game = Game({ levels: levels })
+  game = Game({ levels })
 
-  //handler on file selection
-  $("#files").on("change", e => {
-    //for all selected files
-    Promise.all(Array.from(e.target.files).map(file => {
-      //make a file reader for this file
-      const reader = new FileReader()
+  //hide file load if not in debugging mode
+  if (debugging) {
+    //handler on file selection
+    $("#files").on("change", e => {
+      //for all selected files
+      Promise.all(Array.from(e.target.files).map(file => {
+        //make a file reader for this file
+        const reader = new FileReader()
 
-      //and read the file as an binary array buffer
-      reader.readAsArrayBuffer(file)
+        //and read the file as an binary array buffer
+        reader.readAsArrayBuffer(file)
 
-      //wait for load and parse to complete
-      return new Promise((resolve, reject) => {
-        //when the file is done loading
-        reader.onload = e => {
-          //create a level from the binary data
-          const levelReader = LevelFileReader({ arrayBuffer: e.target.result, file })
+        //wait for load and parse to complete
+        return new Promise((resolve, reject) => {
+          //when the file is done loading
+          reader.onload = e => {
+            //create a level from the binary data
+            const levelReader = LevelFileReader({ arrayBuffer: e.target.result, file })
 
-          //finish this level's processing
-          resolve(levelReader.level)
-        }
+            //finish this level's processing
+            resolve(levelReader)
+          }
 
-        //fail on error of reader
-        reader.onerror = reject
+          //fail on error of reader
+          reader.onerror = reject
+        })
+      })).then(levelReaders => {
+        //filter out readers with empty levels
+        levelReaders = levelReaders.filter(lr => lr.level)
+
+        //print all imported levels at once
+        console.log(JSON.stringify(levelReaders.map(lr => lr.levelInfo)))
+
+        //add all levels to list of levels
+        levels = levelReaders.map(lr => lr.level).concat(levels)
+
+        //remove previous game
+        game.remove()
+
+        //completely restart game with new levels
+        game = Game({ levels: levels })
       })
-    })).then(levelResults => {
-      //filter empty levels
-      levelResults = levelResults.filter(l => l)
-
-      //add all levels to list of levels
-      levels = levelResults.concat(levels)
-
-      //remove previous game
-      game.remove()
-
-      //completely restart game with new levels
-      game = Game({ levels: levels })
     })
-  })
+  } else {
+    //hide whole wrapper
+    $("#file-wrapper").hide()
+  }
 });

@@ -5,8 +5,8 @@
     <link href="https://fonts.googleapis.com/css?family=Amatic+SC:400,700|Rubik:400,700" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
     <script
-      src="https://code.jquery.com/jquery-3.3.1.slim.js"
-      integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA="
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
       crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stampit/3.2.1/stampit.umd.min.js"></script>
     <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon32.png">
@@ -16,6 +16,7 @@
     <script src="js/Terrain.js"></script>
     <script src="js/Objects.js"></script>
     <script src="js/Level.js"></script>
+    <script src="js/levelData.js"></script>
     <script src="js/main.js"></script>
   </head>
   <body>
@@ -32,10 +33,17 @@
         <a href="#" id="next-level">Next</a>
         <span id="progress-info"></span>
       </p>
+      <p id="info">
+        <b>Objective:</b> Reach the house to complete the level. You can explore mechanics and reset the level if you get stuck.<br>
+        <b>Controls:</b> Move with WASD and next level by clicking the button or pressing enter
+      </p>
       <div id="file-wrapper">
         <span>Open level files:</span>
         <input type="file" id="files" name="files[]" multiple>
       </div>
+      <p id="debug-setting">Debug mode
+        <a href="?debug=true">ON</a>/<a href="?debug=false">OFF</a>
+      </p>
     </div>
   </body>
 </html>
