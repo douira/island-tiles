@@ -135,7 +135,7 @@ const Game = stampit.compose({
       //reset button is always enabled
 
       //enable next button when reached level is higher than current level
-      this.enableNextBtn = this.reachedIndex >= this.levelIndex
+      this.enableNextBtn = this.completedIndex >= this.levelIndex
       Game.setEnabled(this.elems.nextBtn, debugging || this.enableNextBtn, "active-control")
 
       //update progress info text
