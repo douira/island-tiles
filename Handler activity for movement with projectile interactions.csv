@@ -1,0 +1,6 @@
+Object\Event;checkMove;notifyMove;checkLeave;notifyLeave
+Palm;Allow only PebbleProj;Delete and spawn Coconut in next tile;-;-
+Clam;Allow only PebbleProj, allow push or bump (only bump from player when open);State change: open, do push;-;-
+CoconutHole;Allow only Coconut, depending on state allow all;State change: close, delete Coconut, allow all if in closed state;-;-
+CoconutPath;-;-;Coconut no leave if target tile not also coconut path;-
+Leaf;Allow only PebbleProj, allow push;Do push, or on pebble: If not in line with direction, delete and place in next tile in redirected direction;-;-
