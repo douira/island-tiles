@@ -162,8 +162,8 @@ const SeedHole = FloatingObject.compose(Receptacle, {
 
     //when something moves onto this
     notifyMove(movement, actors) {
-      //if it's a full waterbottle
-      if (actors.subject.tileType === "WaterBottle" && actors.subject.filled) {
+      //if it's a full waterbottle and this seed hole actually has a seed
+      if (this.hasSeed && actors.subject.tileType === "WaterBottle" && actors.subject.filled) {
         //and in animation
         this.level.anim.registerAction(() => {
           //remove waterbottle
