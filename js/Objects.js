@@ -677,7 +677,7 @@ const Key = FloatingObject.compose(Item).props({
 })
 
 //Chest gives a coin in exchange for a key
-const Chest = FloatingObject.compose(Registered, Receptacle, NonWalkableObject, {
+const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
   props: {
     tileType: "Chest",
     imageName: "chest-closed",
@@ -1156,9 +1156,9 @@ const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight,
   methods: {
     //when the pirate gets coins
     receiveItems() {
-      //if all coins from the ground and out of chests have been given
+      //if all coins from the ground and out of chests/keys have been given
       if (this.receivedItems === (this.level.inventory.initItems.Coin || 0) +
-        (this.level.inventory.initItems.Chest || 0)) {
+        (this.level.inventory.initItems.Key || 0)) {
         //if no raft present on this tile yet
         if (! this.parent.getSuchObject("Raft")) {
           //create a raft
