@@ -644,7 +644,13 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
       if (tablets.some(t => ! t.uncovered && t.number < this.number)) {
         //uncovering is not ok, start animation to cover all
         this.level.anim.registerAction(
-          () => tablets.forEach(t => t.changeImageName("tablet-clear")),
+          () => tablets.forEach(t => {
+            //set to display as covered
+            t.changeImageName("tablet-clear")
+
+            //set flag to act like covered (moveable)
+            t.uncovered = false
+          }),
           { actionType: "longAnimation" })
       } else {
         //uncovering is ok, set flag
