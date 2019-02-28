@@ -1,5 +1,5 @@
 # island-tiles
-A simple island themed tile based puzzle game. Open in any modern Browser (like Chrome, Firefox or Edge for example) to play. Use the arrows keys or WASD to navigate and reach the house. Explore what the different objects do and how they behave. Pressing the enter key or the next button brings the next level up. A level editor for easier creation of levels is planned.
+A simple island themed tile based puzzle game. Open in any modern browser (like Chrome, Firefox or Edge for example) to play. Use the arrows keys or WASD to navigate and reach the house. Explore what the different objects do and how they behave. Pressing the enter key or the next button brings the next level up. A level editor for easier creation of levels is planned.
 
 Play it on [https://douira.github.io/island-tiles](https://douira.github.io/island-tiles)
 
