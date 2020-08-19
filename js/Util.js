@@ -1,7 +1,8 @@
 /*exported Vector, directionOffsets, NonWalkableObject, Sinkable,
 Watertight, RequireGone, Item, ReceptacleAllItems, Registered,
 Subtyped, Weighted, Projectile, PushProxy, FloatingObject, Pushable,
-Receptacle, AnimationParticle, Movable, UnknownObject, Pullable*/
+Receptacle, AnimationParticle, Movable, UnknownObject, Pullable,
+NonTeleportable, Teleportable*/
 
 //Vector class represents a 2D position
 const Vector = stampit.compose({
@@ -710,8 +711,22 @@ const UnknownObject = FloatingObject.props({
   imageName: "unknown"
 })
 
+//disallows teleporting this object
+const NonTeleportable = stampit.methods({
+  checkNoTeleport() {
+    return true
+  }
+})
+
+//re-allows teleporting this object
+const Teleportable = stampit.methods({
+  checkNoTeleport() {
+    return false
+  }
+})
+
 //projectile moves on it's own until it hits something
-const Projectile = Movable.compose({
+const Projectile = Movable.compose(NonTeleportable, {
   props: {
     isProjectile: true,
     heightPriority: 2

@@ -295,9 +295,13 @@ const RedTeleporter = Teleporter.compose({
   },
 
   methods: {
-    checkTeleport() {
-      //allow teleporting of everything
-      return true
+    //checks if the subject can be teleported
+    checkTeleport(actors) {
+      //if method for checking teleport disable is present,
+      //call it to check if teleporting is disabled
+      return !(
+        actors.subject.checkNoTeleport && actors.subject.checkNoTeleport()
+      )
     }
   }
 })
