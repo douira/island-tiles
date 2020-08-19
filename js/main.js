@@ -586,6 +586,9 @@ const LevelFileReader = stampit.compose({
 //the game instance
 let game
 
+//preload all images already now, the document doesn't need to be ready
+Level.preloadAllImages()
+
 //when document is present
 $(document).ready(function() {
   //make a game with the levels

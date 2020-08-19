@@ -118,6 +118,11 @@ const MommyCrab = FloatingObject.compose(
         this.level.anim.registerAction(() =>
           this.changeImageName("crab-large-happy")
         )
+      },
+
+      //return all image states as the preload images
+      getPreloadImages() {
+        return ["crab-large-sad", "crab-large-happy"]
       }
     }
   }
@@ -188,6 +193,11 @@ const SeedHole = FloatingObject.compose(Receptacle, {
           this.mutate(Spring)
         })
       }
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["seed-hole", "seeded-hole"]
     }
   }
 })
@@ -217,6 +227,11 @@ const WaterBottle = FloatingObject.compose(Pushable, {
           { actionType: "slowAnimation" }
         )
       }
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["bottle", "bottle-full"]
     }
   }
 })
@@ -479,6 +494,11 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
     //allow walk if in down position or already an object on it
     checkMove() {
       return this.hasWeight || this.parent.objects.length > 1
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return [Spikes.upImageName, Spikes.downImageName]
     }
   }
 })
@@ -567,6 +587,11 @@ const PearlPedestal = FloatingObject.compose(
             })
           )
         }
+      },
+
+      //return all image states as the preload images
+      getPreloadImages() {
+        return ["pearl-pedestal-filled", "pearl-pedestal"]
       }
     }
   }
@@ -645,6 +670,11 @@ const Player = FloatingObject.compose(Movable, {
     //(pushing a figure that moves a figure that wants to occupy the same space as the player)
     checkMove(movement, actors) {
       return actors.initiator === this
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return Player.directionImageNames
     }
   }
 })
@@ -700,9 +730,21 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
       return !this.uncovered
     },
 
-    //must be uncovered forfield complestion
+    //must be uncovered for field completion
     checkFinish() {
       return this.uncovered
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return [
+        "tablet-clear",
+        "tablet-1",
+        "tablet-2",
+        "tablet-3",
+        "tablet-4",
+        "tablet-5"
+      ]
     }
   }
 })
@@ -753,6 +795,11 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
         //give player a coin
         this.level.inventory.addItems("Coin")
       })
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["chest-closed", "chest-open"]
     }
   }
 })
@@ -910,6 +957,11 @@ const CoconutHole = FloatingObject.compose(Registered, {
 
       //otherwise allow if filled
       return this.filled
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["dark-hole", "dark-hole-closed"]
     }
   }
 })
@@ -1071,6 +1123,11 @@ const Clam = FloatingObject.compose(PushProxy, {
         //disallow push
         return false
       }
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["clam-open", "clam-closed", "clam-empty"]
     }
   }
 })
@@ -1291,6 +1348,11 @@ const LeafSwitcher = FloatingObject.compose({
 
       //not walkable, just bumpable
       return false
+    },
+
+    //return all images the leaf switcher can have
+    getPreloadImages() {
+      return this.switcherDirections
     }
   }
 })
@@ -1309,6 +1371,11 @@ const HiddenPath = FloatingObject.compose(Registered, Watertight, {
       this.changeImageName(
         setVisible ? "hidden-path-visible" : "hidden-path-hidden"
       )
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["hidden-path-hidden", "hidden-path-visible"]
     }
   }
 })
@@ -1394,6 +1461,11 @@ const ShellGuy = FloatingObject.compose(Pushable, {
     //require to be in last stage to finish
     checkFinish() {
       return this.stage === ShellGuy.stages.length - 1
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ShellGuy.stages
     }
   }
 })
@@ -1564,6 +1636,11 @@ const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
       this.changeImageName(
         this.typeData[newState ? "imageNameActive" : "imageName"]
       )
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["hidden-path-hidden", "hidden-path-visible"]
     }
   }
 })
@@ -1658,6 +1735,11 @@ const FlowerAnchor = FloatingObject.compose(Registered, {
           FlowerPath({ level: this.level }).addToTile(this.parent)
         }
       }
+    },
+
+    //return all image states as the preload images
+    getPreloadImages() {
+      return ["color-switcher", "dark-hole-closed"]
     }
   }
 })

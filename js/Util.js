@@ -110,13 +110,13 @@ const Displayable = stampit.compose({
               ]
             }
           } else {
-            //is normal object, interpret to dispaly as several layered images
+            //is normal object, interpret to display as several layered images
             this.imageName = this.imageName.layers
           }
         }
 
         //wrap in array if not array yet
-        if (!(this.imageName instanceof Array)) {
+        if (!Array.isArray(this.imageName)) {
           this.imageName = [this.imageName]
         }
 
@@ -125,17 +125,14 @@ const Displayable = stampit.compose({
           //location index for this one image
           const locationIndex = Displayable.getImageSource(imageName)
 
-          //img elem attribs
-          const attribs = {
-            class: "tile",
-
-            //init with first location
-            src: Displayable.makeImgAttrib(imageName, locationIndex)
-          }
-
           //generate new with prepared attribs
           return {
-            elem: $("<img>", attribs),
+            elem: $("<img>", {
+              class: "tile",
+
+              //init with first location
+              src: Displayable.makeImgAttrib(imageName, locationIndex)
+            }),
             name: imageName,
             ownLocationIndex: locationIndex
           }
@@ -195,7 +192,14 @@ const Displayable = stampit.compose({
       item.locationIndex = 0
 
       //set a new name in the img element
+      //TODO: don't we need to deal with the location index here?
       item.elem.attr("src", Displayable.makeImgAttrib(item.name))
+    },
+
+    //the standard imageName is the only image to preload
+    //this should be overwritten for any objects that have more than one image
+    getPreloadImages() {
+      return [this.imageName].flat()
     }
   }
 })
@@ -593,6 +597,11 @@ const Subtyped = stampit.compose({
 
       //update image name for new image of subtype (already set so not passing it)
       this.changeImageName()
+    },
+
+    //return the images of all subtypes
+    getPreloadImages() {
+      return Object.keys(this.subtypes).map(({ imageName }) => imageName)
     }
   }
 })

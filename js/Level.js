@@ -100,14 +100,14 @@ const Inventory = stampit.compose({
     itemDisplayInfo: {}
   },
 
-  //init itemDisplayInfo with all items from positionDescriptorMapping
+  //init itemDisplayInfo with all items from positionDescriptorMap
   init() {
     //if not filled already
     if (!Object.keys(Inventory.itemDisplayInfo).length) {
       //for all objects
-      for (const objAbbrev in Level.positionDescriptorMapping.objects) {
+      for (const objAbbrev in Level.positionDescriptorMap.objects) {
         //get constructor of object
-        const constructor = Level.positionDescriptorMapping.objects[objAbbrev]
+        const constructor = Level.positionDescriptorMap.objects[objAbbrev]
 
         //if image name is attached statically, this is a item
         if (constructor.imageName) {
@@ -346,7 +346,7 @@ Level = stampit.compose({
 
   statics: {
     //mapping from position descriptors to tile classes
-    positionDescriptorMapping: {
+    positionDescriptorMap: {
       //first field is always the tile type
       tiles: {
         w: Water,
@@ -490,6 +490,9 @@ Level = stampit.compose({
       }
     },
 
+    //array of possible tile sizes
+    tileSizes: [128, 96, 64, 32, 16],
+
     //returns a padding position descriptor or an array of them
     getPadding(length) {
       //make array if length set as positive number
@@ -536,8 +539,42 @@ Level = stampit.compose({
       ]
     },
 
-    //array of possible tile sizes
-    tileSizes: [128, 96, 64, 32, 16]
+    //preloads all images by creating image elements with all images in the game
+    //doesn't care about images from other tilesets, yet
+    preloadAllImages() {
+      //collect preload images from all objects
+      const preloadedImages = {}
+
+      //for all objects that can be displayed
+      Object.values(Level.positionDescriptorMap.tiles)
+        .concat(Object.values(Level.positionDescriptorMap.objects))
+        .forEach(constructorFunction => {
+          //disregard init errors, we just need some instance
+          try {
+            constructorFunction()
+              .getPreloadImages()
+              .forEach(imageName => {
+                //if present, add to list of image names to preload
+                if (imageName && imageName.length) {
+                  preloadedImages[imageName] = true
+                }
+              })
+          } catch (e) {
+            //don't care
+          }
+        })
+
+      //preload all unique collected images
+      for (const imageName in preloadedImages) {
+        //preload by making an image with it but not putting it anywhere
+        preloadedImages[imageName] = $("<img>", {
+          src: Displayable.makeImgAttrib(
+            imageName,
+            Displayable.getImageSource(imageName)
+          )
+        })
+      }
+    }
   },
 
   methods: {
@@ -792,7 +829,7 @@ Level = stampit.compose({
       this.tiles = this.field.map((line, y) =>
         line.map((position, x) => {
           //get mapped tile factory from mapping
-          const tileMaker = Level.positionDescriptorMapping.tiles[position[0]]
+          const tileMaker = Level.positionDescriptorMap.tiles[position[0]]
 
           //verify presence (that abbreviation in level description is valid)
           if (!tileMaker) {
@@ -815,7 +852,7 @@ Level = stampit.compose({
 
               //get obj factory, select from obj mapping
               const objMaker =
-                Level.positionDescriptorMapping.objects[objAbbrev.substr(0, 2)]
+                Level.positionDescriptorMap.objects[objAbbrev.substr(0, 2)]
 
               //check for validity
               if (!objMaker) {
