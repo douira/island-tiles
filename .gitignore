@@ -2,3 +2,5 @@ source textures
 replace filename spaces.app
 levels
 pushy island screenshots
+.vscode
+node_modules

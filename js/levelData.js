@@ -1,4 +1,4 @@
-/*jshint ignore:start*/
+/*eslint-disable*/
 //these are all levels read from the files and put through some processing
 const levelData = [
   {

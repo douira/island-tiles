@@ -1,4 +1,3 @@
-/*global stampit*/
 /*exported Vector, directionOffsets, NonWalkableObject, Sinkable,
 Watertight, RequireGone, Item, ReceptacleAllItems, Registered,
 Subtyped, Weighted, Projectile, PushProxy, FloatingObject, Pushable,
@@ -52,11 +51,11 @@ const Vector = stampit.compose({
     sub(v1, v2) {
       //return vector with components subtracted
       return Vector({ x: v1.x - v2.x, y: v1.y - v2.y })
-    },
+    }
   }
 })
 
-//neighbour offsets translate own position into the position of a neighbour
+//neighbor offsets translate own position into the position of a neighbor
 //map from direction to offset vector
 const directionOffsets = [
   Vector({ x: 0, y: -1 }),
@@ -69,24 +68,20 @@ const directionOffsets = [
 const Displayable = stampit.compose({
   statics: {
     //list of locations to look for the images
-    imgLocations: [
-      "tiles",
-      "tiles-common",
-      "tiles-new",
-    ],
+    imgLocations: ["tiles", "tiles-common", "tiles-new"],
 
     //returns the attribute value for a given image name
     makeImgAttrib(forName, index = 0) {
       return `${Displayable.imgLocations[index]}/${forName}.png`
     },
 
-    //list of what location idnex to use for all images
-    imageSourceRegistry: { },
+    //list of what location index to use for all images
+    imageSourceRegistry: {},
 
     //returns the current image source for the given image name
     getImageSource(imageName) {
       //set to initial 0 if not present
-      if (! (imageName in Displayable.imageSourceRegistry)) {
+      if (!(imageName in Displayable.imageSourceRegistry)) {
         Displayable.imageSourceRegistry[imageName] = 0
       }
 
@@ -99,7 +94,7 @@ const Displayable = stampit.compose({
     //generates a dom object for this tile; an image element
     getImgElem(noReturn) {
       //check that img element doesn't exist yet
-      if (! this.elems) {
+      if (!this.elems) {
         //if image name is an object
         if (typeof this.imageName === "object") {
           //if image name is an array
@@ -110,7 +105,9 @@ const Displayable = stampit.compose({
               this.imageName = this.imageName[0]
             } else {
               //choose one at random
-              this.imageName = this.imageName[Math.floor(Math.random() * this.imageName.length)]
+              this.imageName = this.imageName[
+                Math.floor(Math.random() * this.imageName.length)
+              ]
             }
           } else {
             //is normal object, interpret to dispaly as several layered images
@@ -119,13 +116,13 @@ const Displayable = stampit.compose({
         }
 
         //wrap in array if not array yet
-        if (! (this.imageName instanceof Array)) {
+        if (!(this.imageName instanceof Array)) {
           this.imageName = [this.imageName]
         }
 
         //for all image names
         this.elems = this.imageName.map(imageName => {
-          //locaion index for this one image
+          //location index for this one image
           const locationIndex = Displayable.getImageSource(imageName)
 
           //img elem attribs
@@ -145,31 +142,36 @@ const Displayable = stampit.compose({
         })
 
         //attach error handler to switch to next location if current one fails
-        this.elems.forEach(item => item.elem.on("error", e => {
-          //get current location index
-          let locationIndex = Displayable.getImageSource(item.name)
+        this.elems.forEach(item =>
+          item.elem.on("error", e => {
+            //get current location index
+            let locationIndex = Displayable.getImageSource(item.name)
 
-          //stop if no other locations left
-          if (locationIndex === Displayable.imgLocations.length - 1) {
-            return
-          }
+            //stop if no other locations left
+            if (locationIndex === Displayable.imgLocations.length - 1) {
+              return
+            }
 
-          //increment image source location index if current own is the same
-          //otherwise many tiles trigger an error and the location is incremented too many times
-          if (item.ownLocationIndex === locationIndex) {
-            Displayable.imageSourceRegistry[item.name] = ++locationIndex
+            //increment image source location index if current own is the same
+            //otherwise many tiles trigger an error and the location is incremented too many times
+            if (item.ownLocationIndex === locationIndex) {
+              Displayable.imageSourceRegistry[item.name] = ++locationIndex
 
-            //update own
-            item.ownLocationIndex = locationIndex
-          }
+              //update own
+              item.ownLocationIndex = locationIndex
+            }
 
-          //set to try other location (increment index)
-          $(e.target).attr("src", Displayable.makeImgAttrib(item.name, locationIndex))
-        }))
+            //set to try other location (increment index)
+            $(e.target).attr(
+              "src",
+              Displayable.makeImgAttrib(item.name, locationIndex)
+            )
+          })
+        )
       }
 
       //don't make list of elements if not necessary (if flag on)
-      if (! noReturn) {
+      if (!noReturn) {
         //return list of elements
         return this.elems.map(item => item.elem)
       }
@@ -248,7 +250,7 @@ const FloatingObject = Displayable.compose(Vector, {
       this.parent.removeObj(this)
 
       //update display if not disabled
-      if (! noUpdate) {
+      if (!noUpdate) {
         this.parent.updateDisplay()
       }
 
@@ -309,7 +311,7 @@ const NonWalkableObject = stampit.methods({
 const Movable = stampit.compose({
   statics: {
     //makes a movement object from a direction (generates offset)
-    makeMovementDescr(direction) {
+    makeMovementDescriptor(direction) {
       return {
         //copy direction
         direction,
@@ -327,8 +329,11 @@ const Movable = stampit.compose({
       const actors = { subject: this, initiator }
 
       //check if target tile is ok with movement to it, no action if out of bounds
-      return targetTile && this.parent.checkLeave(movement, actors, targetTile) &&
+      return (
+        targetTile &&
+        this.parent.checkLeave(movement, actors, targetTile) &&
         targetTile.checkMove(movement, actors)
+      )
     },
 
     //does the actual moving
@@ -343,7 +348,9 @@ const Movable = stampit.compose({
       targetTile.notifyMove(movement, actors)
 
       //notify tile on opposite side of movement, target tile is this terrain tile is present
-      const oppositeTargetTile = this.level.getTileAt(Vector.sub(this, movement.offset));
+      const oppositeTargetTile = this.level.getTileAt(
+        Vector.sub(this, movement.offset)
+      )
       if (oppositeTargetTile) {
         oppositeTargetTile.oppositeNotifyLeave(movement, actors, this.parent)
       }
@@ -360,7 +367,7 @@ const Movable = stampit.compose({
 
     //move is called as the initial impulse (this is default initiator)
     move(movement, initiator = this) {
-      //stop if deleted i nthe mean time
+      //stop if deleted in the mean time
       if (this.deleted) {
         return
       }
@@ -369,7 +376,7 @@ const Movable = stampit.compose({
       const targetTile = this.getTargetTile(movement)
 
       //if target tile is invalid
-      if (! targetTile) {
+      if (!targetTile) {
         //if handler specified
         if (this.outOfFieldMove) {
           this.outOfFieldMove(movement, initiator)
@@ -398,18 +405,20 @@ const Pushable = Movable.methods({
   //actual checking function, is broken out to make external call possible
   pushableCheckMove(movement, actors) {
     //require subject and initiator to be the same (don't allow double pushing)
-    return actors.initiator === actors.subject &&
+    return (
+      actors.initiator === actors.subject &&
       //don't allow pushing by projectiles
-      ! actors.subject.isProjectile &&
-
+      !actors.subject.isProjectile &&
       //deny pushing down grass
-      ! (actors.subject.parent.terrainType === "Grass" && this.parent.terrainType === "Land") &&
-
+      !(
+        actors.subject.parent.terrainType === "Grass" &&
+        this.parent.terrainType === "Land"
+      ) &&
       //check if push movement ok in general (for this object)
-      (! this.checkPush || this.checkPush(movement, actors)) &&
-
+      (!this.checkPush || this.checkPush(movement, actors)) &&
       //try to move in direction of current movement, keep initiator
       this.attemptMove(this.getTargetTile(movement), movement, actors.initiator)
+    )
   },
 
   //when move actually happens (movement to parent tile), do move to next tile
@@ -443,7 +452,7 @@ const Sinkable = Pushable.props({
 //watertight objects can be in water and suport other objects if pushed onto them
 const Watertight = stampit.props({
   watertight: true,
-  heightPrio: -1
+  heightPriority: -1
 })
 
 //requires objects with this behavior to be all gone from the field before finishing the level
@@ -455,7 +464,7 @@ const RequireGone = stampit.props({
 const Item = stampit.compose({
   //on composition with pickable
   composers({ stamp, composables }) {
-    //copy image name and tile tpye into statics
+    //copy image name and tile type into statics
     //so inventory can dispaly items of which no instance exists
     const props = composables[composables.length - 1].properties
     stamp.imageName = props.imageName
@@ -507,17 +516,19 @@ const Receptacle = stampit.compose({
       if (
         actors.subject.tileType === "Player" &&
         (typeof this.requireDirection !== "number" ||
-         movement.direction === this.requireDirection) &&
-        (! this.checkReceiveItems || this.checkReceiveItems(movement, actors))
+          movement.direction === this.requireDirection) &&
+        (!this.checkReceiveItems || this.checkReceiveItems(movement, actors))
       ) {
         //take all items specified in prop from level
         const gottenItems = this.level.inventory.takeItems(
-          this.itemType, this.itemReceiveType) //itemReceiveType is number or "all"
+          this.itemType,
+          this.itemReceiveType
+        ) //itemReceiveType is number or "all"
 
         //increment received items with new items
         this.receivedItems += gottenItems
 
-        //if present and any items received, call callbacck of specific type
+        //if present and any items received, call callback of specific type
         if (gottenItems && this.receiveItems) {
           this.receiveItems(gottenItems, movement)
         }
@@ -547,7 +558,7 @@ const Registered = stampit.init(function() {
   this.level.registry.register(this)
 })
 
-//subtyped objects get additional type data so we dont have to make enumerated class names
+//subtyped objects get additional type data so we don't have to make enumerated class names
 const Subtyped = stampit.compose({
   //init subtype
   init({ extraInitData }, { stamp }) {
@@ -647,23 +658,27 @@ const Weighted = stampit.compose({
       }
 
       //register animation to execute when done with motion
-      this.level.anim.registerAction(() => {
-        //unset check flag
-        this.checkRegistered = false
+      this.level.anim.registerAction(
+        () => {
+          //unset check flag
+          this.checkRegistered = false
 
-        //get new weight value, has weight if extra weight set
-        //or more than this object present in this tile
-        const newHasWeight = this.extraWeight || this.parent.objs.length > 1
+          //get new weight value, has weight if extra weight set
+          //or more than this object present in this tile
+          const newHasWeight =
+            this.extraWeight || this.parent.objects.length > 1
 
-        //if weight state changed
-        if (newHasWeight !== this.hasWeight) {
-          //change state
-          this.hasWeight = newHasWeight
+          //if weight state changed
+          if (newHasWeight !== this.hasWeight) {
+            //change state
+            this.hasWeight = newHasWeight
 
-          //notify object
-          this.weightStateChanged(this.hasWeight)
-        }
-      }, { delay: 0, priority: -1 })
+            //notify object
+            this.weightStateChanged(this.hasWeight)
+          }
+        },
+        { delay: 0, priority: -1 }
+      )
     },
 
     //sets the new extra weight state
@@ -690,7 +705,7 @@ const UnknownObject = FloatingObject.props({
 const Projectile = Movable.compose({
   props: {
     isProjectile: true,
-    heightPrio: 2
+    heightPriority: 2
   },
 
   //init with movement
@@ -754,7 +769,7 @@ const PushProxy = Pushable.methods({
       }
     }
 
-    //do push hanlder that triggers push if not disabled
+    //do push handler that triggers push if not disabled
     if (doPush) {
       //then also notify push handler
       this.pushableNotifyMove(movement, actors)

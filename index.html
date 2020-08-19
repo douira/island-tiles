@@ -2,17 +2,21 @@
 <html>
   <head>
     <title>Island Tiles game by douira</title>
-    <meta charset="utf-8">
-    <link href="https://fonts.googleapis.com/css?family=Amatic+SC:400,700|Rubik:400,700" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Amatic+SC:400,700|Rubik:400,700"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
-      crossorigin="anonymous"></script>
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stampit/3.2.1/stampit.umd.min.js"></script>
-    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="icon/favicon96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon32.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="icon/favicon96.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/favicon16.png" />
     <script src="js/Util.js"></script>
     <script src="js/Terrain.js"></script>
     <script src="js/Objects.js"></script>
@@ -23,11 +27,18 @@
   <body>
     <div id="container">
       <div id="game-size">
-        <span id="title">Island Tiles</span><br>
-        <span id="subtitle">by <a href="https://twitter.com/douira100">douira</a> (<a href="https://github.com/douira/island-tiles">GitHub Repo</a>)</span>
+        <span id="title">Island Tiles</span><br />
+        <span id="subtitle"
+          >by <a href="https://twitter.com/douira100">douira</a> (<a
+            href="https://github.com/douira/island-tiles"
+            >GitHub Repo</a
+          >)</span
+        >
         <p id="level-title">
           Level <span class="level-index"></span>: <span id="level-name"></span>
-          <span class="hide-this" id="message-text">Completed Level <span class="level-index"></span>!</span>
+          <span class="hide-this" id="message-text"
+            >Completed Level <span class="level-index"></span>!</span
+          >
         </p>
         <table id="field"></table>
         <div id="item-list"></div>
@@ -39,18 +50,26 @@
         </p>
       </div>
       <p id="info">
-        This is a <b>puzzle game</b>; some higher levels are quite hard (or sneaky).<br>
-        <b>Objective:</b> Reach the house to complete each level. You can explore mechanics and reset the level if you get stuck.<br>
-        <b>Controls:</b> Move with WASD and open the next level by clicking the Next button or pressing enter<br>
-        Please report any problems with the page or the game itself and suggestions as a <a href="https://github.com/douira/island-tiles/issues/new">new issue</a> on GitHub!<br>
+        This is a <b>puzzle game</b>; some higher levels are quite hard (or
+        sneaky).<br />
+        <b>Objective:</b> Reach the house to complete each level. You can
+        explore mechanics and reset the level if you get stuck.<br />
+        <b>Controls:</b> Move with WASD and open the next level by clicking the
+        Next button or pressing enter<br />
+        Please report any problems with the page or the game itself and
+        suggestions as a
+        <a href="https://github.com/douira/island-tiles/issues/new"
+          >new issue</a
+        >
+        on GitHub!<br />
         <a id="clear" href="#">Clear progress</a>
       </p>
       <div id="file-wrapper">
         <span>Open level files:</span>
-        <input type="file" id="files" name="files[]" multiple>
+        <input type="file" id="files" name="files[]" multiple />
       </div>
-      <p id="debug-setting">Debug mode
-        <a href="?debug=true">ON</a>/<a href="?debug=false">OFF</a>
+      <p id="debug-setting">
+        Debug mode <a href="?debug=true">ON</a>/<a href="?debug=false">OFF</a>
       </p>
     </div>
   </body>

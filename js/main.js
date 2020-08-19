@@ -1,4 +1,5 @@
-/*global stampit, Level, Vector, levelData*/
+/*global Level, Vector, levelData*/
+/*eslint-disable sonarjs/no-duplicate-string*/
 //Note: props is a shallow copy and thereby partially shared among instances
 
 //determine debug mode status
@@ -42,7 +43,10 @@ const Game = stampit.compose({
 
     //attempt to read previous saved progress
     try {
-      this.completedIndex = parseInt(window.localStorage.getItem("completed"), 10)
+      this.completedIndex = parseInt(
+        window.localStorage.getItem("completed"),
+        10
+      )
 
       //also set reached and current level
       if (this.completedIndex >= 0) {
@@ -55,14 +59,16 @@ const Game = stampit.compose({
         //set back to original -1 if invalid
         this.completedIndex = -1
       }
-    } catch (e) { }
+    } catch (e) {
+      //doesn't load anything if can't load
+    }
 
     //init the first level (currently set)
     this.startNextLevel(0)
 
     //register handler to start next level when link is clicked
     this.elems.nextBtn.on("click.controls", e => {
-      //dont follow link
+      //don't follow link
       e.preventDefault()
 
       //start the next level
@@ -119,7 +125,9 @@ const Game = stampit.compose({
     remove() {
       //remove all with .controls
       $(document).off(".controls")
-      $("#controls").find("*").off(".controls")
+      $("#controls")
+        .find("*")
+        .off(".controls")
 
       //unregister level handlers
       if (this.currentLevel) {
@@ -136,10 +144,16 @@ const Game = stampit.compose({
 
       //enable next button when reached level is higher than current level
       this.enableNextBtn = this.completedIndex >= this.levelIndex
-      Game.setEnabled(this.elems.nextBtn, debugging || this.enableNextBtn, "active-control")
+      Game.setEnabled(
+        this.elems.nextBtn,
+        debugging || this.enableNextBtn,
+        "active-control"
+      )
 
       //update progress info text
-      this.elems.progress.text(`(${this.completedIndex + 1}/${this.levels.length} Levels done)`)
+      this.elems.progress.text(
+        `(${this.completedIndex + 1}/${this.levels.length} Levels done)`
+      )
     },
 
     //inits the currently selected level
@@ -186,7 +200,9 @@ const Game = stampit.compose({
       //try to save reached level in local storage for persistence
       try {
         window.localStorage.setItem("completed", this.completedIndex)
-      } catch (e) { }
+      } catch (e) {
+        //if can't save then just don't
+      }
 
       //make completed message visible and make next button bold
       this.elems.message.removeClass("hide-this")
@@ -202,6 +218,7 @@ const Game = stampit.compose({
 let levels = levelData.map(data => Level(data))
 
 //custom game level definitions, is padded with water if field is smaller than specified size
+//prettier-ignore
 levels.push(...[
   Level({
     name: "Kramba Radidi",
@@ -295,7 +312,7 @@ const LevelFileReader = stampit.compose({
         10: "sfg",
         35: "sfr",
         42: ["l"] //also land? appears underneath coconut hole in source level 62
-          //but doesn't seem to do anything
+        //but doesn't seem to do anything
       },
       objectTypes: {
         56: "pl",
@@ -338,7 +355,7 @@ const LevelFileReader = stampit.compose({
         70: "cc",
         90: "pi",
         92: "ph",
-        117: "ls", //leafswitcher starting positons
+        117: "ls", //leafswitcher starting positions
         118: "ls",
         119: "ls",
         120: "ls", //speculative assignment
@@ -357,7 +374,7 @@ const LevelFileReader = stampit.compose({
     },
 
     //pads a string with the given length of chars
-    padString(str, { length = 3, char = "0" } = { }) {
+    padString(str, { length = 3, char = "0" } = {}) {
       return (char.repeat(length) + str).substr(-length, length)
     }
   },
@@ -383,16 +400,16 @@ const LevelFileReader = stampit.compose({
       //if withing interestign range
       if (x && x <= 20 && y && y <= 12) {
         //decrement both to compensate for edges
-        x --
-        y --
+        x--
+        y--
 
         //create row if missing
-        if (! this.field[y]) {
+        if (!this.field[y]) {
           this.field[y] = []
         }
 
         //create field if missing
-        if (! this.field[y][x]) {
+        if (!this.field[y][x]) {
           this.field[y][x] = []
         }
 
@@ -433,7 +450,7 @@ const LevelFileReader = stampit.compose({
           str += "\n"
 
           //also increment piece counter
-          fieldIndex ++
+          fieldIndex++
         }
 
         //chars to put in the field/string print
@@ -449,83 +466,99 @@ const LevelFileReader = stampit.compose({
         }
 
         //increment byte position
-        i ++
+        i++
         byteAddress = i * 128 + 2
       }
 
       //read level name at end of file
-      this.levelName = this.data.slice(128 * 14 * 22 * 2 + 2)
+      this.levelName = this.data
+        .slice(128 * 14 * 22 * 2 + 2)
         //by parsing into chars from char codes
-        .reduce((str, c) => str + String.fromCharCode(parseInt(c)), "")
+        .reduce((str, c) => str + String.fromCharCode(parseInt(c, 10)), "")
 
       //print fields visually
       console.log(str)
 
       //print combined field
-      console.log(this.fileName + "\n" + this.field.map(
-        //process each line
-        l => l.map(i => i.map(f => LevelFileReader.padString(f)).join("")).join("")
-      ).join("\n"))
+      console.log(
+        this.fileName +
+          "\n" +
+          this.field
+            .map(
+              //process each line
+              l =>
+                l
+                  .map(i => i.map(f => LevelFileReader.padString(f)).join(""))
+                  .join("")
+            )
+            .join("\n")
+      )
 
       //build level descriptor from field chars, for each line
-      const descr = this.field.map(line => {
+      const levelDescriptor = this.field.map(line => {
         //map line, for each item
-        line = line.map(item => {
-          //start off position as water base
-          let pos = ["w"]
+        line = line
+          .map(item => {
+            //start off position as water base
+            let pos = ["w"]
 
-          //terrain is in the first position
-          const terrain = item[0]
+            //terrain is in the first position
+            const terrain = item[0]
 
-          //if terrain is a type of flat land object
-          const flatLandObject = LevelFileReader.binFormatMaps.terrainTypes[terrain]
-          if (flatLandObject) {
-            //use whole array if given
-            if (Array.isArray(flatLandObject)) {
-              pos = flatLandObject.slice(0)
+            //if terrain is a type of flat land object
+            const flatLandObject =
+              LevelFileReader.binFormatMaps.terrainTypes[terrain]
+            if (flatLandObject) {
+              //use whole array if given
+              if (Array.isArray(flatLandObject)) {
+                pos = flatLandObject.slice(0)
+              } else {
+                //is land with this object
+                pos = ["l", flatLandObject]
+              }
             } else {
-              //is land with this object
-              pos = ["l", flatLandObject]
+              //is land if byte is certain ranges
+              //10 is the green small flower but all others 1-12 are land types
+              if (terrain <= 12) {
+                pos[0] = "l"
+              } else if (terrain <= 24) {
+                pos[0] = "g"
+              } else if (terrain !== placeholder) {
+                //unknown terrain if out of range but still specified
+                pos[0] = "u"
+              }
             }
-          } else {
-            //is land if byte is certain ranges
-            //10 is the green small flower but all others 1-12 are land types
-            if (terrain <= 12) {
-              pos[0] = "l"
-            } else if (terrain <= 24) {
-              pos[0] = "g"
-            } else if (terrain !== placeholder) {
-              //unknown terrain if out of range but still specified
-              pos[0] = "u"
-            }
-          }
 
-          //if second item is number
-          if (typeof item[1] === "number") {
-            //map to object abbrev or unknown if not present
-            //add all objects, enabled adding of multiple objects in bin format map
-            pos = pos.concat(LevelFileReader.binFormatMaps.objectTypes[item[1]] || "uk")
-          }
-
-          //return processed position
-          return pos
-        }).reduce((prev, item) => { //reduce to simplify
-          //if this item is just one piece
-          if (item.length === 1) {
-            //when last is string
-            if (typeof prev[prev.length - 1] === "string") {
-              //add string to it
-              prev[prev.length - 1] += item[0]
-            } //if last is array or prev is empty, push only string
-            else {
-              prev.push(item[0])
+            //if second item is number
+            if (typeof item[1] === "number") {
+              //map to object abbrev or unknown if not present
+              //add all objects, enabled adding of multiple objects in bin format map
+              pos = pos.concat(
+                LevelFileReader.binFormatMaps.objectTypes[item[1]] || "uk"
+              )
             }
-          } else {
-            //push whole item
-            prev.push(item)
-          }
-          return prev
-        }, [])
+
+            //return processed position
+            return pos
+          })
+          .reduce((prev, item) => {
+            //reduce to simplify
+            //if this item is just one piece
+            if (item.length === 1) {
+              //when last is string
+              if (typeof prev[prev.length - 1] === "string") {
+                //add string to it
+                prev[prev.length - 1] += item[0]
+              } //if last is array or prev is empty, push only string
+              else {
+                prev.push(item[0])
+              }
+            } else {
+              //push whole item
+              prev.push(item)
+            }
+            return prev
+          }, [])
 
         //if line collapses into one piece, don't use array to contain
         if (line.length === 1) {
@@ -540,7 +573,7 @@ const LevelFileReader = stampit.compose({
       this.levelInfo = {
         name: `${this.levelName} (${this.fileName})`,
         noPadding: true,
-        field: descr,
+        field: levelDescriptor,
         dim: Vector(20, 12)
       }
 
@@ -575,28 +608,33 @@ $(document).ready(function() {
     //handler on file selection
     $("#files").on("change", e => {
       //for all selected files
-      Promise.all(Array.from(e.target.files).map(file => {
-        //make a file reader for this file
-        const reader = new FileReader()
+      Promise.all(
+        Array.from(e.target.files).map(file => {
+          //make a file reader for this file
+          const reader = new FileReader()
 
-        //and read the file as an binary array buffer
-        reader.readAsArrayBuffer(file)
+          //and read the file as an binary array buffer
+          reader.readAsArrayBuffer(file)
 
-        //wait for load and parse to complete
-        return new Promise((resolve, reject) => {
-          //when the file is done loading
-          reader.onload = e => {
-            //create a level from the binary data
-            const levelReader = LevelFileReader({ arrayBuffer: e.target.result, file })
+          //wait for load and parse to complete
+          return new Promise((resolve, reject) => {
+            //when the file is done loading
+            reader.onload = e => {
+              //create a level from the binary data
+              const levelReader = LevelFileReader({
+                arrayBuffer: e.target.result,
+                file
+              })
 
-            //finish this level's processing
-            resolve(levelReader)
-          }
+              //finish this level's processing
+              resolve(levelReader)
+            }
 
-          //fail on error of reader
-          reader.onerror = reject
+            //fail on error of reader
+            reader.onerror = reject
+          })
         })
-      })).then(levelReaders => {
+      ).then(levelReaders => {
         //filter out readers with empty levels
         levelReaders = levelReaders.filter(lr => lr.level)
 
@@ -617,4 +655,4 @@ $(document).ready(function() {
     //hide whole wrapper
     $("#file-wrapper").hide()
   }
-});
+})

@@ -1,5 +1,4 @@
-/*global stampit,
-Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
+/*global Water, Land, Grass, Rock, Palm, Player, Box, WetBox,
 Vector, Goal, Starfish, MommyCrab, BabyCrab, Displayable,
 Seed, SeedHole, WaterHole, WaterBottle, Spring, Teleporter, RedTeleporter,
 UnknownObject, Figure, Cross, UnknownTerrain, Bomb, BombTrigger,
@@ -34,13 +33,17 @@ const AnimationQueue = stampit.compose({
 
   methods: {
     //registers a new animation action
-    registerAction(action, { delay = -1, actionType = "animation", priority = 0} = {}) {
+    registerAction(
+      action,
+      { delay = -1, actionType = "animation", priority = 0 } = {}
+    ) {
       //add to queue
       this.queue.push({
         action,
 
         //use delay if given, resolve delay time with action type otherwise
-        delay: delay === -1 ? AnimationQueue.actionTypeTimes[actionType] : delay,
+        delay:
+          delay === -1 ? AnimationQueue.actionTypeTimes[actionType] : delay,
 
         //use given priority (which defaults to 0)
         //we rely on the fact that sorting with the same priority keeps the items in the same order
@@ -49,7 +52,7 @@ const AnimationQueue = stampit.compose({
       })
 
       //check if the lock hasn't been taken
-      if (! this.lock) {
+      if (!this.lock) {
         //perform action now
         this.doAction()
       }
@@ -64,21 +67,21 @@ const AnimationQueue = stampit.compose({
 
         //if more than one item present
         if (this.queue.length > 1) {
-          //sort by priority, highest prio should be first in array
+          //sort by priority, highest priority should be first in array
           this.queue.sort((a, b) => b.priority - a.priority)
         }
 
         //get item from queue
-        const actionDescr = this.queue.shift()
+        const actionDescriptor = this.queue.shift()
 
         //do next action check in interval time (keep lock until done)
         setTimeout(() => {
           //execute action
-          actionDescr.action()
+          actionDescriptor.action()
 
           //and check for more actions
           this.doAction()
-        }, actionDescr.delay)
+        }, actionDescriptor.delay)
       } else {
         //release lock as nothing is being processed
         this.lock = false
@@ -94,22 +97,23 @@ let Level
 const Inventory = stampit.compose({
   statics: {
     //list of item image names
-    itemDisplayInfo: { }
+    itemDisplayInfo: {}
   },
 
   //init itemDisplayInfo with all items from positionDescriptorMapping
   init() {
     //if not filled already
-    if (! Object.keys(Inventory.itemDisplayInfo).length) {
+    if (!Object.keys(Inventory.itemDisplayInfo).length) {
       //for all objects
-      for (const objAbbrev in Level.positionDescriptorMapping.objs) {
+      for (const objAbbrev in Level.positionDescriptorMapping.objects) {
         //get constructor of object
-        const constructor = Level.positionDescriptorMapping.objs[objAbbrev]
+        const constructor = Level.positionDescriptorMapping.objects[objAbbrev]
 
         //if image name is attached statically, this is a item
         if (constructor.imageName) {
           //register image name
-          Inventory.itemDisplayInfo[constructor.tileType] = constructor.imageName
+          Inventory.itemDisplayInfo[constructor.tileType] =
+            constructor.imageName
         }
       }
     }
@@ -119,19 +123,21 @@ const Inventory = stampit.compose({
     //called after all objects are created
     setup({ tileList, itemDisplayElem }) {
       //init item list
-      this.items = { }
+      this.items = {}
 
       //counts number of present item objects
-      this.initItems = { }
+      this.initItems = {}
 
       //count all objects
-      tileList.forEach(t => t.objs.forEach(o => {
-        //increment if object is item
-        if (o.isItem) {
-          //add to type of item
-          this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
-        }
-      }))
+      tileList.forEach(tile =>
+        tile.objects.forEach(o => {
+          //increment if object is item
+          if (o.isItem) {
+            //add to type of item
+            this.initItems[o.tileType] = (this.initItems[o.tileType] || 0) + 1
+          }
+        })
+      )
 
       //save display element
       this.itemDisplayElem = itemDisplayElem
@@ -166,28 +172,33 @@ const Inventory = stampit.compose({
       //if any items present
       if (sortList.length) {
         //sort list of present items by amount
-        sortList.sort((a, b) => a.amount - b.amount)
+        sortList
+          .sort((a, b) => a.amount - b.amount)
 
-        //and for all list items
-        .forEach(item => {
-          //create displayable instance
-          const displayer = Displayable()
+          //and for all list items
+          .forEach(item => {
+            //create displayable instance
+            const displayer = Displayable()
 
-          //set image name on displayer
-          displayer.imageName = Inventory.itemDisplayInfo[item.name]
+            //set image name on displayer
+            displayer.imageName = Inventory.itemDisplayInfo[item.name]
 
-          //add a display item to the display list
-          this.itemDisplayElem.append(
-            //with a span that has an amount and an image of the item tile
-            $("<span>").append(item.amount).append(displayer.getImgElem())
-          )
-        })
+            //add a display item to the display list
+            this.itemDisplayElem.append(
+              //with a span that has an amount and an image of the item tile
+              $("<span>")
+                .append(item.amount)
+                .append(displayer.getImgElem())
+            )
+          })
       } else {
         //add no items message
-        this.itemDisplayElem.append($("<div>", {
-          text: "No Items",
-          id: "no-items-msg"
-        }))
+        this.itemDisplayElem.append(
+          $("<div>", {
+            text: "No Items",
+            id: "no-items-msg"
+          })
+        )
       }
     },
 
@@ -235,7 +246,7 @@ const Inventory = stampit.compose({
           this.updateItemDisplay()
         }
 
-        //return requiested amount
+        //return requested amount
         return amount
       }
     }
@@ -246,7 +257,7 @@ const Inventory = stampit.compose({
 const Registry = stampit.compose({
   init() {
     //init object for lists
-    this.objs = { }
+    this.objects = {}
   },
 
   methods: {
@@ -266,46 +277,49 @@ const Registry = stampit.compose({
     //gets list of objects for given type
     getOfType(typeOrInstance) {
       //extract type of object
-      const type = typeof typeOrInstance === "string" ? typeOrInstance : typeOrInstance.tileType
+      const type =
+        typeof typeOrInstance === "string"
+          ? typeOrInstance
+          : typeOrInstance.tileType
 
       //create list of this type if not present
-      if (! this.objs[type]) {
-        this.objs[type] = []
+      if (!this.objects[type]) {
+        this.objects[type] = []
       }
 
       //return list
-      return this.objs[type]
+      return this.objects[type]
     },
 
     //returns all other objects of the object's type
     getOthers(forObj) {
       //get list of objects for this type and filter out the given one
-      const otherObjs = this.getOfType(forObj).filter(o => o !== forObj)
+      const otherobjects = this.getOfType(forObj).filter(o => o !== forObj)
 
       //return if non-empty, falsy otherwise
-      if (otherObjs.length) {
-        return otherObjs
+      if (otherobjects.length) {
+        return otherobjects
       }
     },
 
     //returns the next teleporter for a given teleporter in the list
     getNext(forObj) {
       //get list of objects for this type
-      const objs = this.getOfType(forObj)
+      const objects = this.getOfType(forObj)
 
       //stop if none registered
-      if (! objs.length) {
-        //returns falsey because not present
+      if (!objects.length) {
+        //returns falsy because not present
         return
       }
 
       //get index of obj in list of objects
-      const index = objs.indexOf(forObj)
+      const index = objects.indexOf(forObj)
 
       //if is number and not -1 (found)
       if (typeof index === "number" && index >= 0) {
         //return object at next index, wrap around
-        return objs[(index + 1) % objs.length]
+        return objects[(index + 1) % objects.length]
       } //else returns falsy
     }
   }
@@ -342,10 +356,10 @@ Level = stampit.compose({
       },
 
       //all following fields are the floating objects and the player
-      objs: {
+      objects: {
         rc: Rock,
         pa: Palm,
-          //makes a coconut when hit by pebble
+        //makes a coconut when hit by pebble
         pl: Player,
         bx: Box,
         bw: WetBox,
@@ -358,36 +372,36 @@ Level = stampit.compose({
         wh: WaterHole,
         wb: WaterBottle,
         sp: Spring,
-          //can be used to transfer from one grass to another
+        //can be used to transfer from one grass to another
         tp: Teleporter,
-          //only teleports the player
+        //only teleports the player
         tr: RedTeleporter,
-          //can also teleport objects, thing is stuck on other side until player comes and takes it
+        //can also teleport objects, thing is stuck on other side until player comes and takes it
         uk: UnknownObject,
         fg: Figure,
-          //two cannot be pushed at once (in one line)
+        //two cannot be pushed at once (in one line)
         cr: Cross,
-          //crosses can be hidden beneath rocks (that have to be blown up)
+        //crosses can be hidden beneath rocks (that have to be blown up)
         bm: Bomb,
-          //removes rocks directly adjacent to it, explosion goes once around
+        //removes rocks directly adjacent to it, explosion goes once around
         bt: BombTrigger,
-          //detonates all bombs
+        //detonates all bombs
         by: Buoy,
         sk: Spikes,
-          /*stay down if spikes button has something on it,
+        /*stay down if spikes button has something on it,
           stays down if something placed on it,
           if player pushes thing on top of it away it stays down with player on it*/
         sb: SpikesButton,
         ic: Ice,
-          /*on water, disappears once stepped off of (like wetbox until stepped off)
+        /*on water, disappears once stepped off of (like wetbox until stepped off)
           also acts like blockage for raft (like most other things, just an example)
           acts like spikes and only goes away once nothing is on it anymore*/
         pr: Pearl,
         pp: PearlPedestal,
-          /*bumpable, goes away after getting pearl, but only if all other pedestals
+        /*bumpable, goes away after getting pearl, but only if all other pedestals
           have also gotten a pearl (all go away at once then)*/
         tb: Tablet,
-          /*pushing triggers roman numeral display on otherwise blank face,
+        /*pushing triggers roman numeral display on otherwise blank face,
           there are consecutively numbered tablets in the map,
           the number only stays visible for a certain tablet if all previous numbers
           have been "uncovered", (goes away again otherwise)
@@ -395,77 +409,77 @@ Level = stampit.compose({
           resets all to no number visible if one pushed out of order*/
         ky: Key,
         ch: Chest,
-          //is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
+        //is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
         ci: Coin,
         sl: Slingshot,
-          /*bumpable, shoots pebble in defined direction,
+        /*bumpable, shoots pebble in defined direction,
           triggers action on certain things it hits: hitting clam makes it open
           hitting palm produces a coconut next to the palm in the direction of the pebble
           can open multiple clams in one go
           pebble stops when it makes a coconut and is also stopped by rock piles*/
         pb: Pebble,
         cc: Coconut,
-          /*see slingshot for creation, goes until it hits something, (also stops at water)
+        /*see slingshot for creation, goes until it hits something, (also stops at water)
           if it hits empty CoconutHole, closes CoconutHole*/
         co: CoconutHole,
-          //needs to be hit by coconut to close and become walkable
+        //needs to be hit by coconut to close and become walkable
         lf: Leaf,
-          //redirects pebble in direction its pointing, can redirect pebble coming from any side,
-          //pass through on exit and opposite of exit side
+        //redirects pebble in direction its pointing, can redirect pebble coming from any side,
+        //pass through on exit and opposite of exit side
         cl: Clam,
-          /*pushable,
+        /*pushable,
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open*/
         br: Barrel,
-          //all barrels have to be on a barrel base to finish
+        //all barrels have to be on a barrel base to finish
         bb: BarrelBase,
-          //a spot where a barrel has to be pushed
+        //a spot where a barrel has to be pushed
         cp: CoconutPath,
-          //special path on which coconuts move until they hit the end of a path
+        //special path on which coconuts move until they hit the end of a path
         ct: CoconutPathTarget,
-          //path segment that when all targets have a coconut, triggers all coconut holes to close
+        //path segment that when all targets have a coconut, triggers all coconut holes to close
         ra: Raft,
-          /*raft goes as far as possible on water, movement of player triggers
+        /*raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
           things can be pushed over raft like wetbox,
           player can push things standing on land (or on wetbox) from raft
           example: raft can move until it hits another raft (then player can transfer)*/
         pi: Pirate,
-          /*is next to pirate hut, after getting all money on the map, goes into hut and
+        /*is next to pirate hut, after getting all money on the map, goes into hut and
           leaves Raft behind (apparently pirate can also go away without a hut)
           only accepts coins from the left*/
         ph: PirateHut,
-          //basically just an unmovable prop
+        //basically just an unmovable prop
         ls: LeafSwitcher,
-          //switches all leaves to point in the direction the switcher was bumped in
+        //switches all leaves to point in the direction the switcher was bumped in
         hp: HiddenPath,
-          //like wet box, is hidden while not revealed with reveal button
+        //like wet box, is hidden while not revealed with reveal button
         re: RevealEye,
-          //makes all hidden path objects visible while pushed (weighted button)
+        //makes all hidden path objects visible while pushed (weighted button)
         sg: ShellGuy,
-          //has three stages, every push makes it switch to the next stage
-          //and also wraps back to the first, only allows finish in third stage
+        //has three stages, every push makes it switch to the next stage
+        //and also wraps back to the first, only allows finish in third stage
         sn: ShellGuySign,
-          //for whatever reason a sign that shows the three stages of the shell guys exists,
-          //unwalkable, usually floating in water near the top left corner
+        //for whatever reason a sign that shows the three stages of the shell guys exists,
+        //unwalkable, usually floating in water near the top left corner
         fl: Flower,
-          /*extends with copies until reached terrain border (end of grass),
+        /*extends with copies until reached terrain border (end of grass),
           pushing any flower makes it extend in that direction,
           cannot be walked on, doesn't go onto the seed of a different color*/
         fs: FlowerSeed,
-          /*all seeds must be covered with a flower of the same color,
+        /*all seeds must be covered with a flower of the same color,
           both flower and flower seed have a red variant that only wants red counterparts
           stops like other obstacle when reached seed of wrong color
           only ever seems to be placed on grass, doesn't propagate down grass*/
         sq: Squid,
-          //can be pulled: moving away from it after being adjacent causes it to follow
-          //cannot be pushed in a normal way
+        //can be pulled: moving away from it after being adjacent causes it to follow
+        //cannot be pushed in a normal way
         sf: SmallFlower,
-          //exists in green and red variant (subtypes), to win,
-          //all small flowers on the level have to be of the same type
+        //exists in green and red variant (subtypes), to win,
+        //all small flowers on the level have to be of the same type
         fa: FlowerAnchor
-          /*when the player walks through one of these, a line is drawn out for every step,
+        /*when the player walks through one of these, a line is drawn out for every step,
           this line cannot be crossed (non walkable) and ends
           when the player steps on another anchor. finishing the line changes the color of all
           touched flowers if only flowers of the same color were touched,
@@ -484,7 +498,7 @@ Level = stampit.compose({
         const arr = []
 
         //fill with specified number of positions
-        for (let i = 0; i < length; i ++) {
+        for (let i = 0; i < length; i++) {
           arr[i] = Level.getPadding()
         }
 
@@ -536,47 +550,47 @@ Level = stampit.compose({
       }
 
       //must be array at this point
-      if (! (this.field instanceof Array)) {
+      if (!(this.field instanceof Array)) {
         throw Error("fields must be a string or array")
       }
 
       //make dim a vector if not one already
       if (typeof this.dim === "number") {
         this.dim = Vector(this.dim, this.dim)
-      } else if (! this.dim) {
+      } else if (!this.dim) {
         //make null vector, will be adjusted later
         this.dim = Vector()
       }
 
       //parse 2d field
       this.field = this.field
-      //must be array or string
-      .filter(line => typeof line === "string" || line instanceof Array)
+        //must be array or string
+        .filter(line => typeof line === "string" || line instanceof Array)
 
-      //split into individual positions if element is string
-      .map(line => {
-        //if line is string, split into chars
-        if (typeof line === "string") {
-          line = line.split("")
-        }
-
-        //process line, split all remaining strings into chars and wrap
-        return line.reduce((arr, item) => {
-          //for type of line item
-          if (typeof item === "string") {
-            //split into chars and wrap into arrays and add individually
-            return arr.concat(item.split("").map(c => [c]))
-          } else if (item instanceof Array) {
-            //push array as whole right away
-            arr.push(item)
-
-            //return expanded array
-            return arr
-          } else {
-            throw Error("line items must be a string or array")
+        //split into individual positions if element is string
+        .map(line => {
+          //if line is string, split into chars
+          if (typeof line === "string") {
+            line = line.split("")
           }
-        }, [])
-      })
+
+          //process line, split all remaining strings into chars and wrap
+          return line.reduce((arr, item) => {
+            //for type of line item
+            if (typeof item === "string") {
+              //split into chars and wrap into arrays and add individually
+              return arr.concat(item.split("").map(c => [c]))
+            } else if (item instanceof Array) {
+              //push array as whole right away
+              arr.push(item)
+
+              //return expanded array
+              return arr
+            } else {
+              throw Error("line items must be a string or array")
+            }
+          }, [])
+        })
     },
 
     //applies padding to the field
@@ -641,81 +655,80 @@ Level = stampit.compose({
           { o: postPadding, p: "x" },
           { o: postPadding, p: "y" },
           { o: prePadding, p: "x" }
-        ].map(descr => value => {
-          //map to fucntion that sets value and returns value
-          if (typeof value === "number") {
-            descr.o[descr.p] += value
+        ]
+          //map to function that sets value and returns value
+          .map(descriptor => value => {
+            if (typeof value === "number") {
+              descriptor.o[descriptor.p] += value
 
-            //also apply to dim
-            this.dim[descr.p] += value
-          }
+              //also apply to dim
+              this.dim[descriptor.p] += value
+            }
 
-          //return current
-          return descr.o[descr.p]
-        })
+            //return current
+            return descriptor.o[descriptor.p]
+          })
 
         //for all bounds get padding
         checkWaterBounds = Level.waterBounds(fieldDim)
 
-        //calc water padding with bounds
-        .map((bound, index) => {
-          //dont check for padding if we already have normal padding here
-          if (directionPaddingAccessors[index]()) {
-            return false
-          }
-
-          //current check position
-          const pos = bound.start.getNew()
-
-          //checking position index (index in bound)
-          let i = 0
-
-          //check bound until end or until non water found
-          while (i++ < bound.length) {
-            //check for non water
-            if (
-              this.field[pos.y] &&
-              this.field[pos.y][pos.x] &&
-              this.field[pos.y][pos.x][0] !== "w") {
-              //found non water, need padding for this bound
-              return true
+          //calc water padding with bounds
+          .map((bound, index) => {
+            //don't check for padding if we already have normal padding here
+            if (directionPaddingAccessors[index]()) {
+              return false
             }
 
-            //add increment vector to position for next position
-            pos.add(bound.dir)
-          }
+            //current check position
+            const pos = bound.start.getNew()
 
-          //no non-water found, no padding needed
-          return false
-        })
+            //checking position index (index in bound)
+            let i = 0
 
-        //apply and check for presence of water padding
-        .reduce((needsWaterPadding, padding, index) => {
-          //if water padding determined to be needed
-          if (padding) {
-            //add to normal padding
-            directionPaddingAccessors[index](1)
-          }
+            //check bound until end or until non water found
+            while (i++ < bound.length) {
+              //check for non water
+              if (
+                this.field[pos.y] &&
+                this.field[pos.y][pos.x] &&
+                this.field[pos.y][pos.x][0] !== "w"
+              ) {
+                //found non water, need padding for this bound
+                return true
+              }
 
-          //no padding needed for water if already padding for size or no water padding needed
-          return needsWaterPadding || padding
-        }, false)
+              //add increment vector to position for next position
+              pos.add(bound.dir)
+            }
+
+            //no non-water found, no padding needed
+            return false
+          })
+
+          //apply and check for presence of water padding
+          .reduce((needsWaterPadding, padding, index) => {
+            //if water padding determined to be needed
+            if (padding) {
+              //add to normal padding
+              directionPaddingAccessors[index](1)
+            }
+
+            //no padding needed for water if already padding for size or no water padding needed
+            return needsWaterPadding || padding
+          }, false)
       }
 
       //if no padding scheduled yet
-      if (! (needsPadding || checkWaterBounds)) {
+      if (!(needsPadding || checkWaterBounds)) {
         //check that all lines are the same length
         let lastLength
         for (let line of this.field) {
-          //if last line length given
-          if (typeof lastLength === "number") {
-            //if lengths don't match, needs padding
-            if (lastLength !== line.length) {
-              needsPadding = true
+          //if last line length given and lengths don't match, needs padding
+          if (typeof lastLength === "number" && lastLength !== line.length) {
+            needsPadding = true
 
-              //stop looking
-              break
-            }
+            //stop looking
+            break
           }
 
           //set new line length
@@ -726,20 +739,20 @@ Level = stampit.compose({
       //if padding is necessary
       if (needsPadding || checkWaterBounds) {
         //apply post padding and fill out any uneven lines
-        for (let y = 0; y < fieldDim.y + postPadding.y; y ++) {
+        for (let y = 0; y < fieldDim.y + postPadding.y; y++) {
           //if line doesn't exist, create it
-          if (! this.field[y]) {
-            this.field[y] = [];
+          if (!this.field[y]) {
+            this.field[y] = []
           }
 
           //get the current line
-          const line = this.field[y];
+          const line = this.field[y]
 
           //for every needed position in x direction
-          for (let x = 0; x < fieldDim.x + postPadding.x; x ++) {
+          for (let x = 0; x < fieldDim.x + postPadding.x; x++) {
             //make padding if not present
-            if (! line[x]) {
-              line[x] = Level.getPadding();
+            if (!line[x]) {
+              line[x] = Level.getPadding()
             }
           }
         }
@@ -747,7 +760,7 @@ Level = stampit.compose({
         //if there is any pre x padding
         if (prePadding.x) {
           //add pre x padding, for every present line
-          for (let y = 0; y < this.field.length; y ++) {
+          for (let y = 0; y < this.field.length; y++) {
             //prepend prePadding length of padding
             this.field[y] = Level.getPadding(prePadding.x).concat(this.field[y])
           }
@@ -759,13 +772,13 @@ Level = stampit.compose({
           const padding = []
 
           //for all pre padding lines
-          for (let y = 0; y < prePadding.y; y ++) {
+          for (let y = 0; y < prePadding.y; y++) {
             //make full width padding line
             padding[y] = Level.getPadding(this.dim.x)
           }
 
           //prepend all padding lines to field
-          this.field = padding.concat(this.field);
+          this.field = padding.concat(this.field)
         }
       }
     },
@@ -776,60 +789,64 @@ Level = stampit.compose({
       this.tileList = []
 
       //for all positions of the field
-      this.tiles = this.field.map((line, y) => line.map((position, x) => {
-        //get mapped tile factory from mapping
-        const tileMaker = Level.positionDescriptorMapping.tiles[position[0]]
+      this.tiles = this.field.map((line, y) =>
+        line.map((position, x) => {
+          //get mapped tile factory from mapping
+          const tileMaker = Level.positionDescriptorMapping.tiles[position[0]]
 
-        //verify presence (that abbreviation in level description is valid)
-        if (! tileMaker) {
-          throw Error(`tile abbrev given in level description is invalid '${position[0]}'`)
-        }
+          //verify presence (that abbreviation in level description is valid)
+          if (!tileMaker) {
+            throw Error(
+              `tile abbrev given in level description is invalid '${position[0]}'`
+            )
+          }
 
-        //make new tile with class gotten from mapping
-        const tile = tileMaker({ x, y, level: this })
+          //make new tile with class gotten from mapping
+          const tile = tileMaker({ x, y, level: this })
 
-        //if objects specified
-        if (position.length > 1) {
-          //make objects
-          const objs = position.map((objAbbrev, index) => {
-            //not on first elem, that is the tile abbrev
-            if (! index) {
-              return
-            }
+          //if objects specified
+          if (position.length > 1) {
+            //make objects
+            const objects = position.map((objAbbrev, index) => {
+              //not on first elem, that is the tile abbrev
+              if (!index) {
+                return
+              }
 
-            //get obj factory, select from obj mapping
-            const objMaker = Level.positionDescriptorMapping.objs[objAbbrev.substr(0, 2)]
+              //get obj factory, select from obj mapping
+              const objMaker =
+                Level.positionDescriptorMapping.objects[objAbbrev.substr(0, 2)]
 
-            //check for validity
-            if (! objMaker) {
-              throw Error(`obj abbrev given in level description is invalid '${objAbbrev}'`)
-            }
+              //check for validity
+              if (!objMaker) {
+                throw Error(
+                  `obj abbrev given in level description is invalid '${objAbbrev}'`
+                )
+              }
 
-            //create object of given class
-            const obj = objMaker({
-              level: this,
+              //create object of given class
+              return objMaker({
+                level: this,
 
-              //extra init data is all that comes after the two char object abbrev
-              extraInitData: objAbbrev.substr(2)
+                //extra init data is all that comes after the two char object abbrev
+                extraInitData: objAbbrev.substr(2)
+              })
             })
 
-            //return created object
-            return obj
-          })
+            //remove first (is empty and not processed, is the tile itself)
+            objects.shift()
 
-          //remove first (is empty and not processed, is the tile itself)
-          objs.shift()
+            //add all objects to tile in init mode
+            tile.addObj(objects, true)
+          }
 
-          //add all objs to tile in init mode
-          tile.addObj(objs, true)
-        }
+          //also add tile to linear list of tiles for non position specific iteration
+          this.tileList.push(tile)
 
-        //also add tile to linear list of tiles for non position specific iteration
-        this.tileList.push(tile)
-
-        //return generated tile
-        return tile
-      }));
+          //return generated tile
+          return tile
+        })
+      )
     },
 
     //inits the level in the page
@@ -875,7 +892,7 @@ Level = stampit.compose({
       const item = $("<td>").appendTo(row)
 
       //clone column w - 1 times
-      for (let i = 1; i < this.dim.x; i ++) {
+      for (let i = 1; i < this.dim.x; i++) {
         //add a item clone and set correct x pos
         row.append(item.clone().addClass("col-" + i))
       }
@@ -884,7 +901,7 @@ Level = stampit.compose({
       item.addClass("col-0")
 
       //clone whole row h - 1 times
-      for (let i = 1; i < this.dim.y; i ++) {
+      for (let i = 1; i < this.dim.y; i++) {
         //add cloned row and set correct y pos
         this.table.append(row.clone().addClass("row-" + i))
       }
@@ -905,12 +922,18 @@ Level = stampit.compose({
     //updates the size of the image display according to the size of the window
     updateTableSize() {
       //remove the current size class from the table
-      this.table.removeClass((i, className) => className.startsWith("img-size-") ? className : "")
+      this.table.removeClass((i, className) =>
+        className.startsWith("img-size-") ? className : ""
+      )
 
       //calculate the maximum acceptable tile size
       const maxTileSize = Math.min(
         ($(window).width() - 35) / this.dim.x,
-        ($(window).height() - this.gameSize.height() + this.table.height() - 10) / this.dim.y
+        ($(window).height() -
+          this.gameSize.height() +
+          this.table.height() -
+          10) /
+          this.dim.y
       )
 
       //current tile size index
@@ -919,9 +942,10 @@ Level = stampit.compose({
       //until current chosen tile size fits in max tile size
       while (
         Level.tileSizes[tileSizeIndex] > maxTileSize &&
-        tileSizeIndex < Level.tileSizes.length - 1) {
+        tileSizeIndex < Level.tileSizes.length - 1
+      ) {
         //increment index
-        tileSizeIndex ++
+        tileSizeIndex++
       }
 
       //use largest fitting tile size
@@ -963,12 +987,17 @@ Level = stampit.compose({
       }
 
       //there must be no items stored and all objects in all tiles must not be requireGone
-      if (! itemsPresent && this.tileList.every(
-        //check that tile is ok with finish
-        t => (! t.checkFinish || t.checkFinish()) &&
-
-        //check that all objects of this tile are ok with finish
-        t.objs.every(o => ! o.requireGone && (! o.checkFinish || o.checkFinish())))
+      if (
+        !itemsPresent &&
+        this.tileList.every(
+          //check that tile is ok with finish
+          t =>
+            (!t.checkFinish || t.checkFinish()) &&
+            //check that all objects of this tile are ok with finish
+            t.objects.every(
+              o => !o.requireGone && (!o.checkFinish || o.checkFinish())
+            )
+        )
       ) {
         //unregister
         this.unregisterHandlers()

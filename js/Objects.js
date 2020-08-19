@@ -16,8 +16,8 @@ const Rock = FloatingObject.compose(NonWalkableObject).props({
   tileType: "Rock",
   imageName: ["rock-1", "rock-2"],
 
-  //low height prio, isn't on top of anything
-  heightPrio: 0
+  //low height priority, isn't on top of anything
+  heightPriority: 0
 })
 
 //WetBox is created when box is sunken in water
@@ -32,7 +32,7 @@ const Box = FloatingObject.compose(Sinkable, {
   props: {
     tileType: "Box",
     imageName: "box",
-    heightPrio: 1
+    heightPriority: 1
   },
 
   methods: {
@@ -97,27 +97,33 @@ const Seed = FloatingObject.compose(Item).props({
 })
 
 //mommy crab receives all stored baby crabs from the inventory
-const MommyCrab = FloatingObject.compose(ReceptacleAllItems, NonWalkableObject, {
-  props: {
-    tileType: "MommyCrab",
-    imageName: "crab-large-sad",
+const MommyCrab = FloatingObject.compose(
+  ReceptacleAllItems,
+  NonWalkableObject,
+  {
+    props: {
+      tileType: "MommyCrab",
+      imageName: "crab-large-sad",
 
-    //also specify type of item to receive
-    itemType: "BabyCrab",
-    itemReceiveType: "all",
-    requireDirection: 0
-  },
+      //also specify type of item to receive
+      itemType: "BabyCrab",
+      itemReceiveType: "all",
+      requireDirection: 0
+    },
 
-  methods: {
-    //when all items are received
-    allItemsReceived() {
-      //change to happy/done image in animation
-      this.level.anim.registerAction(() => this.changeImageName("crab-large-happy"))
+    methods: {
+      //when all items are received
+      allItemsReceived() {
+        //change to happy/done image in animation
+        this.level.anim.registerAction(() =>
+          this.changeImageName("crab-large-happy")
+        )
+      }
     }
   }
-})
+)
 
-//spring is the only thign that allows the player to traverse from land to grass directly
+//spring is the only thing that allows the player to traverse from land to grass directly
 const Spring = FloatingObject.compose({
   props: {
     imageName: "spring",
@@ -130,7 +136,9 @@ const Spring = FloatingObject.compose({
       //by the player
       if (actors.subject.tileType === "Player") {
         //init movement in same direction as animation (otherwise moves infinitely)
-        this.level.anim.registerAction(() => actors.subject.move(movement, this))
+        this.level.anim.registerAction(() =>
+          actors.subject.move(movement, this)
+        )
       }
     }
   }
@@ -163,7 +171,11 @@ const SeedHole = FloatingObject.compose(Receptacle, {
     //when something moves onto this
     notifyMove(movement, actors) {
       //if it's a full waterbottle and this seed hole actually has a seed
-      if (this.hasSeed && actors.subject.tileType === "WaterBottle" && actors.subject.filled) {
+      if (
+        this.hasSeed &&
+        actors.subject.tileType === "WaterBottle" &&
+        actors.subject.filled
+      ) {
         //and in animation
         this.level.anim.registerAction(() => {
           //remove waterbottle
@@ -185,7 +197,7 @@ const WaterBottle = FloatingObject.compose(Pushable, {
   props: {
     imageName: "bottle",
     tileType: "WaterBottle",
-    heightPrio: 1,
+    heightPriority: 1,
 
     //state of with water or not
     filled: false
@@ -195,13 +207,15 @@ const WaterBottle = FloatingObject.compose(Pushable, {
     //when pushed into water hole
     notifyPush(targetTile) {
       //when target is water hole and not filled up yet
-      if (targetTile.getSuchObject("WaterHole") && ! this.filled) {
+      if (targetTile.getSuchObject("WaterHole") && !this.filled) {
         //set filled flag
         this.filled = true
 
         //in long animation, change to full display
         this.level.anim.registerAction(
-          () => this.changeImageName("bottle-full"), { actionType: "slowAnimation" })
+          () => this.changeImageName("bottle-full"),
+          { actionType: "slowAnimation" }
+        )
       }
     }
   }
@@ -235,14 +249,23 @@ const Teleporter = FloatingObject.compose(Registered, {
 
       //if initiator isn't already a teleporter,
       //there is another teleporter to move to and teleport is ok
-      if (! actors.initiator.isTeleporter && target && this.checkTeleport(actors)) {
+      if (
+        !actors.initiator.isTeleporter &&
+        target &&
+        this.checkTeleport(actors)
+      ) {
         //in animation, move to
-        this.level.anim.registerAction(() => actors.subject.move({
-          direction: 0, //not very important
+        this.level.anim.registerAction(() =>
+          actors.subject.move(
+            {
+              direction: 0, //not very important
 
-          //offset is vector to next teleporter
-          offset: Vector.sub(target, this)
-        }, this)) //this is initiator
+              //offset is vector to next teleporter
+              offset: Vector.sub(target, this)
+            },
+            this
+          )
+        ) //this is initiator
       }
     }
   }
@@ -267,7 +290,7 @@ const RedTeleporter = Teleporter.compose({
 //figures can be pushed and move all other figures of the same color with it if possible
 const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
   props: {
-    heightPrio: 1,
+    heightPriority: 1,
     tileType: "Figure"
   },
 
@@ -303,7 +326,6 @@ const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
         //move same as this figure was moved
         others.forEach(o => o.move(movement, actors.initiator))
       }
-
     },
 
     //when finish check happens, only ok if on terrain with cross of same color
@@ -317,7 +339,7 @@ const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
 //figures are moved onto crosses
 const Cross = FloatingObject.compose(Subtyped, {
   props: {
-    heightPrio: 0,
+    heightPriority: 0,
     tileType: "Cross"
   },
 
@@ -347,7 +369,7 @@ const Bomb = FloatingObject.compose(Registered, Pushable, {
   },
 
   statics: {
-    //adjacents and own position
+    //adjacent positions and own position
     explosionOffsets: directionOffsets.concat(Vector()),
 
     //delay time between individual explosions
@@ -368,15 +390,21 @@ const Bomb = FloatingObject.compose(Registered, Pushable, {
           const rock = tile.getSuchObject("Rock")
 
           //in animation with random delay
-          this.level.anim.registerAction(() => {
-            //if present, remove rock
-            if (rock) {
-              rock.delete()
-            }
+          this.level.anim.registerAction(
+            () => {
+              //if present, remove rock
+              if (rock) {
+                rock.delete()
+              }
 
-            //place animation particle with explosion image onto terrain
-            AnimationParticle({ level: this.level, imageName: "bomb-explosion" }).addToTile(tile)
-          }, { delay: Math.random() * index * Bomb.explosionDelay })
+              //place animation particle with explosion image onto terrain
+              AnimationParticle({
+                level: this.level,
+                imageName: "bomb-explosion"
+              }).addToTile(tile)
+            },
+            { delay: Math.random() * index * Bomb.explosionDelay }
+          )
         }
       })
 
@@ -399,8 +427,8 @@ const BombTrigger = FloatingObject.compose({
       //if player moved onto this tile
       if (actors.subject.tileType === "Player") {
         //trigger all bombs with increasing delay in animation
-        this.level.registry.getOfType("Bomb").forEach(
-          (b, index) => this.level.anim.registerAction(
+        this.level.registry.getOfType("Bomb").forEach((b, index) =>
+          this.level.anim.registerAction(
             //action triggers bomb
             () => b.bombTriggered(),
 
@@ -429,7 +457,7 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
     tileType: "Spikes",
 
     //draw at bottom
-    heightPrio: 0
+    heightPriority: 0
   },
 
   statics: {
@@ -441,14 +469,16 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
     //when weight state changes
     weightStateChanged() {
       //in animation change display image
-      this.level.anim.registerAction(
-        () => this.changeImageName(this.hasWeight ? Spikes.downImageName : Spikes.upImageName)
+      this.level.anim.registerAction(() =>
+        this.changeImageName(
+          this.hasWeight ? Spikes.downImageName : Spikes.upImageName
+        )
       )
     },
 
     //allow walk if in down position or already an object on it
     checkMove() {
-      return this.hasWeight || this.parent.objs.length > 1
+      return this.hasWeight || this.parent.objects.length > 1
     }
   }
 })
@@ -457,7 +487,7 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
 const SpikesButton = FloatingObject.compose(Weighted, {
   props: {
     imageName: "spikes-button",
-    heightPrio: 0,
+    heightPriority: 0,
     tileType: "SpikesButton",
 
     //the current state
@@ -468,7 +498,9 @@ const SpikesButton = FloatingObject.compose(Weighted, {
     //when weight state changes
     weightStateChanged() {
       //notify all spikes of change by setting extra weight to weight state of button
-      this.level.registry.getOfType("Spikes").forEach(o => o.setExtraWeight(this.hasWeight))
+      this.level.registry
+        .getOfType("Spikes")
+        .forEach(o => o.setExtraWeight(this.hasWeight))
     }
   }
 })
@@ -484,7 +516,7 @@ const Ice = FloatingObject.compose(Weighted, Watertight, {
     //on removal of weight
     weightStateChanged() {
       //if no weight now, means we had weight before
-      if (! this.hasWeight) {
+      if (!this.hasWeight) {
         //melt, delete itself
         this.delete()
       }
@@ -500,55 +532,58 @@ const Pearl = FloatingObject.compose(Item).props({
 
 //accepts a pearl and goes away once all other pedestals also have a pearl
 const PearlPedestal = FloatingObject.compose(
-  Registered, Receptacle, NonWalkableObject, RequireGone, {
-  props: {
-    imageName: "pearl-pedestal",
-    tileType: "PearlPedestal",
+  Registered,
+  Receptacle,
+  NonWalkableObject,
+  RequireGone,
+  {
+    props: {
+      imageName: "pearl-pedestal",
+      tileType: "PearlPedestal",
 
-    //takes one pearl
-    itemReceiveType: 1,
-    itemType: "Pearl"
-  },
+      //takes one pearl
+      itemReceiveType: 1,
+      itemType: "Pearl"
+    },
 
-  methods: {
-    //when we get a pearl
-    receiveItems() {
-      //set to have received an item
-      this.hasPearl = true
+    methods: {
+      //when we get a pearl
+      receiveItems() {
+        //set to have received an item
+        this.hasPearl = true
 
-      //change image to with pearl
-      this.changeImageName("pearl-pedestal-filled")
+        //change image to with pearl
+        this.changeImageName("pearl-pedestal-filled")
 
-      //get all pdestals
-      const pedestals = this.level.registry.getOfType(this)
+        //get all pedestals
+        const pedestals = this.level.registry.getOfType(this)
 
-      //check if all other pedestals have pearls
-      if (pedestals.every(p => p.hasPearl)) {
-        //in order of list, animate all to disappear
-        pedestals.forEach(
-          p => this.level.anim.registerAction(() => p.delete(), { actionType: "slowAnimation"}))
+        //check if all other pedestals have pearls
+        if (pedestals.every(p => p.hasPearl)) {
+          //in order of list, animate all to disappear
+          pedestals.forEach(p =>
+            this.level.anim.registerAction(() => p.delete(), {
+              actionType: "slowAnimation"
+            })
+          )
+        }
       }
     }
   }
-})
+)
 
 //represents the player, controllable and deals with interaction
 const Player = FloatingObject.compose(Movable, {
   //set image name
   props: {
     tileType: "Player",
-    heightPrio: 100,
+    heightPriority: 100,
     imageName: "player-l"
   },
 
   statics: {
     //image names for directions
-    directionImageNames: [
-      "player-t",
-      "player-r",
-      "player-b",
-      "player-l"
-    ],
+    directionImageNames: ["player-t", "player-r", "player-b", "player-l"],
 
     //map from key codes for WASD and arrow keys to directions
     keyCodeDirections: {
@@ -596,8 +631,8 @@ const Player = FloatingObject.compose(Movable, {
         this.changeImageName(Player.directionImageNames[keyDirection])
 
         //try to move with offset vector for this direction, also pass direction
-        this.move(Movable.makeMovementDescr(keyDirection))
-      });
+        this.move(Movable.makeMovementDescriptor(keyDirection))
+      })
     },
 
     //remove event handlers
@@ -627,7 +662,7 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
   //register on init and get number
   init({ extraInitData }) {
     //parse tablet number
-    this.number = parseInt(extraInitData)
+    this.number = parseInt(extraInitData, 10)
   },
 
   methods: {
@@ -641,17 +676,19 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
 
       //check if this tablet was opened in the right order,
       //there shouldn't be a covered tablet with a lower number
-      if (tablets.some(t => ! t.uncovered && t.number < this.number)) {
+      if (tablets.some(t => !t.uncovered && t.number < this.number)) {
         //uncovering is not ok, start animation to cover all
         this.level.anim.registerAction(
-          () => tablets.forEach(t => {
-            //set to display as covered
-            t.changeImageName("tablet-clear")
+          () =>
+            tablets.forEach(t => {
+              //set to display as covered
+              t.changeImageName("tablet-clear")
 
-            //set flag to act like covered (moveable)
-            t.uncovered = false
-          }),
-          { actionType: "longAnimation" })
+              //set flag to act like covered (moveable)
+              t.uncovered = false
+            }),
+          { actionType: "longAnimation" }
+        )
       } else {
         //uncovering is ok, set flag
         this.uncovered = true
@@ -660,7 +697,7 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
 
     //don't allow pushing if uncovered
     checkPush() {
-      return ! this.uncovered
+      return !this.uncovered
     },
 
     //must be uncovered forfield complestion
@@ -700,7 +737,7 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
   methods: {
     //only take items if not opened yet
     checkReceiveItems() {
-      return ! this.opened
+      return !this.opened
     },
 
     //when key received
@@ -731,7 +768,7 @@ const Barrel = FloatingObject.compose(Pushable, {
   props: {
     imageName: "barrel",
     tileType: "Barrel",
-    heightPrio: 1
+    heightPriority: 1
   },
 
   methods: {
@@ -803,7 +840,7 @@ const Palm = FloatingObject.compose({
   props: {
     //init with image name
     tileType: "Palm",
-    heightPrio: 0,
+    heightPriority: 0,
     imageName: ["palm-1", "palm-2"]
   },
 
@@ -824,7 +861,7 @@ const Palm = FloatingObject.compose({
         const startTile = this.getTargetTile(movement)
 
         //if no coconut there yet
-        if (! startTile.getSuchObject("Coconut")) {
+        if (!startTile.getSuchObject("Coconut")) {
           //add coconut to target start tile
           Coconut({ startTile })
         }
@@ -838,7 +875,7 @@ const CoconutHole = FloatingObject.compose(Registered, {
   props: {
     imageName: "dark-hole",
     tileType: "CoconutHole",
-    heightPrio: 0,
+    heightPriority: 0,
 
     //flag wether or not this hole has been filled with a coconut
     filled: false
@@ -857,24 +894,27 @@ const CoconutHole = FloatingObject.compose(Registered, {
     //when triggered by the coconut projectile
     checkMove(movement, actors) {
       //coconut entering unfilled hole
-      if (actors.subject.tileType === "Coconut" && ! this.filled) {
+      if (actors.subject.tileType === "Coconut" && !this.filled) {
         //in animation
-        this.level.anim.registerAction(() => {
-          //absorb coconut
-          actors.subject.delete()
+        this.level.anim.registerAction(
+          () => {
+            //absorb coconut
+            actors.subject.delete()
 
-          //and close hole
-          this.closeHole()
-        }, { actionType: "animation" })
+            //and close hole
+            this.closeHole()
+          },
+          { actionType: "animation" }
+        )
       }
 
-      //otherweise allow if filled
+      //otherwise allow if filled
       return this.filled
-    },
+    }
   }
 })
 
-//leaf redirects pebble, is registered as leaf and not subtype because Subtype is inited later
+//leaf redirects pebble, is registered as leaf and not subtype because Subtype is initialized later
 const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
   props: {
     tileType: "Leaf"
@@ -909,7 +949,7 @@ const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
   },
 
   methods: {
-    //on chek move allow pebble proj
+    //on check move allow pebble proj
     pushProxyCheckMove(movement, actors) {
       //allow pebble to enter
       if (actors.subject.tileType === "PebbleProj") {
@@ -923,7 +963,8 @@ const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
     pushProxyNotifyMove(movement, actors) {
       //pebble is entering tile,
       //redirect if movement is perpendicular to axis, not forward and backwards directions
-      if (actors.subject.tileType === "PebbleProj" &&
+      if (
+        actors.subject.tileType === "PebbleProj" &&
         movement.direction !== this.typeData.redirection &&
         movement.direction !== (this.typeData.redirection + 2) % 4
       ) {
@@ -933,9 +974,11 @@ const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
         //in animation
         this.level.anim.registerAction(() => {
           //make movement descriptor for redirected pebble
-          const newMovement = Movable.makeMovementDescr(this.typeData.redirection)
+          const newMovement = Movable.makeMovementDescriptor(
+            this.typeData.redirection
+          )
 
-          //make new prjectile in redirection direction
+          //make new projectile in redirection direction
           PebbleProj({
             startTile: this.parent,
             movement: newMovement
@@ -967,7 +1010,7 @@ const Clam = FloatingObject.compose(PushProxy, {
     }
   },
 
-  //optinally init with extra data
+  //optionally init with extra data
   init({ extraInitData }) {
     //if extra data is "o", init in open state
     if (extraInitData === "o") {
@@ -1017,7 +1060,9 @@ const Clam = FloatingObject.compose(PushProxy, {
         //determine if we are absorbing the projectile
         if (this.clamState === 0) {
           //in animation, move to state open with pearl
-          this.level.anim.registerAction(() => this.changeClamState(1), { priority: 1 })
+          this.level.anim.registerAction(() => this.changeClamState(1), {
+            priority: 1
+          })
         } else {
           //delete pebble projectile (absorb)
           actors.subject.delete()
@@ -1035,7 +1080,7 @@ const CoconutPath = FloatingObject.compose({
   props: {
     imageName: "coconut-path",
     tileType: "CoconutPath",
-    isCoconutPath: true,
+    isCoconutPath: true
   },
 
   methods: {
@@ -1044,7 +1089,7 @@ const CoconutPath = FloatingObject.compose({
       //allow if not a coconut moving
       if (actors.subject.tileType === "Coconut") {
         //allow if target tile is also a coconut path (has such an object)
-        return targetTile.objs.find(o => o.isCoconutPath)
+        return targetTile.objects.find(o => o.isCoconutPath)
       } else {
         return true
       }
@@ -1066,22 +1111,28 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
     //on movement onto this tile, check for coconut placement on targets
     notifyMove(movement, actors) {
       //not stopped yet and if moving object is coconut
-      if (! this.stopped && actors.subject.tileType === "Coconut") {
+      if (!this.stopped && actors.subject.tileType === "Coconut") {
         //get coconut targets
         const otherTargets = this.level.registry.getOthers(this)
 
         //if other targets present and all targets have a coconut
-        if (otherTargets && otherTargets.every(o => o.parent.getSuchObject("Coconut"))) {
+        if (
+          otherTargets &&
+          otherTargets.every(o => o.parent.getSuchObject("Coconut"))
+        ) {
           //mark all targets as stopped
-          otherTargets.forEach(o => o.stopped = true)
+          otherTargets.forEach(o => (o.stopped = true))
         }
 
         //also mark this target as stopped
         this.stopped = true
 
         //in animation, close all coconut holes
-        this.level.registry.getOfType("CoconutHole").forEach(
-          hole => this.level.anim.registerAction(() => hole.closeHole()))
+        this.level.registry
+          .getOfType("CoconutHole")
+          .forEach(hole =>
+            this.level.anim.registerAction(() => hole.closeHole())
+          )
       }
     }
   }
@@ -1110,7 +1161,10 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
         this.move(movement, actors.subject)
       } else if (actors.subject.tileType === "Raft") {
         //disallow movement onto walkable water
-        return targetTile.terrainType === "Water" && ! targetTile.checkWatertightPresent()
+        return (
+          targetTile.terrainType === "Water" &&
+          !targetTile.checkWatertightPresent()
+        )
       }
 
       //otherwise allow leaving
@@ -1124,13 +1178,15 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
         //if player is being dragged along (not on initial move)
         if (actors.initiator === this) {
           //prefetch player from tile as player will be in tile the raft is leaving
-          //when player move aniamtion is triggered
+          //when player move animation is triggered
           const player = this.parent.getSuchObject("Player")
 
           //in immediate animation (right after raft is done moving to allow player to move to it)
           this.level.anim.registerAction(
             //move palyer with the raft
-            () => player.move(movement, this), { delay: 0, priority: 1 })
+            () => player.move(movement, this),
+            { delay: 0, priority: 1 }
+          )
         }
 
         //in animation, move again
@@ -1143,40 +1199,48 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
 //unmovable pirate hut prop
 const PirateHut = FloatingObject.compose(NonWalkableObject).props({
   imageName: "pirate-hut",
-  tileType: "PriateHut"
+  tileType: "PirateHut"
 })
 
 //pirate leaves raft behind when received all coins possible in level (also those from chests)
-const Pirate = FloatingObject.compose(Receptacle, NonWalkableObject, Watertight, {
-  props: {
-    imageName: "pirate-raft",
-    tileType: "Pirate",
-    heightPrio: 1,
+const Pirate = FloatingObject.compose(
+  Receptacle,
+  NonWalkableObject,
+  Watertight,
+  {
+    props: {
+      imageName: "pirate-raft",
+      tileType: "Pirate",
+      heightPriority: 1,
 
-    //takes all coins from the player from the left (moving direction is to the right)
-    requireDirection: 1,
-    itemReceiveType: "all",
-    itemType: "Coin"
-  },
+      //takes all coins from the player from the left (moving direction is to the right)
+      requireDirection: 1,
+      itemReceiveType: "all",
+      itemType: "Coin"
+    },
 
-  methods: {
-    //when the pirate gets coins
-    receiveItems() {
-      //if all coins from the ground and out of chests/keys have been given
-      if (this.receivedItems === (this.level.inventory.initItems.Coin || 0) +
-        (this.level.inventory.initItems.Key || 0)) {
-        //if no raft present on this tile yet
-        if (! this.parent.getSuchObject("Raft")) {
-          //create a raft
-          Raft().addToTile(this.parent)
+    methods: {
+      //when the pirate gets coins
+      receiveItems() {
+        //if all coins from the ground and out of chests/keys have been given
+        if (
+          this.receivedItems ===
+          (this.level.inventory.initItems.Coin || 0) +
+            (this.level.inventory.initItems.Key || 0)
+        ) {
+          //if no raft present on this tile yet
+          if (!this.parent.getSuchObject("Raft")) {
+            //create a raft
+            Raft().addToTile(this.parent)
+          }
+
+          //and remove the pirate
+          this.delete()
         }
-
-        //and remove the priate
-        this.delete()
       }
     }
   }
-})
+)
 
 //leaf switcher switches all leaves to point in the direction it was dumped in
 const LeafSwitcher = FloatingObject.compose({
@@ -1203,19 +1267,25 @@ const LeafSwitcher = FloatingObject.compose({
     //when bumped into
     checkMove(movement, actors) {
       //if player bumped into this and movement direction changed
-      if (actors.subject.tileType === "Player" && movement.direction !== this.facingDirection) {
+      if (
+        actors.subject.tileType === "Player" &&
+        movement.direction !== this.facingDirection
+      ) {
         //change direction
         this.facingDirection = movement.direction
 
         //in animation
         this.level.anim.registerAction(() => {
           //update image of the switcher with new direction
-          this.changeImageName(LeafSwitcher.switcherDirections[this.facingDirection])
+          this.changeImageName(
+            LeafSwitcher.switcherDirections[this.facingDirection]
+          )
 
           //for all leaves in level, change to the new direction
           this.level.registry.getOfType("Leaf").forEach(
             //setup to the new direction subtype
-            leaf => leaf.changeSubtype(this.facingDirection))
+            leaf => leaf.changeSubtype(this.facingDirection)
+          )
         })
       }
 
@@ -1236,7 +1306,9 @@ const HiddenPath = FloatingObject.compose(Registered, Watertight, {
     //changes the hidden state of this object
     setVisibility(setVisible) {
       //changes image name to match new set state
-      this.changeImageName(setVisible ? "hidden-path-visible" : "hidden-path-hidden")
+      this.changeImageName(
+        setVisible ? "hidden-path-visible" : "hidden-path-hidden"
+      )
     }
   }
 })
@@ -1252,7 +1324,9 @@ const RevealEye = FloatingObject.compose(Weighted, {
     //when button push state changes
     weightStateChanged(isPushed) {
       //update all hidden path objects' visibility
-      this.level.registry.getOfType("HiddenPath").forEach(p => p.setVisibility(isPushed))
+      this.level.registry
+        .getOfType("HiddenPath")
+        .forEach(p => p.setVisibility(isPushed))
     }
   }
 })
@@ -1279,7 +1353,7 @@ const ShellGuySign = FloatingObject.compose(NonWalkableObject, Subtyped, {
         tileType: "ShellGuySignThird"
       }
     }
-  },
+  }
 })
 
 //shell guy needs to be pushed a multiple of three times -1 to be happy
@@ -1304,11 +1378,7 @@ const ShellGuy = FloatingObject.compose(Pushable, {
 
   statics: {
     //the three stages, wraps when out of bounds
-    stages: [
-      "shell-guy-1",
-      "shell-guy-2",
-      "shell-guy-3"
-    ]
+    stages: ["shell-guy-1", "shell-guy-2", "shell-guy-3"]
   },
 
   methods: {
@@ -1369,12 +1439,17 @@ const Flower = FloatingObject.compose(Subtyped, {
 
       //if target tile is ok and flower can be there,
       //not wrong type of seed (checked in terrain checkMove)
-      if (targetTile && targetTile.terrainType === "Grass" &&
-        targetTile.checkMove(withMovement, { subject: this, initiator })) {
+      if (
+        targetTile &&
+        targetTile.terrainType === "Grass" &&
+        targetTile.checkMove(withMovement, { subject: this, initiator })
+      ) {
         //in animation, create new flower there
         this.level.anim.registerAction(() => {
           //create a flower of the same type and add it to the new target
-          const newFlower = Flower({ extraInitData: this.subtypeIndex }).addToTile(targetTile)
+          const newFlower = Flower({
+            extraInitData: this.subtypeIndex
+          }).addToTile(targetTile)
 
           //spawn new flower in same direction
           newFlower.createFlower(withMovement, initiator)
@@ -1439,7 +1514,9 @@ const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
       //check if on water hole now
       if (this.parent.getSuchObject("WaterHole")) {
         //delete in animation
-        this.level.anim.registerAction(() => this.delete(), { actionType: "slowAnimation" })
+        this.level.anim.registerAction(() => this.delete(), {
+          actionType: "slowAnimation"
+        })
       }
     }
   }
@@ -1484,7 +1561,9 @@ const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
     //sets the activation state of this flower
     setActivationState(newState) {
       //set image name with state
-      this.changeImageName(this.typeData[newState ? "imageNameActive" : "imageName"])
+      this.changeImageName(
+        this.typeData[newState ? "imageNameActive" : "imageName"]
+      )
     }
   }
 })
@@ -1494,7 +1573,7 @@ const FlowerPath = FloatingObject.compose(NonWalkableObject, Registered, {
   props: {
     imageName: "flower-path",
     tileType: "FlowerPath",
-    heightPrio: 1
+    heightPriority: 1
   },
 
   methods: {
@@ -1555,7 +1634,8 @@ const FlowerAnchor = FloatingObject.compose(Registered, {
           }
 
           //get source anchor by looking for anchor that has a path on it
-          const sourceAnchor = this.level.registry.getOfType("FlowerAnchor")
+          const sourceAnchor = this.level.registry
+            .getOfType("FlowerAnchor")
             .find(a => a.parent.getSuchObject("FlowerPath"))
 
           //remove paths, forEach is messed up when the array of objects is modified

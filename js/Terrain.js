@@ -1,12 +1,11 @@
-/*global stampit,
-Displayable, Vector, directionOffsets*/
+/*global Displayable, Vector, directionOffsets*/
 /*exported Land, Water, Grass, UnknownTerrain*/
 
 //a terrain tile is a displayable tile that can have objects on it
 const Terrain = Displayable.compose(Vector, {
   init({ level }) {
     //starts off with empty list of floating objects
-    this.objs = []
+    this.objects = []
 
     //save level ref
     this.level = level
@@ -16,16 +15,19 @@ const Terrain = Displayable.compose(Vector, {
     //update order of floating objects
     updateImgOrder(needsNoEmpty) {
       //if flag not set, empty container first
-      if (! needsNoEmpty) {
+      if (!needsNoEmpty) {
         //empty without destroying contained elements (but leave terrain)
-        this.tableCellElem.children().slice(this.elems.length).detach()
+        this.tableCellElem
+          .children()
+          .slice(this.elems.length)
+          .detach()
       }
 
       //add own img elem to that table cell
       this.tableCellElem.append(this.getImgElem())
 
       //add image elements for all child objects
-      this.objs.forEach(o => o.addToCell(this.tableCellElem))
+      this.objects.forEach(o => o.addToCell(this.tableCellElem))
     },
 
     //sets itself up in the specified position in the given table
@@ -37,10 +39,12 @@ const Terrain = Displayable.compose(Vector, {
       }
 
       //get td of this position
-      this.tableCellElem = table.children(".row-" + this.y).children(".col-" + this.x)
+      this.tableCellElem = table
+        .children(".row-" + this.y)
+        .children(".col-" + this.x)
 
       //sort floating objects for display
-      this.sortObjs()
+      this.sortobjects()
 
       //update elements in tile container, newly created and needs no emptying
       this.updateImgOrder(true)
@@ -48,10 +52,10 @@ const Terrain = Displayable.compose(Vector, {
 
     //updates the display of this tile
     updateDisplay() {
-      //sort object with height prio
-      this.sortObjs()
+      //sort object with height priority
+      this.sortobjects()
 
-      //and update iamges in display table
+      //and update images in display table
       this.updateImgOrder()
     },
 
@@ -69,77 +73,89 @@ const Terrain = Displayable.compose(Vector, {
     },
 
     //adds a floating object to this tile
-    addObj(objs) {
+    addObj(objects) {
       //if given array, call on each element given
-      if (objs instanceof Array) {
+      if (objects instanceof Array) {
         //call on each
-        objs.forEach(o => this.addObj(o))
+        objects.forEach(o => this.addObj(o))
 
         //stop, already processed
         return
       }
 
       //setup object with this terrain tile
-      this.setupNewObj(objs)
+      this.setupNewObj(objects)
 
       //add to list of floating objects
-      this.objs.push(objs)
+      this.objects.push(objects)
     },
 
     //sorts the floating objects by height priority
-    sortObjs() {
+    sortobjects() {
       //sort list of objects by their height priority
-      this.objs.sort(({ heightPrio: a = 0 }, { heightPrio: b = 0 }) => a - b)
+      this.objects.sort(
+        ({ heightPriority: a = 0 }, { heightPriority: b = 0 }) => a - b
+      )
 
       //filter falsy
-      this.objs = this.objs.filter(o => o)
+      this.objects = this.objects.filter(o => o)
     },
 
     //remove given object from array of objects, will remove its dom element on its own
     removeObj(obj) {
       //remove from array of objects
-      this.objs.splice(this.objs.indexOf(obj), 1)
+      this.objects.splice(this.objects.indexOf(obj), 1)
     },
 
     //called to check if objects of tile allow leave
     checkLeave(movement, actors, targetTile) {
       //check all objects
-      return this.objs.reduce(
-        (ok, o) => ok && (! o.checkLeave || o.checkLeave(movement, actors, targetTile)), true)
+      return this.objects.reduce(
+        (ok, o) =>
+          ok && (!o.checkLeave || o.checkLeave(movement, actors, targetTile)),
+        true
+      )
     },
 
     //called by movable right before it leaves this tile
     notifyLeave(movement, actors, targetTile) {
       //notify objects that movement is happening (away from this tile)
-      this.objs.forEach(
-        ownObj => ownObj.notifyLeave && ownObj.notifyLeave(movement, actors, targetTile))
+      this.objects.forEach(
+        ownObj =>
+          ownObj.notifyLeave && ownObj.notifyLeave(movement, actors, targetTile)
+      )
     },
 
     //by default, ask all contained objects in order of display order, movement to this tile
     checkMove(movement, actors) {
       //first check tile requirements
-      if (this.checkMoveTerrain && ! this.checkMoveTerrain(movement, actors)) {
+      if (this.checkMoveTerrain && !this.checkMoveTerrain(movement, actors)) {
         //stop right away, terrain tile disallows movement
         return false
       }
 
       //check that all objects are ok with movement
-      return this.objs.reduce((moveOk, ownObj) => {
+      return this.objects.reduce((moveOk, ownObj) => {
         //call notify check move (doesn't care about return)
         if (ownObj.notifyCheckMove) {
           ownObj.notifyCheckMove(movement, actors)
         }
 
         //check move
-        return moveOk && (! ownObj.checkMove || ownObj.checkMove(movement, actors))
+        return (
+          moveOk && (!ownObj.checkMove || ownObj.checkMove(movement, actors))
+        )
       }, true)
     },
 
     //notifies the tile in the opposite direction (mainly for squid)
     oppositeNotifyLeave(movement, actors, targetTile) {
       //tell all objects, targeting of the opposite tile is done by the moving object
-      this.objs.forEach(ownObj => ownObj.oppositeNotifyLeave &&
-        ownObj.oppositeNotifyLeave(movement, actors, targetTile))
+      this.objects.forEach(
+        ownObj =>
+          ownObj.oppositeNotifyLeave &&
+          ownObj.oppositeNotifyLeave(movement, actors, targetTile)
+      )
     },
 
     //called when movement actually happens, movement of object to this tile
@@ -150,14 +166,18 @@ const Terrain = Displayable.compose(Vector, {
       }
 
       //notify objects that movement is actually happening
-      this.objs.forEach(ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors))
+      this.objects.forEach(
+        ownObj => ownObj.notifyMove && ownObj.notifyMove(movement, actors)
+      )
     },
 
     //checks if object of given type is contained in this terrain tile and returns it if found
     getSuchObject(type, useSupertype = false) {
-      return this.objs.find(
+      return this.objects.find(
         //use super tile type is specified but fall back of not present
-        o => ((useSupertype ? o.superTileType : o.tileType) || o.tileType) === type)
+        o =>
+          ((useSupertype ? o.superTileType : o.tileType) || o.tileType) === type
+      )
     }
   }
 })
@@ -169,9 +189,9 @@ const RoundedTerrain = Terrain.compose({
   //pass falsy to accept all except for field borders
 
   statics: {
-    //maps from neighbourhood configs to imageNameMap names,
+    //maps from neighborhood configs to imageNameMap names,
     //i for inside type, o for outside type tiles (first is top going clockwise)
-    neighbourConfigNameMap: {
+    neighborConfigNameMap: {
       iiii: "center",
       oooo: "edgeAll",
       ioio: "edgeVertical",
@@ -193,7 +213,7 @@ const RoundedTerrain = Terrain.compose({
     //small connectors have an extra section for the tip touching tiles,
     //counting starting at top right corner, _ means doesn't matter
     //for respecting and searchign with _, we need to use an array and strings as keys
-    connNeighbourNameMap: [
+    connneighborNameMap: [
       {
         pos: "ii__o___",
         name: "connRightTop"
@@ -209,7 +229,7 @@ const RoundedTerrain = Terrain.compose({
       {
         pos: "i__i___o",
         name: "connLeftTop"
-      },
+      }
     ],
 
     //connector directions offsets for tip touching tiles
@@ -217,47 +237,56 @@ const RoundedTerrain = Terrain.compose({
       Vector({ x: 1, y: -1 }),
       Vector({ x: 1, y: 1 }),
       Vector({ x: -1, y: 1 }),
-      Vector({ x: -1, y: -1 }),
+      Vector({ x: -1, y: -1 })
     ]
   },
 
-  //determine image name from surrouding tile types
+  //determine image name from surrounding tile types
   methods: {
     calcImageName(level) {
-      //for all possible neighbour positions, determine inside or outside status
-      const neighbourConfigs = [directionOffsets, RoundedTerrain.tipDirectionOffsets]
-      .map(map => map.map(offset => {
-        //get tile at neighbour position
-        const neighbourTile = level.getTileAt(Vector.add(this, offset))
+      //for all possible neighbor positions, determine inside or outside status
+      const neighborConfigs = [
+        directionOffsets,
+        RoundedTerrain.tipDirectionOffsets
+      ].map(map =>
+        map
+          .map(offset => {
+            //get tile at neighbor position
+            const neighborTile = level.getTileAt(Vector.add(this, offset))
 
-        //if tile doesn't exist: border of field, automatically outside
-        if (! neighbourTile) {
-          return "o"
-        }
+            //if tile doesn't exist: border of field, automatically outside
+            if (!neighborTile) {
+              return "o"
+            }
 
-        //get tile at offsetted position and check if one of the inside classes or same class
-        //do not check if none given (accept all as inside)
-        return (
-          ! this.insideTypes ||
-          neighbourTile.terrainType === this.terrainType ||
-          this.insideTypes.length && this.insideTypes.includes(neighbourTile.terrainType)
-        ) ? "i" : "o"
-      }).join(""))
+            //get tile at offsetted position and check if one of the inside classes or same class
+            //do not check if none given (accept all as inside)
+            return !this.insideTypes ||
+              neighborTile.terrainType === this.terrainType ||
+              (this.insideTypes.length &&
+                this.insideTypes.includes(neighborTile.terrainType))
+              ? "i"
+              : "o"
+          })
+          .join("")
+      )
 
       //set from name map and choose base image if special one not present
-      this.imageName = this.imageNameMap[
-        //get image type in image name map from neighbourhoodNameMap,
-        //choose center if unknown neighbour config
-        RoundedTerrain.neighbourConfigNameMap[neighbourConfigs[0]] || "center"
-      ] || this.imageNameMap.center
+      this.imageName =
+        this.imageNameMap[
+          //get image type in image name map from neighborhoodNameMap,
+          //choose center if unknown neighbor config
+          RoundedTerrain.neighborConfigNameMap[neighborConfigs[0]] || "center"
+        ] || this.imageNameMap.center
 
-      //construct the extended neighbourhood config string, split into chars for char comparison
-      const extNeighbours = neighbourConfigs.join("").split("")
+      //construct the extended neighborhood config string, split into chars for char comparison
+      const extneighbors = neighborConfigs.join("").split("")
 
-      //find a connection neighbour item that fits this extended neighbour config
-      const connImageType = RoundedTerrain.connNeighbourNameMap.find(
+      //find a connection neighbor item that fits this extended neighbor config
+      const connImageType = RoundedTerrain.connneighborNameMap.find(
         //make sure every positions fits or doesn't matter
-        item => extNeighbours.every((c, i) => item.pos[i] === "_" || c === item.pos[i])
+        item =>
+          extneighbors.every((c, i) => item.pos[i] === "_" || c === item.pos[i])
       )
 
       //get image name if anything found
@@ -308,7 +337,7 @@ const Land = RoundedTerrain.props({
     onlyTop: "land-only-t",
     onlyRight: "land-only-r",
     onlyBottom: "land-only-b",
-    onlyLeft: "land-only-l",
+    onlyLeft: "land-only-l"
     /*onlyTop: tileVariation("land-only-t", 2),
     onlyRight: tileVariation("land-only-r", 2),
     onlyBottom: tileVariation("land-only-b", 2),
@@ -346,7 +375,10 @@ const Grass = RoundedTerrain.compose({
     //disallow movement not from spring
     checkMoveTerrain(movement, actors) {
       //return false if initiator is not of type spring or not already on grass
-      return actors.initiator.tileType === "Spring" || actors.subject.parent.terrainType === "Grass"
+      return (
+        actors.initiator.tileType === "Spring" ||
+        actors.subject.parent.terrainType === "Grass"
+      )
     }
   }
 })
@@ -369,7 +401,7 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
   methods: {
     //checks  if there is a watertight object on this terrain
     checkWatertightPresent() {
-      return this.objs.some(o => o.watertight)
+      return this.objects.some(o => o.watertight)
     },
 
     //allow movement into if wet box is present or submersible object is being pushed
@@ -383,7 +415,8 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
       //if actor is sinkable and no wet box present
       if (
         actors.subject.notifySink && //only if handler present at all
-        actors.subject.sinkable && ! this.checkWatertightPresent()
+        actors.subject.sinkable &&
+        !this.checkWatertightPresent()
       ) {
         //notify box of sinking
         actors.subject.notifySink(movement, actors)
