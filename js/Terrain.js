@@ -17,10 +17,7 @@ const Terrain = Displayable.compose(Vector, {
       //if flag not set, empty container first
       if (!needsNoEmpty) {
         //empty without destroying contained elements (but leave terrain)
-        this.tableCellElem
-          .children()
-          .slice(this.elems.length)
-          .detach()
+        this.tableCellElem.children().slice(this.elems.length).detach()
       }
 
       //add own img elem to that table cell
@@ -178,8 +175,8 @@ const Terrain = Displayable.compose(Vector, {
         o =>
           ((useSupertype ? o.superTileType : o.tileType) || o.tileType) === type
       )
-    }
-  }
+    },
+  },
 })
 
 //RoundedTile does calculations regarding corners and edges for grass and land tiles
@@ -207,7 +204,7 @@ const RoundedTerrain = Terrain.compose({
       iooo: "onlyTop",
       oioo: "onlyRight",
       ooio: "onlyBottom",
-      oooi: "onlyLeft"
+      oooi: "onlyLeft",
     },
 
     //small connectors have an extra section for the tip touching tiles,
@@ -216,20 +213,20 @@ const RoundedTerrain = Terrain.compose({
     connneighborNameMap: [
       {
         pos: "ii__o___",
-        name: "connRightTop"
+        name: "connRightTop",
       },
       {
         pos: "_ii__o__",
-        name: "connRightBottom"
+        name: "connRightBottom",
       },
       {
         pos: "__ii__o_",
-        name: "connLeftBottom"
+        name: "connLeftBottom",
       },
       {
         pos: "i__i___o",
-        name: "connLeftTop"
-      }
+        name: "connLeftTop",
+      },
     ],
 
     //connector directions offsets for tip touching tiles
@@ -237,8 +234,8 @@ const RoundedTerrain = Terrain.compose({
       Vector({ x: 1, y: -1 }),
       Vector({ x: 1, y: 1 }),
       Vector({ x: -1, y: 1 }),
-      Vector({ x: -1, y: -1 })
-    ]
+      Vector({ x: -1, y: -1 }),
+    ],
   },
 
   //determine image name from surrounding tile types
@@ -247,7 +244,7 @@ const RoundedTerrain = Terrain.compose({
       //for all possible neighbor positions, determine inside or outside status
       const neighborConfigs = [
         directionOffsets,
-        RoundedTerrain.tipDirectionOffsets
+        RoundedTerrain.tipDirectionOffsets,
       ].map(map =>
         map
           .map(offset => {
@@ -308,8 +305,8 @@ const RoundedTerrain = Terrain.compose({
       return Object.values(this.imageNameMap)
         .flat()
         .concat(this.imageName || [])
-    }
-  }
+    },
+  },
 })
 
 //disallows walking on this terrain tile
@@ -318,7 +315,7 @@ const NonWalkableTerrain = stampit.methods({
   //disallow walking on terrain tile before checking objects
   checkMoveTerrain() {
     return false
-  }
+  },
 })
 
 //utility function for generating arrays of tile variation names
@@ -345,7 +342,7 @@ const Land = RoundedTerrain.props({
     onlyTop: "land-only-t",
     onlyRight: "land-only-r",
     onlyBottom: "land-only-b",
-    onlyLeft: "land-only-l"
+    onlyLeft: "land-only-l",
     /*onlyTop: tileVariation("land-only-t", 2),
     onlyRight: tileVariation("land-only-r", 2),
     onlyBottom: tileVariation("land-only-b", 2),
@@ -355,7 +352,7 @@ const Land = RoundedTerrain.props({
     connLeftBottom: "land-conn-lb",
     connLeftTop: "land-conn-lt"*/
   },
-  insideTypes: ["Grass"]
+  insideTypes: ["Grass"],
 })
 
 //the Grass tile
@@ -374,9 +371,9 @@ const Grass = RoundedTerrain.compose({
       edgeBottom: "grass-edge-b",
       edgeLeft: "grass-edge-l",
       onlyRight: "grass-corner-lb",
-      onlyLeft: "grass-corner-rb"
+      onlyLeft: "grass-corner-rb",
     },
-    insideTypes: true
+    insideTypes: true,
   },
 
   methods: {
@@ -387,8 +384,8 @@ const Grass = RoundedTerrain.compose({
         actors.initiator.tileType === "Spring" ||
         actors.subject.parent.terrainType === "Grass"
       )
-    }
-  }
+    },
+  },
 })
 
 //the Water tile
@@ -401,9 +398,9 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
       rightTop: "water-border-t",
       leftTop: "water-border-corner",
       edgeLeft: "water-border-l",
-      leftBottom: "water-border-l"
+      leftBottom: "water-border-l",
     },
-    insideTypes: false
+    insideTypes: false,
   },
 
   methods: {
@@ -429,12 +426,12 @@ const Water = RoundedTerrain.compose(NonWalkableTerrain, {
         //notify box of sinking
         actors.subject.notifySink(movement, actors)
       }
-    }
-  }
+    },
+  },
 })
 
 //unknown terrain
 const UnknownTerrain = Terrain.props({
   terrainType: "UnknownTerrain",
-  imageName: "unknown-terrain"
+  imageName: "unknown-terrain",
 })

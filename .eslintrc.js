@@ -4,11 +4,7 @@ module.exports = {
     browser: true,
     es6: true
   },
-  parserOptions: {
-    parser: "babel-eslint"
-  },
   globals: {
-    $nuxt: true,
     $: true,
     stampit: true,
     module: true,
@@ -20,7 +16,7 @@ module.exports = {
     "plugin:sonarjs/recommended",
     "plugin:promise/recommended",
     "eslint:recommended",
-    "plugin:prettier/recommended"
+    "prettier"
   ],
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "error" : "off",
@@ -32,7 +28,6 @@ module.exports = {
     "no-var": "error",
     "sonarjs/cognitive-complexity": "off",
     "sonarjs/no-duplicate-string": "off",
-    "vue/no-v-html": "off",
     radix: "error",
     "max-len": [
       "error",

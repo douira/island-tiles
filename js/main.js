@@ -18,7 +18,7 @@ const Game = stampit.compose({
     completedIndex: -1,
 
     //start with current index at first level
-    levelIndex: 0
+    levelIndex: 0,
   },
 
   //constructed with a level object
@@ -35,7 +35,7 @@ const Game = stampit.compose({
       prevBtn: $("#prev-level"),
       resetBtn: $("#reset-level"),
       progress: $("#progress-info"),
-      gameSize: $("#game-size")
+      gameSize: $("#game-size"),
     }
 
     //save levels
@@ -117,7 +117,7 @@ const Game = stampit.compose({
     setEnabled(elem, enabled, setClass) {
       //add or remove enabling class
       elem[enabled ? "addClass" : "removeClass"](setClass)
-    }
+    },
   },
 
   methods: {
@@ -125,9 +125,7 @@ const Game = stampit.compose({
     remove() {
       //remove all with .controls
       $(document).off(".controls")
-      $("#controls")
-        .find("*")
-        .off(".controls")
+      $("#controls").find("*").off(".controls")
 
       //unregister level handlers
       if (this.currentLevel) {
@@ -210,8 +208,8 @@ const Game = stampit.compose({
 
       //update controls display
       this.updateControls()
-    }
-  }
+    },
+  },
 })
 
 //create levels from raw level data
@@ -311,7 +309,7 @@ const LevelFileReader = stampit.compose({
         48: ["g", "fsr"],
         10: "sfg",
         35: "sfr",
-        42: ["l"] //also land? appears underneath coconut hole in source level 62
+        42: ["l"], //also land? appears underneath coconut hole in source level 62
         //but doesn't seem to do anything
       },
       objectTypes: {
@@ -369,14 +367,14 @@ const LevelFileReader = stampit.compose({
         112: "flr",
         114: "sq",
         95: "clo", //open clam
-        122: "fa"
-      }
+        122: "fa",
+      },
     },
 
     //pads a string with the given length of chars
     padString(str, { length = 3, char = "0" } = {}) {
       return (char.repeat(length) + str).substr(-length, length)
-    }
+    },
   },
 
   //inits and performes parsing
@@ -574,13 +572,13 @@ const LevelFileReader = stampit.compose({
         name: `${this.levelName} (${this.fileName})`,
         noPadding: true,
         field: levelDescriptor,
-        dim: Vector(20, 12)
+        dim: Vector(20, 12),
       }
 
       //create level with descriptor, file name as name and standard size
       this.level = Level(this.levelInfo)
-    }
-  }
+    },
+  },
 })
 
 //the game instance
@@ -590,7 +588,7 @@ let game
 Level.preloadAllImages()
 
 //when document is present
-$(document).ready(function() {
+$(document).ready(function () {
   //make a game with the levels
   game = Game({ levels })
 
@@ -626,7 +624,7 @@ $(document).ready(function() {
               //create a level from the binary data
               const levelReader = LevelFileReader({
                 arrayBuffer: e.target.result,
-                file
+                file,
               })
 
               //finish this level's processing

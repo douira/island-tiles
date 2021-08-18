@@ -38,7 +38,7 @@ const Vector = stampit.compose({
     getNew() {
       //construct new vector with same values
       return Vector(this)
-    }
+    },
   },
 
   statics: {
@@ -52,8 +52,8 @@ const Vector = stampit.compose({
     sub(v1, v2) {
       //return vector with components subtracted
       return Vector({ x: v1.x - v2.x, y: v1.y - v2.y })
-    }
-  }
+    },
+  },
 })
 
 //neighbor offsets translate own position into the position of a neighbor
@@ -62,7 +62,7 @@ const directionOffsets = [
   Vector({ x: 0, y: -1 }),
   Vector({ x: 1, y: 0 }),
   Vector({ x: 0, y: 1 }),
-  Vector({ x: -1, y: 0 })
+  Vector({ x: -1, y: 0 }),
 ]
 
 //handles rendering of a tile
@@ -88,7 +88,7 @@ const Displayable = stampit.compose({
 
       //return current
       return Displayable.imageSourceRegistry[imageName]
-    }
+    },
   },
 
   methods: {
@@ -106,9 +106,10 @@ const Displayable = stampit.compose({
               this.imageName = this.imageName[0]
             } else {
               //choose one at random
-              this.imageName = this.imageName[
-                Math.floor(Math.random() * this.imageName.length)
-              ]
+              this.imageName =
+                this.imageName[
+                  Math.floor(Math.random() * this.imageName.length)
+                ]
             }
           } else {
             //is normal object, interpret to display as several layered images
@@ -132,10 +133,10 @@ const Displayable = stampit.compose({
               class: "tile",
 
               //init with first location
-              src: Displayable.makeImgAttrib(imageName, locationIndex)
+              src: Displayable.makeImgAttrib(imageName, locationIndex),
             }),
             name: imageName,
-            ownLocationIndex: locationIndex
+            ownLocationIndex: locationIndex,
           }
         })
 
@@ -201,8 +202,8 @@ const Displayable = stampit.compose({
     //this should be overwritten for any objects that have more than one image
     getPreloadImages() {
       return [this.imageName].flat()
-    }
-  }
+    },
+  },
 })
 
 //a basic object that can be on top of a terrain tile
@@ -300,8 +301,8 @@ const FloatingObject = Displayable.compose(Vector, {
     getTargetTile(movement) {
       //add offset to own position and get tile from there from level
       return this.level.getTileAt(Vector.add(this, movement.offset))
-    }
-  }
+    },
+  },
 })
 
 //disallows walking on the tile if this object is on it
@@ -309,7 +310,7 @@ const NonWalkableObject = stampit.methods({
   //disallow putting things on this by default, called to check if something can move onto this
   checkMove() {
     return false
-  }
+  },
 })
 
 //movable supplies methods for trying to move (being the subject of the move)
@@ -322,9 +323,9 @@ const Movable = stampit.compose({
         direction,
 
         //and lookup offset in movement offsets
-        offset: directionOffsets[direction]
+        offset: directionOffsets[direction],
       }
-    }
+    },
   },
 
   methods: {
@@ -396,8 +397,8 @@ const Movable = stampit.compose({
         //perform possible move
         this.performMove(targetTile, movement, initiator)
       }
-    }
-  }
+    },
+  },
 })
 
 //pushable allows floating objects to be pushed by the player
@@ -444,25 +445,25 @@ const Pushable = Movable.methods({
     if (this.notifyPush) {
       this.notifyPush(targetTile, movement, actors)
     }
-  }
+  },
 })
 
 //Sinkable object can be pushed into water,
 //optional method "sink" can be defined to specify behavior after being pushed into water
 const Sinkable = Pushable.props({
   //prop to signal to water to allow pushing this into it
-  sinkable: true
+  sinkable: true,
 })
 
 //watertight objects can be in water and suport other objects if pushed onto them
 const Watertight = stampit.props({
   watertight: true,
-  heightPriority: -1
+  heightPriority: -1,
 })
 
 //requires objects with this behavior to be all gone from the field before finishing the level
 const RequireGone = stampit.props({
-  requireGone: true
+  requireGone: true,
 })
 
 //items can be picked up and are stored in a fixed type inventory
@@ -478,7 +479,7 @@ const Item = stampit.compose({
 
   props: {
     //signal to be item (for counting on whole level)
-    isItem: true
+    isItem: true,
   },
 
   methods: {
@@ -503,15 +504,15 @@ const Item = stampit.compose({
         //register item pickup
         this.level.inventory.addItems(this.tileType)
       })
-    }
-  }
+    },
+  },
 })
 
 //can receive items and perform actions when a certain amount of items is reached
 const Receptacle = stampit.compose({
   props: {
     //starts off with 0 received items
-    receivedItems: 0
+    receivedItems: 0,
   },
 
   methods: {
@@ -538,8 +539,8 @@ const Receptacle = stampit.compose({
           this.receiveItems(gottenItems, movement)
         }
       }
-    }
-  }
+    },
+  },
 })
 
 //receptable that calls a callback when all items on the field of the accepted type are received
@@ -553,12 +554,12 @@ const ReceptacleAllItems = Receptacle.methods({
     ) {
       this.allItemsReceived()
     }
-  }
+  },
 })
 
 //registers the object in the level registry for things
 //where an array of all objects of a certain type needs to be accessed
-const Registered = stampit.init(function() {
+const Registered = stampit.init(function () {
   //register in level
   this.level.registry.register(this)
 })
@@ -603,8 +604,8 @@ const Subtyped = stampit.compose({
     //return the images of all subtypes
     getPreloadImages() {
       return Object.keys(this.subtypes).map(({ imageName }) => imageName)
-    }
-  }
+    },
+  },
 })
 
 //animation particles are used for animation of effects
@@ -612,12 +613,12 @@ const Subtyped = stampit.compose({
 const AnimationParticle = FloatingObject.compose({
   props: {
     tileType: "AnimationParticle",
-    imageName: "unknown"
+    imageName: "unknown",
   },
 
   statics: {
     //how long it takes for the animation particle to disappear on its own
-    ttl: 50
+    ttl: 50,
   },
 
   //inits with given image name
@@ -630,7 +631,7 @@ const AnimationParticle = FloatingObject.compose({
       //animation to remove in ttl ms
       level.anim.registerAction(() => this.delete(), { delay: ttl })
     }
-  }
+  },
 })
 
 //triggers a callback after moves have finished
@@ -643,7 +644,7 @@ const Weighted = stampit.compose({
     checkRegistered: false,
 
     //extra weight is not present by deafult, can be set though
-    extraWeight: false
+    extraWeight: false,
   },
 
   init() {
@@ -701,35 +702,35 @@ const Weighted = stampit.compose({
         //trigger check on extra weight change
         this.checkWeight()
       }
-    }
-  }
+    },
+  },
 })
 
 //unknown item is a placeholder
 const UnknownObject = FloatingObject.props({
   tileType: "UnknownObject",
-  imageName: "unknown"
+  imageName: "unknown",
 })
 
 //disallows teleporting this object
 const NonTeleportable = stampit.methods({
   checkNoTeleport() {
     return true
-  }
+  },
 })
 
 //re-allows teleporting this object
 const Teleportable = stampit.methods({
   checkNoTeleport() {
     return false
-  }
+  },
 })
 
 //projectile moves on it's own until it hits something
 const Projectile = Movable.compose(NonTeleportable, {
   props: {
     isProjectile: true,
-    heightPriority: 2
+    heightPriority: 2,
   },
 
   //init with movement
@@ -755,8 +756,8 @@ const Projectile = Movable.compose(NonTeleportable, {
         //in animation, move again
         this.level.anim.registerAction(() => this.move(movement))
       }
-    }
-  }
+    },
+  },
 })
 
 //incepts checkMove for an additional check, same for notifyMove
@@ -798,7 +799,7 @@ const PushProxy = Pushable.methods({
       //then also notify push handler
       this.pushableNotifyMove(movement, actors)
     }
-  }
+  },
 })
 
 //moves with pulling, the player moves away after being adjacent and this object follows
@@ -817,5 +818,5 @@ const Pullable = Movable.methods({
         this.notifyPull(movement, actors, targetTile)
       }
     }
-  }
+  },
 })

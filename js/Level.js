@@ -16,8 +16,8 @@ const AnimationQueue = stampit.compose({
       interaction: 0,
       animation: 100,
       slowAnimation: 300,
-      longAnimation: 600
-    }
+      longAnimation: 600,
+    },
   },
 
   //init with parent level
@@ -48,7 +48,7 @@ const AnimationQueue = stampit.compose({
         //use given priority (which defaults to 0)
         //we rely on the fact that sorting with the same priority keeps the items in the same order
         //(although this may not be the case in all environments, it is in most)
-        priority
+        priority,
       })
 
       //check if the lock hasn't been taken
@@ -86,8 +86,8 @@ const AnimationQueue = stampit.compose({
         //release lock as nothing is being processed
         this.lock = false
       }
-    }
-  }
+    },
+  },
 })
 
 //order of declaration
@@ -97,7 +97,7 @@ let Level
 const Inventory = stampit.compose({
   statics: {
     //list of item image names
-    itemDisplayInfo: {}
+    itemDisplayInfo: {},
   },
 
   //init itemDisplayInfo with all items from positionDescriptorMap
@@ -164,7 +164,7 @@ const Inventory = stampit.compose({
           //add to sort list with mapped name (from tile type to image name)
           sortList.push({
             name: itemName,
-            amount: itemAmount
+            amount: itemAmount,
           })
         }
       }
@@ -186,9 +186,7 @@ const Inventory = stampit.compose({
             //add a display item to the display list
             this.itemDisplayElem.append(
               //with a span that has an amount and an image of the item tile
-              $("<span>")
-                .append(item.amount)
-                .append(displayer.getImgElem())
+              $("<span>").append(item.amount).append(displayer.getImgElem())
             )
           })
       } else {
@@ -196,7 +194,7 @@ const Inventory = stampit.compose({
         this.itemDisplayElem.append(
           $("<div>", {
             text: "No Items",
-            id: "no-items-msg"
+            id: "no-items-msg",
           })
         )
       }
@@ -249,8 +247,8 @@ const Inventory = stampit.compose({
         //return requested amount
         return amount
       }
-    }
-  }
+    },
+  },
 })
 
 //registry keeps track of registered objects
@@ -321,8 +319,8 @@ const Registry = stampit.compose({
         //return object at next index, wrap around
         return objects[(index + 1) % objects.length]
       } //else returns falsy
-    }
-  }
+    },
+  },
 })
 
 //level describes the configuration of the playing field
@@ -352,7 +350,7 @@ Level = stampit.compose({
         w: Water,
         l: Land,
         g: Grass,
-        u: UnknownTerrain
+        u: UnknownTerrain,
       },
 
       //all following fields are the floating objects and the player
@@ -478,7 +476,7 @@ Level = stampit.compose({
         sf: SmallFlower,
         //exists in green and red variant (subtypes), to win,
         //all small flowers on the level have to be of the same type
-        fa: FlowerAnchor
+        fa: FlowerAnchor,
         /*when the player walks through one of these, a line is drawn out for every step,
           this line cannot be crossed (non walkable) and ends
           when the player steps on another anchor. finishing the line changes the color of all
@@ -487,7 +485,7 @@ Level = stampit.compose({
           leaves a walkable closed coconut hole behind,
           can be used without a second one,just as a barrier that
           appears on the player's walking path, can be active and/or present on finish*/
-      }
+      },
     },
 
     //array of possible tile sizes
@@ -519,23 +517,23 @@ Level = stampit.compose({
         {
           start: Vector({ x: 0, y: 0 }),
           dir: Vector({ x: 1, y: 0 }),
-          length: fieldDim.x
+          length: fieldDim.x,
         },
         {
           start: Vector({ x: fieldDim.x - 1, y: 0 }),
           dir: Vector({ x: 0, y: 1 }),
-          length: fieldDim.y
+          length: fieldDim.y,
         },
         {
           start: Vector({ x: 0, y: fieldDim.y - 1 }),
           dir: Vector({ x: 1, y: 0 }),
-          length: fieldDim.x
+          length: fieldDim.x,
         },
         {
           start: Vector({ x: 0, y: 0 }),
           dir: Vector({ x: 0, y: 1 }),
-          length: fieldDim.y
-        }
+          length: fieldDim.y,
+        },
       ]
     },
 
@@ -571,10 +569,10 @@ Level = stampit.compose({
           src: Displayable.makeImgAttrib(
             imageName,
             Displayable.getImageSource(imageName)
-          )
+          ),
         })
       }
-    }
+    },
   },
 
   methods: {
@@ -635,7 +633,7 @@ Level = stampit.compose({
       //determine size of the field
       const fieldDim = Vector({
         x: this.field.reduce((max, line) => Math.max(max, line.length), 0),
-        y: this.field.length
+        y: this.field.length,
       })
 
       //flag that is set if padding needs to be done
@@ -671,17 +669,17 @@ Level = stampit.compose({
       //total padding needed on axis, divide by 2 for the padding needed on each side
       const sidePadding = Vector({
         x: this.dim.x - fieldDim.x,
-        y: this.dim.y - fieldDim.y
+        y: this.dim.y - fieldDim.y,
       }).mult(0.5)
 
       //split padding into pre and post padding on both axis
       const prePadding = Vector({
         x: Math.floor(sidePadding.x),
-        y: Math.floor(sidePadding.y)
+        y: Math.floor(sidePadding.y),
       })
       const postPadding = Vector({
         x: Math.ceil(sidePadding.x),
-        y: Math.ceil(sidePadding.y)
+        y: Math.ceil(sidePadding.y),
       })
 
       //check water bounds if requested
@@ -691,7 +689,7 @@ Level = stampit.compose({
           { o: prePadding, p: "y" },
           { o: postPadding, p: "x" },
           { o: postPadding, p: "y" },
-          { o: prePadding, p: "x" }
+          { o: prePadding, p: "x" },
         ]
           //map to function that sets value and returns value
           .map(descriptor => value => {
@@ -866,7 +864,7 @@ Level = stampit.compose({
                 level: this,
 
                 //extra init data is all that comes after the two char object abbrev
-                extraInitData: objAbbrev.substr(2)
+                extraInitData: objAbbrev.substr(2),
               })
             })
 
@@ -906,7 +904,7 @@ Level = stampit.compose({
       //init inventory with item counting after object creation
       this.inventory.setup({
         tileList: this.tileList,
-        itemDisplayElem: this.game.elems.itemDisplay
+        itemDisplayElem: this.game.elems.itemDisplay,
       })
 
       //set title text
@@ -1042,6 +1040,6 @@ Level = stampit.compose({
         //make game move on to next level
         this.game.levelCompleted()
       }
-    }
-  }
+    },
+  },
 })

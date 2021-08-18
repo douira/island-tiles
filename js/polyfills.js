@@ -40,7 +40,7 @@ if (!Array.prototype.flat) {
       return depth
         ? Array.prototype.reduce.call(
             this,
-            function(acc, cur) {
+            function (acc, cur) {
               if (Array.isArray(cur)) {
                 acc.push.apply(acc, flat.call(cur, depth - 1))
               } else {
@@ -53,6 +53,6 @@ if (!Array.prototype.flat) {
           )
         : Array.prototype.slice.call(this)
     },
-    writable: true
+    writable: true,
   })
 }

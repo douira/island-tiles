@@ -17,14 +17,14 @@ const Rock = FloatingObject.compose(NonWalkableObject).props({
   imageName: ["rock-1", "rock-2"],
 
   //low height priority, isn't on top of anything
-  heightPriority: 0
+  heightPriority: 0,
 })
 
 //WetBox is created when box is sunken in water
 const WetBox = FloatingObject.compose(Watertight).props({
   //configure image
   tileType: "WetBox",
-  imageName: "box-wet"
+  imageName: "box-wet",
 })
 
 //box can be pushed
@@ -32,7 +32,7 @@ const Box = FloatingObject.compose(Sinkable, {
   props: {
     tileType: "Box",
     imageName: "box",
-    heightPriority: 1
+    heightPriority: 1,
   },
 
   methods: {
@@ -40,8 +40,8 @@ const Box = FloatingObject.compose(Sinkable, {
     notifySink() {
       //register animation to sink
       this.level.anim.registerAction(() => this.mutate(WetBox))
-    }
-  }
+    },
+  },
 })
 
 //Goal triggers the level to check that the finishing conditions are met
@@ -49,7 +49,7 @@ const Goal = FloatingObject.compose({
   //set image name
   props: {
     tileType: "Goal",
-    imageName: "house"
+    imageName: "house",
   },
 
   methods: {
@@ -62,15 +62,15 @@ const Goal = FloatingObject.compose({
     notifyMove() {
       //trigger level finish check
       this.level.goalTriggered()
-    }
-  }
+    },
+  },
 })
 
 //starfish only needs to be sunken
 const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
   props: {
     tileType: "Starfish",
-    imageName: "starfish"
+    imageName: "starfish",
   },
 
   methods: {
@@ -78,22 +78,22 @@ const Starfish = FloatingObject.compose(Sinkable, RequireGone, {
     notifySink() {
       //register animation to sink
       this.level.anim.registerAction(() => this.delete())
-    }
-  }
+    },
+  },
 })
 
 //baby crabs can be picked up and given to the mother crab all at once
 const BabyCrab = FloatingObject.compose(Item, RequireGone).props({
   //image name and type
   tileType: "BabyCrab",
-  imageName: "crab-small"
+  imageName: "crab-small",
 })
 
 //seeds can be picked up and planted in a seed hole
 const Seed = FloatingObject.compose(Item).props({
   //image name and type
   tileType: "Seed",
-  imageName: "seed"
+  imageName: "seed",
 })
 
 //mommy crab receives all stored baby crabs from the inventory
@@ -108,7 +108,7 @@ const MommyCrab = FloatingObject.compose(
       //also specify type of item to receive
       itemType: "BabyCrab",
       itemReceiveType: "all",
-      requireDirection: 0
+      requireDirection: 0,
     },
 
     methods: {
@@ -123,8 +123,8 @@ const MommyCrab = FloatingObject.compose(
       //return all image states as the preload images
       getPreloadImages() {
         return ["crab-large-sad", "crab-large-happy"]
-      }
-    }
+      },
+    },
   }
 )
 
@@ -132,7 +132,7 @@ const MommyCrab = FloatingObject.compose(
 const Spring = FloatingObject.compose({
   props: {
     imageName: "spring",
-    tileType: "Spring"
+    tileType: "Spring",
   },
 
   methods: {
@@ -145,8 +145,8 @@ const Spring = FloatingObject.compose({
           actors.subject.move(movement, this)
         )
       }
-    }
-  }
+    },
+  },
 })
 
 //seed hole can receive seed and full water bottle to become spring
@@ -160,7 +160,7 @@ const SeedHole = FloatingObject.compose(Receptacle, {
     itemType: "Seed",
 
     //state of seededness
-    hasSeed: false
+    hasSeed: false,
   },
 
   methods: {
@@ -198,8 +198,8 @@ const SeedHole = FloatingObject.compose(Receptacle, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["seed-hole", "seeded-hole"]
-    }
-  }
+    },
+  },
 })
 
 //water bottle can be filled up with water at the water hole
@@ -210,7 +210,7 @@ const WaterBottle = FloatingObject.compose(Pushable, {
     heightPriority: 1,
 
     //state of with water or not
-    filled: false
+    filled: false,
   },
 
   methods: {
@@ -232,14 +232,14 @@ const WaterBottle = FloatingObject.compose(Pushable, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["bottle", "bottle-full"]
-    }
-  }
+    },
+  },
 })
 
 //the water hole can be used to fill the bottle up with water
 const WaterHole = FloatingObject.props({
   imageName: "water-hole-land",
-  tileType: "WaterHole"
+  tileType: "WaterHole",
 })
 
 //telporter transports player from one teleporter to the other (only the player)
@@ -247,7 +247,7 @@ const Teleporter = FloatingObject.compose(Registered, {
   props: {
     imageName: "teleporter-land",
     tileType: "Teleporter",
-    isTeleporter: true
+    isTeleporter: true,
   },
 
   methods: {
@@ -276,14 +276,14 @@ const Teleporter = FloatingObject.compose(Registered, {
               direction: 0, //not very important
 
               //offset is vector to next teleporter
-              offset: Vector.sub(target, this)
+              offset: Vector.sub(target, this),
             },
             this
           )
         ) //this is initiator
       }
-    }
-  }
+    },
+  },
 })
 
 //red teleporter also teleports other objects
@@ -291,7 +291,7 @@ const RedTeleporter = Teleporter.compose({
   //set to red derivative type
   props: {
     tileType: "RedTeleporter",
-    imageName: "teleporter-red-land"
+    imageName: "teleporter-red-land",
   },
 
   methods: {
@@ -302,15 +302,15 @@ const RedTeleporter = Teleporter.compose({
       return !(
         actors.subject.checkNoTeleport && actors.subject.checkNoTeleport()
       )
-    }
-  }
+    },
+  },
 })
 
 //figures can be pushed and move all other figures of the same color with it if possible
 const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
   props: {
     heightPriority: 1,
-    tileType: "Figure"
+    tileType: "Figure",
   },
 
   statics: {
@@ -319,19 +319,19 @@ const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
       r: {
         imageName: "figure-red",
         tileType: "RedFigure",
-        crossType: "RedCross"
+        crossType: "RedCross",
       },
       g: {
         imageName: "figure-green",
         tileType: "GreenFigure",
-        crossType: "GreenCross"
+        crossType: "GreenCross",
       },
       b: {
         imageName: "figure-blue",
         tileType: "BlueFigure",
-        crossType: "BlueCross"
-      }
-    }
+        crossType: "BlueCross",
+      },
+    },
   },
 
   methods: {
@@ -351,40 +351,40 @@ const Figure = FloatingObject.compose(Subtyped, Registered, Pushable, {
     checkFinish() {
       //cross type is the tile type of the cross this figure has to be on
       return this.parent.getSuchObject(this.typeData.crossType)
-    }
-  }
+    },
+  },
 })
 
 //figures are moved onto crosses
 const Cross = FloatingObject.compose(Subtyped, {
   props: {
     heightPriority: 0,
-    tileType: "Cross"
+    tileType: "Cross",
   },
 
   statics: {
     subtypes: {
       r: {
         imageName: "cross-red",
-        tileType: "RedCross"
+        tileType: "RedCross",
       },
       g: {
         imageName: "cross-green",
-        tileType: "GreenCross"
+        tileType: "GreenCross",
       },
       b: {
         imageName: "cross-blue",
-        tileType: "BlueCross"
-      }
-    }
-  }
+        tileType: "BlueCross",
+      },
+    },
+  },
 })
 
 //Bomb removes rocks directly adjacent to it
 const Bomb = FloatingObject.compose(Registered, Pushable, {
   props: {
     imageName: "bomb",
-    tileType: "Bomb"
+    tileType: "Bomb",
   },
 
   statics: {
@@ -392,7 +392,7 @@ const Bomb = FloatingObject.compose(Registered, Pushable, {
     explosionOffsets: directionOffsets.concat(Vector()),
 
     //delay time between individual explosions
-    explosionDelay: 30
+    explosionDelay: 30,
   },
 
   methods: {
@@ -419,7 +419,7 @@ const Bomb = FloatingObject.compose(Registered, Pushable, {
               //place animation particle with explosion image onto terrain
               AnimationParticle({
                 level: this.level,
-                imageName: "bomb-explosion"
+                imageName: "bomb-explosion",
               }).addToTile(tile)
             },
             { delay: Math.random() * index * Bomb.explosionDelay }
@@ -429,15 +429,15 @@ const Bomb = FloatingObject.compose(Registered, Pushable, {
 
       //remove self, can only be triggered once
       this.delete()
-    }
-  }
+    },
+  },
 })
 
 //bomb trigger triggers all bombs
 const BombTrigger = FloatingObject.compose({
   props: {
     imageName: "bomb-trigger-land",
-    tileType: "BombTrigger"
+    tileType: "BombTrigger",
   },
 
   methods: {
@@ -459,14 +459,14 @@ const BombTrigger = FloatingObject.compose({
         //trigger also removes itself
         this.delete()
       }
-    }
-  }
+    },
+  },
 })
 
 //buoy is non walkable water obstacle
 const Buoy = FloatingObject.compose(NonWalkableObject).props({
   imageName: "buoy",
-  tileType: "Buoy"
+  tileType: "Buoy",
 })
 
 //spikes register and can be changed by a spike button
@@ -476,12 +476,12 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
     tileType: "Spikes",
 
     //draw at bottom
-    heightPriority: 0
+    heightPriority: 0,
   },
 
   statics: {
     upImageName: "spikes-up",
-    downImageName: "spikes-down"
+    downImageName: "spikes-down",
   },
 
   methods: {
@@ -503,8 +503,8 @@ const Spikes = FloatingObject.compose(Registered, Weighted, {
     //return all image states as the preload images
     getPreloadImages() {
       return [Spikes.upImageName, Spikes.downImageName]
-    }
-  }
+    },
+  },
 })
 
 //spikes button controlles spike status
@@ -515,7 +515,7 @@ const SpikesButton = FloatingObject.compose(Weighted, {
     tileType: "SpikesButton",
 
     //the current state
-    pressed: false
+    pressed: false,
   },
 
   methods: {
@@ -525,15 +525,15 @@ const SpikesButton = FloatingObject.compose(Weighted, {
       this.level.registry
         .getOfType("Spikes")
         .forEach(o => o.setExtraWeight(this.hasWeight))
-    }
-  }
+    },
+  },
 })
 
 //ice goes away like spikes come back up once unweighted (ice just goes away)
 const Ice = FloatingObject.compose(Weighted, Watertight, {
   props: {
     imageName: "ice",
-    tileType: "Ice"
+    tileType: "Ice",
   },
 
   methods: {
@@ -544,14 +544,14 @@ const Ice = FloatingObject.compose(Weighted, Watertight, {
         //melt, delete itself
         this.delete()
       }
-    }
-  }
+    },
+  },
 })
 
 //pearl is a item
 const Pearl = FloatingObject.compose(Item).props({
   imageName: "pearl",
-  tileType: "Pearl"
+  tileType: "Pearl",
 })
 
 //accepts a pearl and goes away once all other pedestals also have a pearl
@@ -567,7 +567,7 @@ const PearlPedestal = FloatingObject.compose(
 
       //takes one pearl
       itemReceiveType: 1,
-      itemType: "Pearl"
+      itemType: "Pearl",
     },
 
     methods: {
@@ -587,7 +587,7 @@ const PearlPedestal = FloatingObject.compose(
           //in order of list, animate all to disappear
           pedestals.forEach(p =>
             this.level.anim.registerAction(() => p.delete(), {
-              actionType: "slowAnimation"
+              actionType: "slowAnimation",
             })
           )
         }
@@ -596,8 +596,8 @@ const PearlPedestal = FloatingObject.compose(
       //return all image states as the preload images
       getPreloadImages() {
         return ["pearl-pedestal-filled", "pearl-pedestal"]
-      }
-    }
+      },
+    },
   }
 )
 
@@ -607,7 +607,7 @@ const Player = FloatingObject.compose(Movable, {
   props: {
     tileType: "Player",
     heightPriority: 100,
-    imageName: "player-l"
+    imageName: "player-l",
   },
 
   statics: {
@@ -626,8 +626,8 @@ const Player = FloatingObject.compose(Movable, {
       38: 0,
       39: 1,
       40: 2,
-      37: 3
-    }
+      37: 3,
+    },
   },
 
   //add to level on creation
@@ -679,8 +679,8 @@ const Player = FloatingObject.compose(Movable, {
     //return all image states as the preload images
     getPreloadImages() {
       return Player.directionImageNames
-    }
-  }
+    },
+  },
 })
 
 //tablet can be pushed and requires pushing of all five in order for them to be valid
@@ -690,7 +690,7 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
     tileType: "Tablet",
 
     //flag is set to true when this tablet is uncovered properly
-    uncovered: false
+    uncovered: false,
   },
 
   //register on init and get number
@@ -747,22 +747,22 @@ const Tablet = FloatingObject.compose(Registered, Pushable, {
         "tablet-2",
         "tablet-3",
         "tablet-4",
-        "tablet-5"
+        "tablet-5",
       ]
-    }
-  }
+    },
+  },
 })
 
 //coin is a item
 const Coin = FloatingObject.compose(Registered, Item).props({
   imageName: "coin",
-  tileType: "Coin"
+  tileType: "Coin",
 })
 
 //key is a item that can be used to get coins from chests
 const Key = FloatingObject.compose(Item).props({
   imageName: "key",
-  tileType: "Key"
+  tileType: "Key",
 })
 
 //Chest gives a coin in exchange for a key
@@ -777,7 +777,7 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
     itemReceiveType: 1,
 
     //flag wether or not this chest has been opened
-    opened: false
+    opened: false,
   },
 
   methods: {
@@ -804,14 +804,14 @@ const Chest = FloatingObject.compose(Receptacle, NonWalkableObject, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["chest-closed", "chest-open"]
-    }
-  }
+    },
+  },
 })
 
 //Pebble is an item
 const Pebble = FloatingObject.compose(Item).props({
   imageName: "pebble",
-  tileType: "Pebble"
+  tileType: "Pebble",
 })
 
 //barrel can be pushed and needs to be on a barrel base to allow finishing
@@ -819,7 +819,7 @@ const Barrel = FloatingObject.compose(Pushable, {
   props: {
     imageName: "barrel",
     tileType: "Barrel",
-    heightPriority: 1
+    heightPriority: 1,
   },
 
   methods: {
@@ -827,14 +827,14 @@ const Barrel = FloatingObject.compose(Pushable, {
     checkFinish() {
       //require to be on a base
       return this.parent.getSuchObject("BarrelBase")
-    }
-  }
+    },
+  },
 })
 
 //barrelBase is used to check that all barrels have been put in the right place
 const BarrelBase = FloatingObject.props({
   imageName: "barrel-base",
-  tileType: "BarrelBase"
+  tileType: "BarrelBase",
 })
 
 //pebble projectile is created by slingshot
@@ -845,7 +845,7 @@ const PebbleProj = FloatingObject.compose(Projectile, {
     tileType: "PebbleProj",
 
     //allow movement into water tiles
-    sinkable: true
+    sinkable: true,
   },
 
   methods: {
@@ -853,8 +853,8 @@ const PebbleProj = FloatingObject.compose(Projectile, {
     outOfFieldMove() {
       //remove to disappear
       this.delete()
-    }
-  }
+    },
+  },
 })
 
 //coconut is projectile that moves in the direction it was pushed
@@ -862,7 +862,7 @@ const PebbleProj = FloatingObject.compose(Projectile, {
 //so that projectile movement is triggered on push
 const Coconut = FloatingObject.compose(Pushable, Projectile).props({
   imageName: "coconut",
-  tileType: "Coconut"
+  tileType: "Coconut",
 })
 
 //singshot shoots pebble items from the inventory
@@ -874,7 +874,7 @@ const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
     //interacts with bottom (upwards movement) and receives single pebbles
     requireDirection: 0,
     itemType: "Pebble",
-    itemReceiveType: 1
+    itemReceiveType: 1,
   },
 
   methods: {
@@ -882,8 +882,8 @@ const Slingshot = FloatingObject.compose(Receptacle, NonWalkableObject, {
     receiveItems(items, movement) {
       //create a new pebble projectile on this tile that will move itself
       PebbleProj({ movement, startTile: this.parent })
-    }
-  }
+    },
+  },
 })
 
 //Palm tile is stationary
@@ -892,7 +892,7 @@ const Palm = FloatingObject.compose({
     //init with image name
     tileType: "Palm",
     heightPriority: 0,
-    imageName: ["palm-1", "palm-2"]
+    imageName: ["palm-1", "palm-2"],
   },
 
   methods: {
@@ -917,8 +917,8 @@ const Palm = FloatingObject.compose({
           Coconut({ startTile })
         }
       }
-    }
-  }
+    },
+  },
 })
 
 //coconut hole is filled by absorbing a coconut projectile
@@ -929,7 +929,7 @@ const CoconutHole = FloatingObject.compose(Registered, {
     heightPriority: 0,
 
     //flag wether or not this hole has been filled with a coconut
-    filled: false
+    filled: false,
   },
 
   methods: {
@@ -966,14 +966,14 @@ const CoconutHole = FloatingObject.compose(Registered, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["dark-hole", "dark-hole-closed"]
-    }
-  }
+    },
+  },
 })
 
 //leaf redirects pebble, is registered as leaf and not subtype because Subtype is initialized later
 const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
   props: {
-    tileType: "Leaf"
+    tileType: "Leaf",
 
     //image determined later
   },
@@ -984,24 +984,24 @@ const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
       0: {
         imageName: "leaf-t",
         tileType: "LeafTop",
-        redirection: 0
+        redirection: 0,
       },
       1: {
         imageName: "leaf-r",
         tileType: "LeafRight",
-        redirection: 1
+        redirection: 1,
       },
       2: {
         imageName: "leaf-b",
         tileType: "LeafBottom",
-        redirection: 2
+        redirection: 2,
       },
       3: {
         imageName: "leaf-l",
         tileType: "LeafLeft",
-        redirection: 3
-      }
-    }
+        redirection: 3,
+      },
+    },
   },
 
   methods: {
@@ -1037,15 +1037,15 @@ const Leaf = FloatingObject.compose(Registered, PushProxy, Subtyped, {
           //make new projectile in redirection direction
           PebbleProj({
             startTile: this.parent,
-            movement: newMovement
+            movement: newMovement,
           })
         })
 
         //do not allow push
         return false
       }
-    }
-  }
+    },
+  },
 })
 
 //clam opens and allows pearl item to be taken
@@ -1055,15 +1055,15 @@ const Clam = FloatingObject.compose(PushProxy, {
     tileType: "Clam",
 
     //state of the clam, 0 is closed, 1 is open with pearl, 2 is open without pearl
-    clamState: 0
+    clamState: 0,
   },
 
   statics: {
     //images for the two other states
     clamStates: {
       1: "clam-open",
-      2: "clam-empty"
-    }
+      2: "clam-empty",
+    },
   },
 
   //optionally init with extra data
@@ -1117,7 +1117,7 @@ const Clam = FloatingObject.compose(PushProxy, {
         if (this.clamState === 0) {
           //in animation, move to state open with pearl
           this.level.anim.registerAction(() => this.changeClamState(1), {
-            priority: 1
+            priority: 1,
           })
         } else {
           //delete pebble projectile (absorb)
@@ -1132,8 +1132,8 @@ const Clam = FloatingObject.compose(PushProxy, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["clam-open", "clam-closed", "clam-empty"]
-    }
-  }
+    },
+  },
 })
 
 //coconut path constrains coconut to move on it
@@ -1141,7 +1141,7 @@ const CoconutPath = FloatingObject.compose({
   props: {
     imageName: "coconut-path",
     tileType: "CoconutPath",
-    isCoconutPath: true
+    isCoconutPath: true,
   },
 
   methods: {
@@ -1154,8 +1154,8 @@ const CoconutPath = FloatingObject.compose({
       } else {
         return true
       }
-    }
-  }
+    },
+  },
 })
 
 //coconut path segment that needs to be filled with a coconut to finish
@@ -1165,7 +1165,7 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
     tileType: "CoconutPathTarget",
 
     //is set to true when all targets have coconuts and the holes are filled
-    stopped: false
+    stopped: false,
   },
 
   methods: {
@@ -1195,8 +1195,8 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
             this.level.anim.registerAction(() => hole.closeHole())
           )
       }
-    }
-  }
+    },
+  },
 })
 
 //raft can be used to travel on water, always moves until it hits an obstacle
@@ -1209,7 +1209,7 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
     tileType: "Raft",
 
     //allow movement into water tiles
-    sinkable: true
+    sinkable: true,
   },
 
   methods: {
@@ -1253,14 +1253,14 @@ const Raft = FloatingObject.compose(Movable, Watertight, {
         //in animation, move again
         this.level.anim.registerAction(() => this.move(movement))
       }
-    }
-  }
+    },
+  },
 })
 
 //unmovable pirate hut prop
 const PirateHut = FloatingObject.compose(NonWalkableObject).props({
   imageName: "pirate-hut",
-  tileType: "PirateHut"
+  tileType: "PirateHut",
 })
 
 //pirate leaves raft behind when received all coins possible in level (also those from chests)
@@ -1277,7 +1277,7 @@ const Pirate = FloatingObject.compose(
       //takes all coins from the player from the left (moving direction is to the right)
       requireDirection: 1,
       itemReceiveType: "all",
-      itemType: "Coin"
+      itemType: "Coin",
     },
 
     methods: {
@@ -1298,8 +1298,8 @@ const Pirate = FloatingObject.compose(
           //and remove the pirate
           this.delete()
         }
-      }
-    }
+      },
+    },
   }
 )
 
@@ -1311,7 +1311,7 @@ const LeafSwitcher = FloatingObject.compose({
     tileType: "LeafSwitcher",
 
     //current facing direction starts off with 0 (up)
-    facingDirection: 0
+    facingDirection: 0,
   },
 
   statics: {
@@ -1320,8 +1320,8 @@ const LeafSwitcher = FloatingObject.compose({
       "leaf-switcher-t",
       "leaf-switcher-r",
       "leaf-switcher-b",
-      "leaf-switcher-l"
-    ]
+      "leaf-switcher-l",
+    ],
   },
 
   methods: {
@@ -1357,15 +1357,15 @@ const LeafSwitcher = FloatingObject.compose({
     //return all images the leaf switcher can have
     getPreloadImages() {
       return this.switcherDirections
-    }
-  }
+    },
+  },
 })
 
 //hidden path can be made visible by reveal button
 const HiddenPath = FloatingObject.compose(Registered, Watertight, {
   props: {
     imageName: "hidden-path-hidden",
-    tileType: "HiddenPath"
+    tileType: "HiddenPath",
   },
 
   methods: {
@@ -1380,15 +1380,15 @@ const HiddenPath = FloatingObject.compose(Registered, Watertight, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["hidden-path-hidden", "hidden-path-visible"]
-    }
-  }
+    },
+  },
 })
 
 //button that makes hidden path visible while pushed
 const RevealEye = FloatingObject.compose(Weighted, {
   props: {
     imageName: "path-reveal-button",
-    tileType: "RevealEye"
+    tileType: "RevealEye",
   },
 
   methods: {
@@ -1398,14 +1398,14 @@ const RevealEye = FloatingObject.compose(Weighted, {
       this.level.registry
         .getOfType("HiddenPath")
         .forEach(p => p.setVisibility(isPushed))
-    }
-  }
+    },
+  },
 })
 
 //shell guy sign is subtyped but static (no interaction)
 const ShellGuySign = FloatingObject.compose(NonWalkableObject, Subtyped, {
   props: {
-    tileType: "ShellGuySign"
+    tileType: "ShellGuySign",
   },
 
   statics: {
@@ -1413,25 +1413,25 @@ const ShellGuySign = FloatingObject.compose(NonWalkableObject, Subtyped, {
     subtypes: {
       0: {
         imageName: "shell-guy-stages-1",
-        tileType: "ShellGuySignFirst"
+        tileType: "ShellGuySignFirst",
       },
       1: {
         imageName: "shell-guy-stages-2",
-        tileType: "ShellGuySignSecond"
+        tileType: "ShellGuySignSecond",
       },
       2: {
         imageName: "shell-guy-stages-3",
-        tileType: "ShellGuySignThird"
-      }
-    }
-  }
+        tileType: "ShellGuySignThird",
+      },
+    },
+  },
 })
 
 //shell guy needs to be pushed a multiple of three times -1 to be happy
 const ShellGuy = FloatingObject.compose(Pushable, {
   props: {
     tileType: "ShellGuy",
-    imageName: "shell-guy-1"
+    imageName: "shell-guy-1",
 
     //current stage is set in init
   },
@@ -1449,7 +1449,7 @@ const ShellGuy = FloatingObject.compose(Pushable, {
 
   statics: {
     //the three stages, wraps when out of bounds
-    stages: ["shell-guy-1", "shell-guy-2", "shell-guy-3"]
+    stages: ["shell-guy-1", "shell-guy-2", "shell-guy-3"],
   },
 
   methods: {
@@ -1470,15 +1470,15 @@ const ShellGuy = FloatingObject.compose(Pushable, {
     //return all image states as the preload images
     getPreloadImages() {
       return ShellGuy.stages
-    }
-  }
+    },
+  },
 })
 
 //flower is subtyped into yellow and red,
 //if pushed extends wall of flowers until it hits non-grass
 const Flower = FloatingObject.compose(Subtyped, {
   props: {
-    tileType: "Flower"
+    tileType: "Flower",
   },
 
   statics: {
@@ -1486,13 +1486,13 @@ const Flower = FloatingObject.compose(Subtyped, {
     subtypes: {
       r: {
         imageName: "flower-red",
-        tileType: "FlowerRed"
+        tileType: "FlowerRed",
       },
       y: {
         imageName: "flower-yellow",
-        tileType: "FlowerYellow"
-      }
-    }
+        tileType: "FlowerYellow",
+      },
+    },
   },
 
   methods: {
@@ -1524,21 +1524,21 @@ const Flower = FloatingObject.compose(Subtyped, {
         this.level.anim.registerAction(() => {
           //create a flower of the same type and add it to the new target
           const newFlower = Flower({
-            extraInitData: this.subtypeIndex
+            extraInitData: this.subtypeIndex,
           }).addToTile(targetTile)
 
           //spawn new flower in same direction
           newFlower.createFlower(withMovement, initiator)
         })
       }
-    }
-  }
+    },
+  },
 })
 
 //flower seed requires a flower of the same color to be on it to finish
 const FlowerSeed = FloatingObject.compose(Subtyped, {
   props: {
-    tileType: "FlowerSeed"
+    tileType: "FlowerSeed",
   },
 
   statics: {
@@ -1547,14 +1547,14 @@ const FlowerSeed = FloatingObject.compose(Subtyped, {
       r: {
         imageName: "flower-seed-red",
         tileType: "FlowerSeedRed",
-        flowerType: "FlowerRed"
+        flowerType: "FlowerRed",
       },
       y: {
         imageName: "flower-seed-yellow",
         tileType: "FlowerSeedYellow",
-        flowerType: "FlowerYellow"
-      }
-    }
+        flowerType: "FlowerYellow",
+      },
+    },
   },
 
   methods: {
@@ -1573,15 +1573,15 @@ const FlowerSeed = FloatingObject.compose(Subtyped, {
     //allow finish if covered by right type of flower
     checkFinish() {
       return this.parent.getSuchObject(this.typeData.flowerType)
-    }
-  }
+    },
+  },
 })
 
 //squid is pulled by player, not moveable/walkable in the normal sense
 const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
   props: {
     imageName: "octopus",
-    tileType: "Squid"
+    tileType: "Squid",
   },
 
   methods: {
@@ -1591,18 +1591,18 @@ const Squid = FloatingObject.compose(Pullable, RequireGone, NonWalkableObject, {
       if (this.parent.getSuchObject("WaterHole")) {
         //delete in animation
         this.level.anim.registerAction(() => this.delete(), {
-          actionType: "slowAnimation"
+          actionType: "slowAnimation",
         })
       }
-    }
-  }
+    },
+  },
 })
 
 //small flower has green and red variant, must all be the same color to win
 //registers before subtyping to avoid needing to re-register when subtype changes
 const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
   props: {
-    tileType: "SmallFlower"
+    tileType: "SmallFlower",
   },
 
   statics: {
@@ -1611,14 +1611,14 @@ const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
       r: {
         imageName: "flower-hole-red",
         imageNameActive: "flower-hole-active-red",
-        tileType: "SmallFlowerRed"
+        tileType: "SmallFlowerRed",
       },
       g: {
         imageName: "flower-hole-green",
         imageNameActive: "flower-hole-active-green",
-        tileType: "SmallFlowerGreen"
-      }
-    }
+        tileType: "SmallFlowerGreen",
+      },
+    },
   },
 
   methods: {
@@ -1645,8 +1645,8 @@ const SmallFlower = FloatingObject.compose(Registered, Subtyped, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["hidden-path-hidden", "hidden-path-visible"]
-    }
-  }
+    },
+  },
 })
 
 //flower path is created by walking player after touching a flower anchor
@@ -1654,7 +1654,7 @@ const FlowerPath = FloatingObject.compose(NonWalkableObject, Registered, {
   props: {
     imageName: "flower-path",
     tileType: "FlowerPath",
-    heightPriority: 1
+    heightPriority: 1,
   },
 
   methods: {
@@ -1671,8 +1671,8 @@ const FlowerPath = FloatingObject.compose(NonWalkableObject, Registered, {
           flower.setActivationState(true)
         }
       }
-    }
-  }
+    },
+  },
 })
 
 //flower anchor creates flower path on stepping on,
@@ -1683,7 +1683,7 @@ const FlowerAnchor = FloatingObject.compose(Registered, {
     tileType: "FlowerAnchor",
 
     //if still active (not used yet)
-    unused: true
+    unused: true,
   },
 
   methods: {
@@ -1744,6 +1744,6 @@ const FlowerAnchor = FloatingObject.compose(Registered, {
     //return all image states as the preload images
     getPreloadImages() {
       return ["color-switcher", "dark-hole-closed"]
-    }
-  }
+    },
+  },
 })

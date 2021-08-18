@@ -1,4 +1,6 @@
 /*eslint-disable*/
+// prettier-ignore
+
 //these are all levels read from the files and put through some processing
 const levelData = [
   {
