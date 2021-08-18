@@ -236,6 +236,14 @@ const RoundedTerrain = Terrain.compose({
       Vector({ x: -1, y: 1 }),
       Vector({ x: -1, y: -1 }),
     ],
+
+    //all images in the image name map need to be preloaded
+    getPreloadImages() {
+      //don't add anything if imageName is not present
+      return Object.values(this.compose.properties.imageNameMap)
+        .flat()
+        .concat(this.compose.properties.imageName || [])
+    },
   },
 
   //determine image name from surrounding tile types
@@ -297,14 +305,6 @@ const RoundedTerrain = Terrain.compose({
           this.imageName = { layers: [this.imageName, connImageName] }
         }
       }
-    },
-
-    //all images in the image name map need to be preloaded
-    getPreloadImages() {
-      //don't add anything if imageName is not present
-      return Object.values(this.imageNameMap)
-        .flat()
-        .concat(this.imageName || [])
     },
   },
 })

@@ -356,12 +356,13 @@ Level = stampit.compose({
       //all following fields are the floating objects and the player
       objects: {
         rc: Rock,
-        pa: Palm,
         //makes a coconut when hit by pebble
+        pa: Palm,
         pl: Player,
         bx: Box,
         bw: WetBox,
-        ho: Goal, //h for house
+        //ho for house
+        ho: Goal,
         st: Starfish,
         mc: MommyCrab,
         bc: BabyCrab,
@@ -369,122 +370,122 @@ Level = stampit.compose({
         se: Seed,
         wh: WaterHole,
         wb: WaterBottle,
-        sp: Spring,
         //can be used to transfer from one grass to another
-        tp: Teleporter,
+        sp: Spring,
         //only teleports the player
-        tr: RedTeleporter,
+        tp: Teleporter,
         //can also teleport objects, thing is stuck on other side until player comes and takes it
+        tr: RedTeleporter,
         uk: UnknownObject,
-        fg: Figure,
         //two cannot be pushed at once (in one line)
-        cr: Cross,
+        fg: Figure,
         //crosses can be hidden beneath rocks (that have to be blown up)
-        bm: Bomb,
+        cr: Cross,
         //removes rocks directly adjacent to it, explosion goes once around
-        bt: BombTrigger,
+        bm: Bomb,
         //detonates all bombs
+        bt: BombTrigger,
         by: Buoy,
-        sk: Spikes,
         /*stay down if spikes button has something on it,
           stays down if something placed on it,
           if player pushes thing on top of it away it stays down with player on it*/
+        sk: Spikes,
         sb: SpikesButton,
-        ic: Ice,
         /*on water, disappears once stepped off of (like wetbox until stepped off)
           also acts like blockage for raft (like most other things, just an example)
           acts like spikes and only goes away once nothing is on it anymore*/
+        ic: Ice,
         pr: Pearl,
-        pp: PearlPedestal,
         /*bumpable, goes away after getting pearl, but only if all other pedestals
           have also gotten a pearl (all go away at once then)*/
-        tb: Tablet,
+        pp: PearlPedestal,
         /*pushing triggers roman numeral display on otherwise blank face,
           there are consecutively numbered tablets in the map,
           the number only stays visible for a certain tablet if all previous numbers
           have been "uncovered", (goes away again otherwise)
           all numbers have to be visible to win,
           resets all to no number visible if one pushed out of order*/
+        tb: Tablet,
         ky: Key,
-        ch: Chest,
         //is bumpable receptacle, gives (1?) coin back for key, only opens from bottom
+        ch: Chest,
         ci: Coin,
-        sl: Slingshot,
         /*bumpable, shoots pebble in defined direction,
           triggers action on certain things it hits: hitting clam makes it open
           hitting palm produces a coconut next to the palm in the direction of the pebble
           can open multiple clams in one go
           pebble stops when it makes a coconut and is also stopped by rock piles*/
+        sl: Slingshot,
         pb: Pebble,
-        cc: Coconut,
         /*see slingshot for creation, goes until it hits something, (also stops at water)
           if it hits empty CoconutHole, closes CoconutHole*/
-        co: CoconutHole,
+        cc: Coconut,
         //needs to be hit by coconut to close and become walkable
-        lf: Leaf,
+        co: CoconutHole,
         //redirects pebble in direction its pointing, can redirect pebble coming from any side,
         //pass through on exit and opposite of exit side
-        cl: Clam,
+        lf: Leaf,
         /*pushable,
           can be bumped to receive pearl item once opened by pebble shot
           can get pearl from any side, becomes bumpable when opened
           absorbs flying pebble if already open*/
-        br: Barrel,
+        cl: Clam,
         //all barrels have to be on a barrel base to finish
-        bb: BarrelBase,
+        br: Barrel,
         //a spot where a barrel has to be pushed
-        cp: CoconutPath,
+        bb: BarrelBase,
         //special path on which coconuts move until they hit the end of a path
-        ct: CoconutPathTarget,
+        cp: CoconutPath,
         //path segment that when all targets have a coconut, triggers all coconut holes to close
-        ra: Raft,
+        ct: CoconutPathTarget,
         /*raft goes as far as possible on water, movement of player triggers
           raft movement with player on it, if player movement possible, player leaves raft
           things can be pushed over raft like wetbox,
           player can push things standing on land (or on wetbox) from raft
           example: raft can move until it hits another raft (then player can transfer)*/
-        pi: Pirate,
+        ra: Raft,
         /*is next to pirate hut, after getting all money on the map, goes into hut and
           leaves Raft behind (apparently pirate can also go away without a hut)
           only accepts coins from the left*/
-        ph: PirateHut,
+        pi: Pirate,
         //basically just an unmovable prop
-        ls: LeafSwitcher,
+        ph: PirateHut,
         //switches all leaves to point in the direction the switcher was bumped in
-        hp: HiddenPath,
+        ls: LeafSwitcher,
         //like wet box, is hidden while not revealed with reveal button
-        re: RevealEye,
+        hp: HiddenPath,
         //makes all hidden path objects visible while pushed (weighted button)
-        sg: ShellGuy,
+        re: RevealEye,
         //has three stages, every push makes it switch to the next stage
         //and also wraps back to the first, only allows finish in third stage
-        sn: ShellGuySign,
+        sg: ShellGuy,
         //for whatever reason a sign that shows the three stages of the shell guys exists,
         //unwalkable, usually floating in water near the top left corner
-        fl: Flower,
+        sn: ShellGuySign,
         /*extends with copies until reached terrain border (end of grass),
-          pushing any flower makes it extend in that direction,
-          cannot be walked on, doesn't go onto the seed of a different color*/
-        fs: FlowerSeed,
+        pushing any flower makes it extend in that direction,
+        cannot be walked on, doesn't go onto the seed of a different color*/
+        fl: Flower,
         /*all seeds must be covered with a flower of the same color,
-          both flower and flower seed have a red variant that only wants red counterparts
-          stops like other obstacle when reached seed of wrong color
-          only ever seems to be placed on grass, doesn't propagate down grass*/
-        sq: Squid,
+        both flower and flower seed have a red variant that only wants red counterparts
+        stops like other obstacle when reached seed of wrong color
+        only ever seems to be placed on grass, doesn't propagate down grass*/
+        fs: FlowerSeed,
         //can be pulled: moving away from it after being adjacent causes it to follow
         //cannot be pushed in a normal way
-        sf: SmallFlower,
+        sq: Squid,
         //exists in green and red variant (subtypes), to win,
         //all small flowers on the level have to be of the same type
-        fa: FlowerAnchor,
+        sf: SmallFlower,
         /*when the player walks through one of these, a line is drawn out for every step,
-          this line cannot be crossed (non walkable) and ends
-          when the player steps on another anchor. finishing the line changes the color of all
-          touched flowers if only flowers of the same color were touched,
-          (doesn't have to touch all flowers of a color in the level to work)
-          leaves a walkable closed coconut hole behind,
-          can be used without a second one,just as a barrier that
-          appears on the player's walking path, can be active and/or present on finish*/
+        this line cannot be crossed (non walkable) and ends
+        when the player steps on another anchor. finishing the line changes the color of all
+        touched flowers if only flowers of the same color were touched,
+        (doesn't have to touch all flowers of a color in the level to work)
+        leaves a walkable closed coconut hole behind,
+        can be used without a second one,just as a barrier that
+        appears on the player's walking path, can be active and/or present on finish*/
+        fa: FlowerAnchor,
       },
     },
 
@@ -541,37 +542,34 @@ Level = stampit.compose({
     //doesn't care about images from other tilesets, yet
     preloadAllImages() {
       //collect preload images from all objects
-      const preloadedImages = {}
+      const preloadedImages = new Map()
 
       //for all objects that can be displayed
       Object.values(Level.positionDescriptorMap.tiles)
         .concat(Object.values(Level.positionDescriptorMap.objects))
         .forEach(constructorFunction => {
-          //disregard init errors, we just need some instance
-          try {
-            constructorFunction()
-              .getPreloadImages()
-              .forEach(imageName => {
-                //if present, add to list of image names to preload
-                if (imageName && imageName.length) {
-                  preloadedImages[imageName] = true
-                }
-              })
-          } catch (e) {
-            //don't care
-          }
+          constructorFunction.getPreloadImages().forEach(imageName => {
+            //if present, add to list of image names to preload
+            if (imageName && imageName.length) {
+              preloadedImages.set(imageName, true)
+            }
+          })
         })
 
+      //find the preload container for adding preload elements to
+      const preloadContainer = $("#preload-container")
+
       //preload all unique collected images
-      for (const imageName in preloadedImages) {
-        //preload by making an image with it but not putting it anywhere
-        preloadedImages[imageName] = $("<img>", {
-          src: Displayable.makeImgAttrib(
-            imageName,
-            Displayable.getImageSource(imageName)
-          ),
-        })
-      }
+      preloadedImages.forEach((_, imageName) =>
+        preloadContainer.append(
+          $("<img>", {
+            src: Displayable.makeImgAttrib(
+              imageName,
+              Displayable.getImageSource(imageName)
+            ),
+          })
+        )
+      )
     },
   },
 

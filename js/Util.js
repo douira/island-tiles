@@ -89,6 +89,12 @@ const Displayable = stampit.compose({
       //return current
       return Displayable.imageSourceRegistry[imageName]
     },
+
+    //the standard imageName is the only image to preload
+    //this should be overwritten for any objects that have more than one image
+    getPreloadImages() {
+      return [this.compose.properties.imageName].flat()
+    },
   },
 
   methods: {
@@ -196,12 +202,6 @@ const Displayable = stampit.compose({
       //set a new name in the img element
       //TODO: don't we need to deal with the location index here?
       item.elem.attr("src", Displayable.makeImgAttrib(item.name))
-    },
-
-    //the standard imageName is the only image to preload
-    //this should be overwritten for any objects that have more than one image
-    getPreloadImages() {
-      return [this.imageName].flat()
     },
   },
 })
@@ -566,6 +566,15 @@ const Registered = stampit.init(function () {
 
 //subtyped objects get additional type data so we don't have to make enumerated class names
 const Subtyped = stampit.compose({
+  statics: {
+    //return the images of all subtypes
+    getPreloadImages() {
+      return Object.keys(this.subtypes).map(
+        ({ imageName }) => imageName
+      )
+    },
+  },
+
   //init subtype
   init({ extraInitData }, { stamp }) {
     //save more general tile type
@@ -599,11 +608,6 @@ const Subtyped = stampit.compose({
 
       //update image name for new image of subtype (already set so not passing it)
       this.changeImageName()
-    },
-
-    //return the images of all subtypes
-    getPreloadImages() {
-      return Object.keys(this.subtypes).map(({ imageName }) => imageName)
     },
   },
 })
