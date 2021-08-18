@@ -1,0 +1,28 @@
+{
+  "eslint.validate": [
+    "javascript"
+  ],
+  "cSpell.words": [
+    "Vuetify",
+    "axios",
+    "elems",
+    "errored",
+    "iframe",
+    "instanceof",
+    "mult",
+    "nuxt",
+    "nuxtjs",
+    "onbeforeunload",
+    "repo",
+    "rgba",
+    "skippable",
+    "sonarjs",
+    "srcdoc",
+    "stampit",
+    "truthy",
+    "typeof",
+    "unwalkable",
+    "vuex",
+    "wasd"
+  ]
+}
