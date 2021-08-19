@@ -558,7 +558,7 @@ Level = stampit.compose({
 
       //find the preload container for adding preload elements to
       const preloadContainer = $("#preload-container")
-      console.log(preloadedImages.values())
+
       //preload all unique collected images
       preloadedImages.forEach(imageName =>
         preloadContainer.append(
