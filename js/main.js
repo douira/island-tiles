@@ -3,7 +3,7 @@
 //Note: props is a shallow copy and thereby partially shared among instances
 
 //determine debug mode status
-const debugging = window.location.search === "?debug=true"
+const debugging = /debug=true/.test(window.location.search)
 
 //the game object has a field of tiles
 const Game = stampit.compose({
@@ -591,6 +591,8 @@ $(document).ready(function () {
 
   //make a game with the levels
   game = Game({ levels })
+
+  //register handler on body click link
 
   //register handler on clear link
   $("#clear").click(() => {
