@@ -542,7 +542,7 @@ Level = stampit.compose({
     //doesn't care about images from other tilesets, yet
     preloadAllImages() {
       //collect preload images from all objects
-      const preloadedImages = new Map()
+      const preloadedImages = new Set()
 
       //for all objects that can be displayed
       Object.values(Level.positionDescriptorMap.tiles)
@@ -551,16 +551,16 @@ Level = stampit.compose({
           constructorFunction.getPreloadImages().forEach(imageName => {
             //if present, add to list of image names to preload
             if (imageName && imageName.length) {
-              preloadedImages.set(imageName, true)
+              preloadedImages.add(imageName, true)
             }
           })
         })
 
       //find the preload container for adding preload elements to
       const preloadContainer = $("#preload-container")
-
+      console.log(preloadedImages.values())
       //preload all unique collected images
-      preloadedImages.forEach((_, imageName) =>
+      preloadedImages.forEach(imageName =>
         preloadContainer.append(
           $("<img>", {
             src: Displayable.makeImgAttrib(
