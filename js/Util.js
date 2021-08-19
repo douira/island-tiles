@@ -140,6 +140,9 @@ const Displayable = stampit.compose({
 
               //init with first location
               src: Displayable.makeImgAttrib(imageName, locationIndex),
+
+              //disable dragging to prevent touch inputs sometimes not working
+              draggable: false
             }),
             name: imageName,
             ownLocationIndex: locationIndex,

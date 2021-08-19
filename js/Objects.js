@@ -664,23 +664,42 @@ const Player = FloatingObject.compose(Movable, {
         //prevent default action of moving the page or similar
         e.preventDefault()
 
-        //don't move if any animations are still processing
-        if (this.level.anim.lock) {
-          return
-        }
-
-        //update to face in that direction
-        this.changeImageName(Player.directionImageNames[keyDirection])
-
-        //try to move with offset vector for this direction, also pass direction
-        this.move(Movable.makeMovementDescriptor(keyDirection))
+        //handle the movement input with this direction
+        this.handleMoveInput(keyDirection)
       })
+
+      //register game click event for touch controls
+      const table = this.level.game.elems.table
+      table.on("click.controls", e => {
+        const offset = table.offset()
+        const fractionX = (e.pageX - offset.left) / table.width()
+        const fractionY = (e.pageY - offset.top) / table.height()
+        const bottomLeft = fractionX < fractionY
+        const topLeft = fractionX + fractionY < 1
+
+        //switch on the combination of diagonals and handle movement inputs
+        this.handleMoveInput(bottomLeft ? (topLeft ? 3 : 2) : topLeft ? 0 : 1)
+      })
+    },
+
+    handleMoveInput(direction) {
+      //don't move if any animations are still processing
+      if (this.level.anim.lock) {
+        return
+      }
+
+      //update to face in that direction
+      this.changeImageName(Player.directionImageNames[direction])
+
+      //try to move with offset vector for this direction, also pass direction
+      this.move(Movable.makeMovementDescriptor(direction))
     },
 
     //remove event handlers
     unregisterHandlers() {
-      //remove keydown handler we assigned
+      //remove the keydown handler we assigned and the click handler
       $(document).off(".interaction")
+      this.level.game.elems.table.off(".controls")
     },
 
     //is walkable if the initiator is itself
