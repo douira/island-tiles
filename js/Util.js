@@ -1,8 +1,11 @@
-/*exported Vector, directionOffsets, NonWalkableObject, Sinkable,
+/*exported debugging, Vector, directionOffsets, NonWalkableObject, Sinkable,
 Watertight, RequireGone, Item, ReceptacleAllItems, Registered,
 Subtyped, Weighted, Projectile, PushProxy, FloatingObject, Pushable,
 Receptacle, AnimationParticle, Movable, UnknownObject, Pullable,
 NonTeleportable, Teleportable*/
+
+//determine debug mode status
+const debugging = /debug=true/.test(window.location.search)
 
 //Vector class represents a 2D position
 const Vector = stampit.compose({
@@ -356,7 +359,7 @@ const Movable = stampit.compose({
       //notify terrain tiles and objects and so on
       targetTile.notifyMove(movement, actors)
 
-      //notify tile on opposite side of movement, target tile is this terrain tile is present
+      //notify tile on opposite side of movement, target tile is this terrain tile if present
       const oppositeTargetTile = this.level.getTileAt(
         Vector.sub(this, movement.offset)
       )

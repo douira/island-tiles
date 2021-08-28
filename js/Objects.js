@@ -60,8 +60,16 @@ const Goal = FloatingObject.compose({
 
     //when stepped on
     notifyMove() {
-      //trigger level finish check
-      this.level.goalTriggered()
+      //trigger the player to spin for fun
+      this.level.player.animatePlayerWin()
+
+      //trigger level finish check after everything has finished processing
+      this.level.anim.registerAction(
+        () => {
+          this.level.goalTriggered()
+        },
+        { delay: 0, priority: -10 }
+      )
     },
   },
 })
@@ -679,12 +687,15 @@ const Player = FloatingObject.compose(Movable, {
 
         //switch on the combination of diagonals and handle movement inputs
         this.handleMoveInput(bottomLeft ? (topLeft ? 3 : 2) : topLeft ? 0 : 1)
+
+        //if the level is completed, advance to the next level on click
+        this.level.tryAdvanceLevel()
       })
     },
 
     handleMoveInput(direction) {
-      //don't move if any animations are still processing
-      if (this.level.anim.lock) {
+      //don't move if any animations are still processing or goal was reached
+      if (this.level.anim.lock || this.level.goalReached) {
         return
       }
 
@@ -706,6 +717,18 @@ const Player = FloatingObject.compose(Movable, {
     //(pushing a figure that moves a figure that wants to occupy the same space as the player)
     checkMove(movement, actors) {
       return actors.initiator === this
+    },
+
+    //animates the player spinning
+    animatePlayerWin() {
+      //generate a sequence of animation image names
+      const frames = Array(3).fill(Player.directionImageNames).flat()
+
+      //remove the first and add it to the end to make the facing directions consistent
+      frames.push(frames.shift())
+      frames.forEach(image =>
+        this.level.anim.registerAction(() => this.changeImageName(image))
+      )
     },
   },
 })

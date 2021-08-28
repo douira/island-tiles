@@ -325,6 +325,10 @@ const Registry = stampit.compose({
 
 //level describes the configuration of the playing field
 Level = stampit.compose({
+  props: {
+    goalReached: false,
+  },
+
   //is constructed in the level store, parses the level format
   init({ name, dim, field, noPadding }) {
     //copy fields
@@ -948,6 +952,9 @@ Level = stampit.compose({
       //update the table size for the new field
       this.updateTableSize()
 
+      //reset goal reached state
+      this.goalReached = false
+
       //start game by registering event handler of player
       this.player.registerHandlers()
     },
@@ -1032,11 +1039,18 @@ Level = stampit.compose({
             )
         )
       ) {
-        //unregister
-        this.unregisterHandlers()
+        //mark level as finished, handlers are unregistered when the next level is shown
+        this.goalReached = true
 
         //make game move on to next level
         this.game.levelCompleted()
+      }
+    },
+
+    //tries to advance to the next level if possible
+    tryAdvanceLevel() {
+      if (this.goalReached) {
+        this.game.startNextLevel(1)
       }
     },
   },
