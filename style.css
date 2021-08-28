@@ -5,6 +5,7 @@ body {
   text-align: center;
   background-color: rgb(39, 39, 39);
   color: white;
+  touch-action: manipulation;
 }
 
 #title {
@@ -98,6 +99,11 @@ a {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+  pointer-events: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 #field img {

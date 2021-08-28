@@ -592,8 +592,6 @@ $(document).ready(function () {
   //make a game with the levels
   game = Game({ levels })
 
-  //register handler on body click link
-
   //register handler on clear link
   $("#clear").click(() => {
     //remove local storage for this page
