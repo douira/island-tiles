@@ -1,7 +1,4 @@
 {
-  "eslint.validate": [
-    "javascript"
-  ],
   "cSpell.words": [
     "Vuetify",
     "axios",

@@ -1239,17 +1239,17 @@ const CoconutPathTarget = CoconutPath.compose(Registered, {
         ) {
           //mark all targets as stopped
           otherTargets.forEach(o => (o.stopped = true))
+
+          //also mark this target as stopped
+          this.stopped = true
+
+          //in animation, close all coconut holes
+          this.level.registry
+            .getOfType("CoconutHole")
+            .forEach(hole =>
+              this.level.anim.registerAction(() => hole.closeHole())
+            )
         }
-
-        //also mark this target as stopped
-        this.stopped = true
-
-        //in animation, close all coconut holes
-        this.level.registry
-          .getOfType("CoconutHole")
-          .forEach(hole =>
-            this.level.anim.registerAction(() => hole.closeHole())
-          )
       }
     },
   },
